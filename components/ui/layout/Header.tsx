@@ -129,7 +129,7 @@ export default function Header() {
               <>
                 {user ? (
                   <div className="flex items-center space-x-3">
-                    <ListPropertyButton />
+                    {hasHostRole(user) && <ListPropertyButton />}
 
                     <Link href="/favorites">
                       <Button variant="ghost" size="sm">
@@ -257,29 +257,15 @@ export default function Header() {
                   >
                     Profile
                   </Link>
-                  <a
-                    className="text-gray-700 hover:text-teal-600 font-medium"
-                    onClick={async (e) => {
-                      e.preventDefault();
-                      setIsMenuOpen(false);
-                      try {
-                        if (!hasHostRole(user)) {
-                          const res = await fetch('/api/host/promote', { method: 'POST' });
-                          if (res.ok) {
-                            const json = await res.json();
-                            const d = json.data || {};
-                            setUser((prev) => prev ? { ...prev, roles: d.roles || prev.roles, role: d.role || prev.role, listingsCount: d.listingsCount ?? prev.listingsCount } : prev);
-                          }
-                        }
-                      } catch (err) {
-                        console.error('Promote failed', err);
-                      } finally {
-                        router.push('/host/listings/create');
-                      }
-                    }}
-                  >
-                    List Property
-                  </a>
+                  {hasHostRole(user) && (
+                    <Link
+                      href="/host/listings/create"
+                      className="text-gray-700 hover:text-teal-600 font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      List Property
+                    </Link>
+                  )}
                   {hasHostRole(user) && (
                     <Link
                       href="/host/dashboard"

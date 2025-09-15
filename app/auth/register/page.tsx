@@ -24,7 +24,7 @@ export default function RegisterPage() {
     phone: '',
     password: '',
     confirmPassword: '',
-    role: 'guest',
+  role: 'user',
     agreeToTerms: false
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -225,7 +225,7 @@ export default function RegisterPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="guest">Find a property</SelectItem>
+                    <SelectItem value="user">Find a property</SelectItem>
                     <SelectItem value="host">List my property</SelectItem>
                   </SelectContent>
                 </Select>

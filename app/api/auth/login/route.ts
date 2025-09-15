@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     await User.findByIdAndUpdate(user._id, { lastLoginAt: new Date() });
     const token = generateToken(user._id.toString());
 
-    const roles = Array.isArray((user as any).roles) ? (user as any).roles : (user.role ? [user.role] : ['user']);
+  const roles = Array.isArray((user as any).roles) ? (user as any).roles : (user.role ? [user.role] : ['user']);
 
   const res = NextResponse.json({ data: { id: user._id, name: user.name, email: user.email, roles }, message: 'Login successful' });
     res.cookies.set('token', token, {

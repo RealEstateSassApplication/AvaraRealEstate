@@ -5,7 +5,7 @@ export interface IUser extends Document {
   email: string;
   phone: string;
   passwordHash?: string;
-  role?: 'guest' | 'tenant' | 'host' | 'admin' | 'super-admin';
+  role?: 'user' | 'tenant' | 'host' | 'admin' | 'super-admin';
   // preferred multi-role array
   roles?: string[];
   profilePhoto?: string;
@@ -42,12 +42,12 @@ const UserSchema = new Schema<IUser>({
   passwordHash: { type: String },
   role: {
     type: String,
-    enum: ['guest', 'tenant', 'host', 'admin', 'super-admin'],
-    default: 'guest'
+    enum: ['user', 'tenant', 'host', 'admin', 'super-admin'],
+    default: 'user'
   },
   roles: {
     type: [String],
-    enum: ['user', 'tenant', 'host', 'admin', 'super-admin'],
+    enum: ['guest', 'user', 'tenant', 'host', 'admin', 'super-admin'],
     default: ['user']
   },
   profilePhoto: { type: String },
@@ -83,4 +83,9 @@ const UserSchema = new Schema<IUser>({
 // UserSchema.index({ phone: 1 });
 UserSchema.index({ role: 1 });
 
-export default mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
+
+const MODEL_NAME = 'User';
+if (mongoose.models && (mongoose.models as any)[MODEL_NAME]) {
+  delete (mongoose.models as any)[MODEL_NAME];
+}
+export default mongoose.models.User || mongoose.model<IUser>(MODEL_NAME, UserSchema);

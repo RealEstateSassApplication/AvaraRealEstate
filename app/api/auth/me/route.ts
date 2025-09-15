@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const user = await getUserFromReq(request as any);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const roles = Array.isArray((user as any).roles) ? (user as any).roles : (user.role ? [user.role] : ['user']);
+  const roles = Array.isArray((user as any).roles) ? (user as any).roles : (user.role ? [user.role] : ['user']);
     // compute listings count from Property collection to ensure accuracy
     await dbConnect();
     const listingsCount = await Property.countDocuments({ owner: user._id });
