@@ -144,6 +144,16 @@ export default function UserProfilePage() {
               <Button asChild>
                 <Link href="/bookings">My Bookings</Link>
               </Button>
+              <Button variant="destructive" onClick={async () => {
+                try {
+                  await fetch('/api/auth/logout', { method: 'POST' });
+                  window.location.href = '/';
+                } catch (err) {
+                  console.error('Logout failed', err);
+                }
+              }}>
+                Logout
+              </Button>
             </div>
           </div>
         </aside>

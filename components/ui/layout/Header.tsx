@@ -137,23 +137,19 @@ export default function Header() {
                       </Button>
                     </Link>
 
-                    <div className="flex items-center gap-2">
-                      <Link href="/user/profile" className="hidden sm:inline-block">
-                        <Avatar>
-                          {user.profilePhoto ? (
-                            <AvatarImage src={user.profilePhoto} alt={user.name} />
-                          ) : (
-                            <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
-                          )}
-                        </Avatar>
-                      </Link>
-
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                            <User className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
+          <div className="flex items-center gap-2">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Link href="/user/profile" className="hidden sm:inline-block">
+                              <Avatar>
+                                {user.profilePhoto ? (
+                                  <AvatarImage src={user.profilePhoto} alt={user.name} />
+                                ) : (
+                                  <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
+                                )}
+                              </Avatar>
+                            </Link>
+                          </DropdownMenuTrigger>
                         <DropdownMenuContent className="w-56" align="end" forceMount>
                           <div className="flex items-center justify-start gap-2 p-2">
                             <div className="flex flex-col space-y-1 leading-none">
@@ -185,6 +181,10 @@ export default function Header() {
                           </div>
                         </DropdownMenuContent>
                       </DropdownMenu>
+                      {/* Visible logout button next to avatar for quick access */}
+                      <Button variant="ghost" size="sm" onClick={handleLogout} className="hidden sm:inline-flex">
+                        Logout
+                      </Button>
                     </div>
                   </div>
                 ) : (
@@ -298,6 +298,21 @@ export default function Header() {
                       Admin Panel
                     </Link>
                   )}
+                  <a
+                    className="text-gray-700 hover:text-teal-600 font-medium"
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      setIsMenuOpen(false);
+                      try {
+                        await fetch('/api/auth/logout', { method: 'POST' });
+                        window.location.href = '/';
+                      } catch (err) {
+                        console.error('Logout failed', err);
+                      }
+                    }}
+                  >
+                    Logout
+                  </a>
                 </>
               )}
             </nav>
