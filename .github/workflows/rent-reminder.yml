@@ -1,0 +1,19 @@
+name: Rent Reminders
+
+on:
+  schedule:
+    - cron: '0 8 * * *' # every day at 08:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  trigger-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger rent reminders
+        uses: actions/http-client@v1
+        with:
+          url: ${{ secrets.SITE_URL }}/api/rents
+          method: PATCH
+          headers: '{"Content-Type":"application/json"}'
+          body: '{"action":"triggerReminders","daysBefore":3}'
+          # Note: ensure SITE_URL secret points to your deployed site (https://example.com)
