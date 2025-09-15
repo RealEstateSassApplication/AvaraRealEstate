@@ -1,17 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server';
 import Header from '@/components/ui/layout/Header';
 import { Button } from '@/components/ui/button';
 import getUserFromReq from '@/lib/auth';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
-export default async function HostApplyPage({ request }: { request: NextRequest }) {
+export const dynamic = 'force-dynamic';
+
+export default async function HostApplyPage() {
   try {
-    const user = await getUserFromReq(request as any);
+    const token = cookies().get('token')?.value;
+    const cookieHeader = token ? `token=${token}` : '';
+    const user = await getUserFromReq({ headers: { get: (name: string) => name === 'cookie' ? cookieHeader : undefined } } as any);
     if (user) {
       const roles = Array.isArray((user as any).roles) ? (user as any).roles : (user as any).role ? [(user as any).role] : [];
       const listingsCount = Array.isArray((user as any).listings) ? (user as any).listings.length : 0;
       const isHost = roles.includes('host') || listingsCount > 0;
       if (isHost) {
-        return NextResponse.redirect(new URL('/host/dashboard', request.url));
+        redirect('/host/dashboard');
       }
     }
   } catch (err) {
@@ -29,7 +34,9 @@ export default async function HostApplyPage({ request }: { request: NextRequest 
           <Button asChild>
             <a href="/host/listings/create">Create Listing</a>
           </Button>
-          <Button variant="outline" onClick={() => {}}>Request Host Access</Button>
+          <Button variant="outline" asChild>
+            <a href="/host/apply/request">Request Host Access</a>
+          </Button>
         </div>
       </div>
     </div>

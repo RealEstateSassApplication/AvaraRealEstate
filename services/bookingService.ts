@@ -46,7 +46,7 @@ export default class BookingService {
       if (!property) throw new Error('Property not found');
       if (property.status !== 'active') throw new Error('Property not available');
 
-      const available = await this.checkAvailability(property._id.toString(), payload.startDate, payload.endDate);
+  const available = await this.checkAvailability((property._id as any).toString(), payload.startDate, payload.endDate);
       if (!available) throw new Error('Property not available for selected dates');
 
       const start = new Date(payload.startDate);
