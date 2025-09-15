@@ -8,7 +8,7 @@ export interface ITransaction extends Document {
   amount: number;
   currency: string;
   type: 'booking' | 'refund' | 'payout' | 'fee';
-  provider: 'payhere' | 'stripe' | 'manual';
+  provider: 'payhere' | 'manual';
   providerTransactionId: string;
   status: 'pending' | 'completed' | 'failed' | 'cancelled';
   description?: string;
@@ -31,7 +31,7 @@ const TransactionSchema = new Schema<ITransaction>({
   },
   provider: {
     type: String,
-    enum: ['payhere', 'stripe', 'manual'],
+    enum: ['payhere', 'manual'],
     required: true
   },
   providerTransactionId: { type: String, required: true },

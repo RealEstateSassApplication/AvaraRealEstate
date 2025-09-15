@@ -1,0 +1,13 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+  functions = ".netlify/functions"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[build.environment]
+  # Leave example env var names here; set real values in Netlify UI
+  # MONGODB_URI = ""
+  # JWT_SECRET = ""
+  # NEXT_PUBLIC_* client keys (if any)

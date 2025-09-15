@@ -13,7 +13,7 @@ This document consolidates the MVP blueprint for Avara SL: architecture, models,
 - DB: MongoDB Atlas
 - Auth: NextAuth.js or JWT + OTP (SMS/WhatsApp)
 - Storage: AWS S3 (signed uploads) / Cloudflare R2 alternative
-- Payments: PayHere (LKR) + Stripe (international)
+- Payments: PayHere (LKR)
 - Messaging: WhatsApp Business API or Twilio WhatsApp + SMS fallback
 
 ## 3. Project Structure (recommended)
@@ -55,7 +55,7 @@ Example query params:
 ## 7. Services / Business Logic
 - `propertyService`: create/update/search, slugging, geolocation helpers
 - `bookingService`: availability checking, double-book prevention, create booking with MongoDB transactions (sessions)
-- `paymentService`: integrate PayHere / Stripe SDKs, create payment intent, verify webhooks
+- `paymentService`: integrate PayHere SDKs, create payment intent, verify webhooks
 - `notificationService`: WhatsApp & SMS, OTP management
 
 ## 8. Booking Flow (MVP)
@@ -70,7 +70,7 @@ Example query params:
 
 ## 10. Payments
 - PayHere for LKR local flows (sandbox for testing)
-- Stripe for international cards
+- (Optional) support for international card processors
 - Webhooks to update booking and transaction records; signature verification required
 
 ## 11. WhatsApp & SMS

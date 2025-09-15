@@ -9,7 +9,7 @@ This document summarizes the Avara SL MVP: architecture, models, APIs, deploymen
 - Backend: Next.js API routes + Mongoose
 - DB: MongoDB Atlas
 - File storage: AWS S3
-- Payments: PayHere (LKR) + Stripe
+- Payments: PayHere (LKR)
 - Messaging: WhatsApp Business API + Twilio SMS fallback
 
 ## Project structure

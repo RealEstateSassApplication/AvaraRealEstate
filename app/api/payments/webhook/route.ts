@@ -4,14 +4,14 @@ import Booking from '@/models/Booking';
 import Transaction from '@/models/Transaction';
 
 export async function POST(req: Request) {
-  // Note: In production verify webhook signatures (Stripe/PayHere)
+  // Note: In production verify webhook signatures for your payment provider
   try {
     const payload = await req.text();
     // Minimal scaffold: parse JSON if possible
     let data: any = {};
     try { data = JSON.parse(payload); } catch (e) { data = { raw: payload }; }
 
-    // Example: handle booking payment success from Stripe/PayHere
+  // Example: handle booking payment success from a payment provider
     if (data.type === 'payment_intent.succeeded' || data.event === 'payment.success') {
       const bookingId = data?.data?.object?.metadata?.bookingId || data?.bookingId;
       const providerId = data?.data?.object?.id || data?.transactionId;

@@ -10,7 +10,7 @@ A comprehensive fullstack Next.js application for property rentals, sales, and s
 - **User Management**: Multiple user roles (Guest, Tenant, Host, Admin) with secure authentication
 - **Property Management**: Complete CRUD operations with image uploads and status management
 - **Booking System**: Real-time availability checking and booking management
-- **Payment Integration**: Support for PayHere (Sri Lankan) and Stripe (International)
+- **Payment Integration**: Support for PayHere (Sri Lankan)
 - **Admin Dashboard**: Comprehensive moderation tools and analytics
 
 ### Technical Features
@@ -45,7 +45,7 @@ A comprehensive fullstack Next.js application for property rentals, sales, and s
    Configure your `.env.local` with:
    - MongoDB connection string
    - AWS S3 credentials
-   - Payment provider keys (PayHere/Stripe)
+   - Payment provider keys (PayHere)
    - JWT secrets
 
 3. **Start Development Server**
@@ -55,7 +55,11 @@ A comprehensive fullstack Next.js application for property rentals, sales, and s
 
 Visit `http://localhost:3000` to see the application.
 
-## 📁 Project Structure
+## � Deploying to Netlify
+
+This project includes a `netlify.toml` and supports deployment using Netlify's Next.js plugin. See `README.deploy-netlify.md` for detailed steps. Ensure you set required environment variables in your Netlify site settings (`MONGODB_URI`, `JWT_SECRET`, provider keys, etc.).
+
+## �📁 Project Structure
 
 ```
 avara-sl/
@@ -118,11 +122,6 @@ Key API routes include:
 - Local currency (LKR) support
 - Mobile payment integration
 - Sandbox and production environments
-
-### Stripe (International)
-- Credit card processing
-- Multi-currency support
-- Webhook handling for payment confirmation
 
 ## 📱 Mobile & PWA Features
 
