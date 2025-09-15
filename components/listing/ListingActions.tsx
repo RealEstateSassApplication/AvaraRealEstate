@@ -20,6 +20,7 @@ interface Props {
 export default function ListingActions({ propertyId, initialFavorite = false, hostContact }: Props) {
   const [favorite, setFavorite] = useState<boolean>(initialFavorite);
   const [loading, setLoading] = useState(false);
+  const [showContact, setShowContact] = useState(false);
 
   const toggleFavorite = async () => {
     setLoading(true);
@@ -54,27 +55,40 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
     <div>
       <div className="flex flex-col gap-2">
         {hostContact && (
-          <div className="w-full mb-2 p-3 rounded border bg-card text-sm space-y-1">
-            <div className="font-semibold">Host Contact</div>
-            <div>Name: {hostContact.name || 'N/A'}</div>
-            {hostContact.phone && (
-              <div className="flex items-center justify-between">
-                <span>Phone: {hostContact.phone}</span>
-                <Button type="button" size="sm" variant="ghost" onClick={() => copyToClipboard(hostContact.phone)}>Copy</Button>
+          <>
+            <Button
+              className="w-full"
+              variant="black"
+              onClick={() => setShowContact((s) => !s)}
+            >
+              {showContact ? 'Hide Contact' : 'Contact Host'}
+            </Button>
+
+            {showContact && (
+              <div className="w-full mb-2 p-3 rounded border bg-card text-sm space-y-1">
+                <div className="font-semibold">Host Contact</div>
+                <div>Name: {hostContact.name || 'N/A'}</div>
+                {hostContact.phone && (
+                  <div className="flex items-center justify-between">
+                    <span>Phone: {hostContact.phone}</span>
+                    <Button type="button" size="sm" variant="ghost" onClick={() => copyToClipboard(hostContact.phone)}>Copy</Button>
+                  </div>
+                )}
+                {hostContact.email && (
+                  <div className="flex items-center justify-between">
+                    <span>Email: {hostContact.email}</span>
+                    <Button type="button" size="sm" variant="ghost" onClick={() => copyToClipboard(hostContact.email)}>Copy</Button>
+                  </div>
+                )}
+                {!hostContact.phone && !hostContact.email && (
+                  <div className="text-muted-foreground">No direct contact details.</div>
+                )}
+                {hostContact.verified && <div className="text-xs text-green-600">Verified Host</div>}
               </div>
             )}
-            {hostContact.email && (
-              <div className="flex items-center justify-between">
-                <span>Email: {hostContact.email}</span>
-                <Button type="button" size="sm" variant="ghost" onClick={() => copyToClipboard(hostContact.email)}>Copy</Button>
-              </div>
-            )}
-            {!hostContact.phone && !hostContact.email && (
-              <div className="text-muted-foreground">No direct contact details.</div>
-            )}
-            {hostContact.verified && <div className="text-xs text-green-600">Verified Host</div>}
-          </div>
+          </>
         )}
+
         <Button className="w-full" variant="outline" onClick={toggleFavorite} disabled={loading}>
           {favorite ? 'Remove from Favorites' : 'Add to Favorites'}
         </Button>

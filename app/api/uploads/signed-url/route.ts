@@ -1,17 +1,19 @@
 import { NextResponse } from 'next/server';
-import { generateSignedUrl } from '@/lib/s3';
+import storage from '@/lib/storage';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { fileName, contentType } = body;
     if (!fileName || !contentType) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
-    const key = `properties/${Date.now()}-${fileName}`;
-    const signedUrl = await generateSignedUrl(key, contentType);
-    const publicUrl = `https://${process.env.S3_BUCKET}.s3.${process.env.S3_REGION || 'us-east-1'}.amazonaws.com/${key}`;
-    return NextResponse.json({ signedUrl, publicUrl });
+    const key = storage.generateUploadKey(fileName);
+
+    // The client can upload the file via PUT to this uploadUrl (same origin)
+    const uploadUrl = `/api/uploads/local?key=${encodeURIComponent(key)}`;
+    const publicUrl = storage.getPublicUrl(key);
+    return NextResponse.json({ uploadUrl, publicUrl });
   } catch (err: any) {
     console.error('Signed url error', err);
-    return NextResponse.json({ error: 'Failed to generate signed url' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to generate upload url' }, { status: 500 });
   }
 }

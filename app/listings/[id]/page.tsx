@@ -84,7 +84,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
               </div>
               <div className="text-sm text-muted-foreground mb-4 capitalize">{property.purpose}</div>
               <ListingActions
-                propertyId={property._id}
+                propertyId={String(property._id)}
                 initialFavorite={false}
                 hostContact={{
                   name: (property.owner as any)?.name,
