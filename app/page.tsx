@@ -120,7 +120,7 @@ export default function HomePage() {
               </h1>
 
               <p className="mt-6 text-lg text-slate-700 max-w-xl">
-                Avara — an intelligent property platform for Sri Lanka. Premium listings, verified owners, and precise search powered by modern UX.
+                Avara — an intelligent property platform for Sri Lanka. Premium listings, verified owners, and precise search powered by modern technology.
               </p>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
