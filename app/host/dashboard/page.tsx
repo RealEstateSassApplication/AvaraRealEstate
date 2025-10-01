@@ -293,6 +293,27 @@ export default function HostDashboard() {
     }
   };
 
+  const handleBookingAction = async (bookingId: string, action: 'approve' | 'decline' | 'cancel') => {
+    try {
+      const response = await fetch(`/api/bookings/${bookingId}/${action}`, {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        // Show success message
+        alert(`Booking ${action}d successfully!`);
+        fetchBookings(); // Refresh booking data
+      } else {
+        const error = await response.json();
+        alert(`Failed to ${action} booking: ${error.error}`);
+      }
+    } catch (error) {
+      console.error(`Failed to ${action} booking:`, error);
+      alert(`Network error: Failed to ${action} booking`);
+    }
+  };
+
   const handleRentAction = async (rentId: string, action: 'mark_paid' | 'send_reminder') => {
     try {
       const response = await fetch(`/api/rents/${rentId}/${action}`, {
@@ -384,43 +405,60 @@ export default function HostDashboard() {
 
             {/* Recent Activity and Quick Actions */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Recent Bookings */}
+              {/* Pending Approvals */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Recent Bookings</CardTitle>
-                  <CardDescription>Latest booking requests and confirmations</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Pending Approvals</CardTitle>
+                      <CardDescription>Booking requests requiring your attention</CardDescription>
+                    </div>
+                    <Badge variant="destructive" className="bg-red-100 text-red-800">
+                      {bookings.filter(b => b.status === 'pending').length} Pending
+                    </Badge>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  {bookings.slice(0, 5).map((booking) => (
-                    <div key={booking._id} className="flex items-center justify-between py-3 border-b last:border-0">
+                  {bookings.filter(b => b.status === 'pending').slice(0, 3).map((booking) => (
+                    <div key={booking._id} className="flex items-center justify-between py-4 border-b last:border-0">
                       <div className="flex items-center space-x-3">
                         <img
                           src={booking.property.images[0] || '/images/property-placeholder.jpg'}
                           alt={booking.property.title}
-                          className="w-10 h-10 rounded object-cover"
+                          className="w-12 h-12 rounded-lg object-cover"
                         />
                         <div>
                           <p className="font-medium text-sm">{booking.property.title}</p>
                           <p className="text-sm text-gray-600">{booking.user.name}</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(booking.startDate).toLocaleDateString()} - {new Date(booking.endDate).toLocaleDateString()}
+                          </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <Badge 
-                          variant={
-                            booking.status === 'confirmed' ? 'default' :
-                            booking.status === 'pending' ? 'secondary' : 'destructive'
-                          }
+                      <div className="flex space-x-1">
+                        <Button 
+                          size="sm" 
+                          className="bg-green-600 hover:bg-green-700 text-xs px-2 py-1"
+                          onClick={() => handleBookingAction(booking._id, 'approve')}
                         >
-                          {booking.status}
-                        </Badge>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {new Date(booking.startDate).toLocaleDateString()}
-                        </p>
+                          Approve
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="text-xs px-2 py-1"
+                          onClick={() => handleBookingAction(booking._id, 'decline')}
+                        >
+                          Decline
+                        </Button>
                       </div>
                     </div>
                   ))}
-                  {bookings.length === 0 && (
-                    <p className="text-center text-gray-500 py-4">No bookings yet</p>
+                  {bookings.filter(b => b.status === 'pending').length === 0 && (
+                    <div className="text-center py-6">
+                      <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-2" />
+                      <p className="text-gray-600">All caught up! No pending approvals.</p>
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -616,16 +654,33 @@ export default function HostDashboard() {
                             <div className="flex space-x-2">
                               {booking.status === 'pending' && (
                                 <>
-                                  <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                                    Confirm
+                                  <Button 
+                                    size="sm" 
+                                    className="bg-green-600 hover:bg-green-700"
+                                    onClick={() => handleBookingAction(booking._id, 'approve')}
+                                  >
+                                    Approve
                                   </Button>
-                                  <Button size="sm" variant="destructive">
+                                  <Button 
+                                    size="sm" 
+                                    variant="destructive"
+                                    onClick={() => handleBookingAction(booking._id, 'decline')}
+                                  >
                                     Decline
                                   </Button>
                                 </>
                               )}
+                              {booking.status === 'confirmed' && (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => handleBookingAction(booking._id, 'cancel')}
+                                >
+                                  Cancel
+                                </Button>
+                              )}
                               <Button size="sm" variant="outline">
-                                Contact
+                                Contact Guest
                               </Button>
                             </div>
                           </TableCell>
