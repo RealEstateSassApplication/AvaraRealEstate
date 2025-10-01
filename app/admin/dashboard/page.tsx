@@ -216,10 +216,12 @@ export default function AdminDashboardPage() {
 
         {/* Main Content */}
         <Tabs defaultValue="pending-properties" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="pending-properties">Pending Properties</TabsTrigger>
             <TabsTrigger value="recent-users">Recent Users</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="rent-management">Rent Management</TabsTrigger>
+            <TabsTrigger value="financial-overview">Financial Overview</TabsTrigger>
           </TabsList>
 
           {/* Pending Properties */}
@@ -466,6 +468,277 @@ export default function AdminDashboardPage() {
                         </span>
                       </Link>
                     </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Rent Management Tab */}
+          <TabsContent value="rent-management">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <DollarSign className="w-5 h-5 mr-2 text-blue-500" />
+                  Platform Rent Management
+                </CardTitle>
+                <CardDescription>
+                  Monitor and manage all rental activities across the platform
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-blue-600">Active Rents</p>
+                        <p className="text-2xl font-bold text-blue-900">247</p>
+                      </div>
+                      <Home className="w-8 h-8 text-blue-500" />
+                    </div>
+                  </div>
+                  <div className="bg-orange-50 p-4 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-orange-600">Overdue Payments</p>
+                        <p className="text-2xl font-bold text-orange-900">23</p>
+                      </div>
+                      <AlertTriangle className="w-8 h-8 text-orange-500" />
+                    </div>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-green-600">Monthly Rent Collection</p>
+                        <p className="text-2xl font-bold text-green-900">LKR 2.4M</p>
+                      </div>
+                      <TrendingUp className="w-8 h-8 text-green-500" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">Recent Rent Activities</h3>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm">
+                        Export Report
+                      </Button>
+                      <Button size="sm">
+                        Send Bulk Reminders
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Property</TableHead>
+                        <TableHead>Host</TableHead>
+                        <TableHead>Tenant</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Due Date</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">Modern Apartment Colombo</p>
+                            <p className="text-sm text-gray-600">Colombo 03</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">John Silva</p>
+                            <p className="text-sm text-gray-600">john@example.com</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">Mary Fernando</p>
+                            <p className="text-sm text-gray-600">mary@example.com</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>LKR 85,000</TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">Nov 15, 2024</p>
+                            <p className="text-sm text-red-600">3 days overdue</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="destructive">Overdue</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-1">
+                            <Button size="sm" variant="outline">
+                              Remind
+                            </Button>
+                            <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                              Mark Paid
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      {/* Add more sample rows as needed */}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Financial Overview Tab */}
+          <TabsContent value="financial-overview">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <TrendingUp className="w-5 h-5 mr-2 text-green-500" />
+                    Platform Financial Overview
+                  </CardTitle>
+                  <CardDescription>
+                    Complete financial metrics and revenue tracking
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-blue-100 text-sm font-medium">Total Revenue</p>
+                          <p className="text-2xl font-bold">LKR 12.5M</p>
+                          <p className="text-blue-100 text-sm mt-1">+15% from last month</p>
+                        </div>
+                        <DollarSign className="w-8 h-8 text-blue-200" />
+                      </div>
+                    </div>
+                    <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-green-100 text-sm font-medium">Commission Earned</p>
+                          <p className="text-2xl font-bold">LKR 625K</p>
+                          <p className="text-green-100 text-sm mt-1">5% platform fee</p>
+                        </div>
+                        <Star className="w-8 h-8 text-green-200" />
+                      </div>
+                    </div>
+                    <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-purple-100 text-sm font-medium">Pending Payments</p>
+                          <p className="text-2xl font-bold">LKR 1.2M</p>
+                          <p className="text-purple-100 text-sm mt-1">247 transactions</p>
+                        </div>
+                        <Clock className="w-8 h-8 text-purple-200" />
+                      </div>
+                    </div>
+                    <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-6 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-orange-100 text-sm font-medium">Active Hosts</p>
+                          <p className="text-2xl font-bold">156</p>
+                          <p className="text-orange-100 text-sm mt-1">+8 this month</p>
+                        </div>
+                        <Users className="w-8 h-8 text-orange-200" />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Revenue Breakdown</CardTitle>
+                    <CardDescription>Revenue sources and distribution</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center p-3 bg-blue-50 rounded">
+                        <span className="font-medium text-blue-900">Rental Income</span>
+                        <span className="font-bold text-blue-900">LKR 8.5M (68%)</span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-green-50 rounded">
+                        <span className="font-medium text-green-900">Short-term Stays</span>
+                        <span className="font-bold text-green-900">LKR 2.8M (22%)</span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-purple-50 rounded">
+                        <span className="font-medium text-purple-900">Property Sales</span>
+                        <span className="font-bold text-purple-900">LKR 1.2M (10%)</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Top Performing Cities</CardTitle>
+                    <CardDescription>Revenue by location</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium">Colombo</p>
+                          <p className="text-sm text-gray-600">89 properties</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold">LKR 4.2M</p>
+                          <p className="text-sm text-green-600">+12%</p>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium">Kandy</p>
+                          <p className="text-sm text-gray-600">45 properties</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold">LKR 2.1M</p>
+                          <p className="text-sm text-green-600">+8%</p>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium">Galle</p>
+                          <p className="text-sm text-gray-600">32 properties</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold">LKR 1.8M</p>
+                          <p className="text-sm text-green-600">+15%</p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Platform Health Metrics</CardTitle>
+                  <CardDescription>Key performance indicators</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-blue-600">94%</div>
+                      <div className="text-sm text-gray-600">Payment Success Rate</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-green-600">4.7</div>
+                      <div className="text-sm text-gray-600">Average Rating</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-purple-600">72%</div>
+                      <div className="text-sm text-gray-600">Occupancy Rate</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-orange-600">2.3</div>
+                      <div className="text-sm text-gray-600">Days Avg Response</div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

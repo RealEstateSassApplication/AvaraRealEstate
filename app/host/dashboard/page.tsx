@@ -3,8 +3,31 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Home,
+  DollarSign,
+  Users,
+  Calendar,
+  TrendingUp,
+  Eye,
+  Edit,
+  Star,
+  Clock,
+  CheckCircle,
+  AlertTriangle
+} from 'lucide-react';
 import PropertyCard from '@/components/property/PropertyCard';
-// Card and icons removed — not used in the redesigned dashboard
 
 // Minimal shape returned from API
 interface HostPropertyApi {
@@ -26,9 +49,55 @@ interface HostPropertyApi {
   ratings?: { average?: number; count?: number };
   description?: string;
   rentFrequency?: string;
+  status?: string;
 }
 
-// Shape expected by PropertyCard (provide fallbacks)
+interface DashboardStats {
+  totalProperties: number;
+  activeListings: number;
+  totalBookings: number;
+  totalRevenue: number;
+  pendingRents: number;
+  occupancyRate: number;
+}
+
+interface RentData {
+  _id: string;
+  property: {
+    _id: string;
+    title: string;
+    address: { city: string };
+  };
+  tenant: {
+    _id: string;
+    name: string;
+    email: string;
+    phone: string;
+  };
+  amount: number;
+  currency: string;
+  frequency: string;
+  nextDue: string;
+  status: string;
+}
+
+interface BookingData {
+  _id: string;
+  property: {
+    _id: string;
+    title: string;
+    images: string[];
+  };
+  user: {
+    name: string;
+    email: string;
+  };
+  startDate: string;
+  endDate: string;
+  status: string;
+  totalAmount: number;
+  currency: string;
+}
 interface PropertyCardReady {
   _id: string;
   title: string;
@@ -53,12 +122,63 @@ interface PropertyCardReady {
 export default function HostDashboard() {
   const [properties, setProperties] = useState<PropertyCardReady[]>([]);
   const [rawProperties, setRawProperties] = useState<any[]>([]);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalProperties: 0,
+    activeListings: 0,
+    totalBookings: 0,
+    totalRevenue: 0,
+    pendingRents: 0,
+    occupancyRate: 0
+  });
+  const [rents, setRents] = useState<RentData[]>([]);
+  const [bookings, setBookings] = useState<BookingData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'rent' | 'sale' | 'stay' | 'tenants'>('rent');
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'bookings' | 'rents'>('overview');
 
-  useEffect(() => { fetchProperties(); fetchBookings(); }, []);
+  useEffect(() => { 
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      await Promise.all([
+        fetchProperties(),
+        fetchBookings(),
+        fetchRents(),
+        fetchStats()
+      ]);
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+      setError('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const res = await fetch('/api/host/stats');
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data);
+      }
+    } catch (err) {
+      console.error('Failed to load stats', err);
+    }
+  };
+
+  const fetchRents = async () => {
+    try {
+      const res = await fetch('/api/rents?type=host');
+      if (res.ok) {
+        const data = await res.json();
+        setRents(data.rents || []);
+      }
+    } catch (err) {
+      console.error('Failed to load rents', err);
+    }
+  };
 
   const fetchProperties = async () => {
     try {
@@ -112,6 +232,30 @@ export default function HostDashboard() {
     }
   };
 
+  const StatCard = ({ title, value, icon: Icon, change, changeType }: any) => (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-gray-600">{title}</p>
+            <p className="text-2xl font-bold text-gray-900">{value}</p>
+            {change && (
+              <p className={`text-sm flex items-center mt-1 ${
+                changeType === 'positive' ? 'text-green-600' : 'text-red-600'
+              }`}>
+                <TrendingUp className="w-4 h-4 mr-1" />
+                {change}
+              </p>
+            )}
+          </div>
+          <div className="bg-gradient-to-br from-teal-500 to-blue-600 text-white p-3 rounded-lg">
+            <Icon className="w-6 h-6" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   const handleDelete = async (id: string) => {
     const ok = confirm('Are you sure you want to delete this listing? This action cannot be undone.');
     if (!ok) return;
@@ -149,88 +293,464 @@ export default function HostDashboard() {
     }
   };
 
+  const handleRentAction = async (rentId: string, action: 'mark_paid' | 'send_reminder') => {
+    try {
+      const response = await fetch(`/api/rents/${rentId}/${action}`, {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        fetchRents(); // Refresh rent data
+      }
+    } catch (error) {
+      console.error(`Failed to ${action} rent:`, error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="max-w-7xl mx-auto p-6">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-300 rounded w-64 mb-8"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-32 bg-gray-300 rounded"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold">Host Dashboard</h1>
-            <p className="text-sm text-gray-600">Manage your listings, bookings and tenants</p>
+            <h1 className="text-3xl font-bold text-gray-900">Property Owner Dashboard</h1>
+            <p className="text-gray-600 mt-2">Manage your properties, tenants and rental income</p>
           </div>
           <div className="flex items-center gap-3">
             <Button asChild>
-              <Link href="/host/listings/create">Create Listing</Link>
+              <Link href="/host/listings/create">Add Property</Link>
             </Button>
-            <Button variant="ghost">Settings</Button>
+            <Button variant="outline">Settings</Button>
           </div>
         </div>
 
-        <div className="bg-black text-white rounded-lg p-4 mb-6">
-          <div className="flex gap-2">
-            <button className={`px-4 py-2 rounded ${activeTab==='rent'? 'bg-white text-black':'bg-transparent text-white/75'}`} onClick={() => setActiveTab('rent')}>Rent</button>
-            <button className={`px-4 py-2 rounded ${activeTab==='sale'? 'bg-white text-black':'bg-transparent text-white/75'}`} onClick={() => setActiveTab('sale')}>Sale</button>
-            <button className={`px-4 py-2 rounded ${activeTab==='stay'? 'bg-white text-black':'bg-transparent text-white/75'}`} onClick={() => setActiveTab('stay')}>Short Stays</button>
-            <button className={`px-4 py-2 rounded ml-auto ${activeTab==='tenants'? 'bg-white text-black':'bg-transparent text-white/75'}`} onClick={() => setActiveTab('tenants')}>Tenant Management</button>
-          </div>
-        </div>
+        <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="properties">Properties</TabsTrigger>
+            <TabsTrigger value="bookings">Bookings</TabsTrigger>
+            <TabsTrigger value="rents">Rent Management</TabsTrigger>
+          </TabsList>
 
-        {activeTab !== 'tenants' ? (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Your Listings</h2>
-            {properties.length === 0 ? (
-              <div className="p-8 text-center text-gray-600">No listings yet — create your first property.</div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {properties.filter(p => (activeTab==='rent' ? p.purpose === 'rent' : activeTab==='sale' ? p.purpose === 'sale' : true)).map(p => (
-                  <div key={p._id} className="bg-white border rounded-lg shadow-sm overflow-hidden">
-                    <PropertyCard property={p} />
-                    <div className="p-3 flex items-center gap-2 justify-between">
-                      <div className="flex gap-2">
-                        <Button asChild>
-                          <Link href={`/host/listings/${p._id}/edit`}>
-                            Edit
-                          </Link>
-                        </Button>
-                        <Button asChild>
-                          <Link href={`/listings/${p._id}`}>
-                            View
-                          </Link>
-                        </Button>
+          {/* Overview Tab */}
+          <TabsContent value="overview">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <StatCard
+                title="Total Properties"
+                value={stats.totalProperties}
+                icon={Home}
+                change="+2 this month"
+                changeType="positive"
+              />
+              <StatCard
+                title="Active Listings"
+                value={stats.activeListings}
+                icon={CheckCircle}
+                change={`${Math.round((stats.activeListings / stats.totalProperties) * 100)}% of total`}
+                changeType="positive"
+              />
+              <StatCard
+                title="Total Bookings"
+                value={stats.totalBookings}
+                icon={Users}
+                change="+15% this month"
+                changeType="positive"
+              />
+              <StatCard
+                title="Revenue"
+                value={`LKR ${stats.totalRevenue.toLocaleString()}`}
+                icon={DollarSign}
+                change="+8% this month"
+                changeType="positive"
+              />
+            </div>
+
+            {/* Recent Activity and Quick Actions */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Recent Bookings */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Bookings</CardTitle>
+                  <CardDescription>Latest booking requests and confirmations</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {bookings.slice(0, 5).map((booking) => (
+                    <div key={booking._id} className="flex items-center justify-between py-3 border-b last:border-0">
+                      <div className="flex items-center space-x-3">
+                        <img
+                          src={booking.property.images[0] || '/images/property-placeholder.jpg'}
+                          alt={booking.property.title}
+                          className="w-10 h-10 rounded object-cover"
+                        />
+                        <div>
+                          <p className="font-medium text-sm">{booking.property.title}</p>
+                          <p className="text-sm text-gray-600">{booking.user.name}</p>
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button variant="destructive" onClick={() => handleDelete(p._id)}>Delete</Button>
-                        <Button variant="secondary" onClick={() => handleToggleFeatured(p._id, p.featured)}>{p.featured ? 'Unfeature' : 'Feature'}</Button>
+                      <div className="text-right">
+                        <Badge 
+                          variant={
+                            booking.status === 'confirmed' ? 'default' :
+                            booking.status === 'pending' ? 'secondary' : 'destructive'
+                          }
+                        >
+                          {booking.status}
+                        </Badge>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {new Date(booking.startDate).toLocaleDateString()}
+                        </p>
                       </div>
                     </div>
+                  ))}
+                  {bookings.length === 0 && (
+                    <p className="text-center text-gray-500 py-4">No bookings yet</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Pending Rents */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <AlertTriangle className="w-5 h-5 mr-2 text-orange-500" />
+                    Rent Due Soon
+                  </CardTitle>
+                  <CardDescription>Rents due in the next 7 days</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {rents
+                    .filter(rent => {
+                      const dueDate = new Date(rent.nextDue);
+                      const now = new Date();
+                      const diffTime = dueDate.getTime() - now.getTime();
+                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                      return diffDays <= 7 && diffDays >= 0;
+                    })
+                    .slice(0, 5)
+                    .map((rent) => (
+                      <div key={rent._id} className="flex items-center justify-between py-3 border-b last:border-0">
+                        <div>
+                          <p className="font-medium text-sm">{rent.property.title}</p>
+                          <p className="text-sm text-gray-600">{rent.tenant.name}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium">
+                            {rent.currency} {rent.amount.toLocaleString()}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Due {new Date(rent.nextDue).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  {rents.length === 0 && (
+                    <p className="text-center text-gray-500 py-4">No upcoming rents</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Properties Tab */}
+          <TabsContent value="properties">
+            <Card>
+              <CardHeader>
+                <CardTitle>Your Properties</CardTitle>
+                <CardDescription>Manage your property listings</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {properties.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Home className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No Properties Yet</h3>
+                    <p className="text-gray-600 mb-4">Start by adding your first property listing</p>
+                    <Button asChild>
+                      <Link href="/host/listings/create">Add Property</Link>
+                    </Button>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Tenant Management</h2>
-            {bookings.length === 0 ? (
-              <div className="p-8 text-center text-gray-600">No bookings found.</div>
-            ) : (
-              <div className="space-y-4">
-                {bookings.map((b: any) => (
-                  <div key={b._id} className="flex items-center justify-between border rounded p-3">
-                    <div>
-                      <div className="font-medium">{b.guestDetails?.name || b.user?.name || 'Guest'}</div>
-                      <div className="text-sm text-gray-600">{b.property?.title || b.propertyTitle} — {new Date(b.startDate).toLocaleDateString()} to {new Date(b.endDate).toLocaleDateString()}</div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" onClick={() => alert('Contact placeholder')}>Contact</Button>
-                      {b.status !== 'confirmed' && <Button onClick={() => alert('Confirm placeholder')}>Confirm</Button>}
-                      <Button variant="destructive" onClick={() => alert('Cancel placeholder')}>Cancel</Button>
-                    </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {properties.map(property => (
+                      <div key={property._id} className="bg-white border rounded-lg shadow-sm overflow-hidden">
+                        <PropertyCard property={property} />
+                        <div className="p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <Badge 
+                              variant={property.verified ? 'default' : 'secondary'}
+                              className={property.verified ? 'bg-green-100 text-green-800' : ''}
+                            >
+                              {property.verified ? 'Active' : rawProperties.find(p => p._id === property._id)?.status || 'Pending'}
+                            </Badge>
+                            <Badge variant={property.featured ? 'default' : 'outline'}>
+                              {property.featured ? 'Featured' : 'Standard'}
+                            </Badge>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" asChild>
+                              <Link href={`/listings/${property._id}`}>
+                                <Eye className="w-4 h-4 mr-1" />
+                                View
+                              </Link>
+                            </Button>
+                            <Button size="sm" asChild>
+                              <Link href={`/host/listings/${property._id}/edit`}>
+                                <Edit className="w-4 h-4 mr-1" />
+                                Edit
+                              </Link>
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleToggleFeatured(property._id, property.featured)}
+                            >
+                              <Star className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="destructive"
+                              onClick={() => handleDelete(property._id)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Bookings Tab */}
+          <TabsContent value="bookings">
+            <Card>
+              <CardHeader>
+                <CardTitle>Bookings</CardTitle>
+                <CardDescription>Manage property bookings and reservations</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {bookings.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No Bookings Yet</h3>
+                    <p className="text-gray-600">Bookings will appear here once guests make reservations</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Property</TableHead>
+                        <TableHead>Guest</TableHead>
+                        <TableHead>Dates</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {bookings.map((booking) => (
+                        <TableRow key={booking._id}>
+                          <TableCell>
+                            <div className="flex items-center space-x-3">
+                              <img
+                                src={booking.property.images[0] || '/images/property-placeholder.jpg'}
+                                alt={booking.property.title}
+                                className="w-12 h-12 rounded-lg object-cover"
+                              />
+                              <div>
+                                <p className="font-medium">{booking.property.title}</p>
+                                <p className="text-sm text-gray-600">{booking.property._id}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{booking.user.name}</p>
+                              <p className="text-sm text-gray-600">{booking.user.email}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">
+                                {new Date(booking.startDate).toLocaleDateString()}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                to {new Date(booking.endDate).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant={
+                                booking.status === 'confirmed' ? 'default' :
+                                booking.status === 'pending' ? 'secondary' : 'destructive'
+                              }
+                            >
+                              {booking.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <p className="font-medium">
+                              {booking.currency} {booking.totalAmount.toLocaleString()}
+                            </p>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              {booking.status === 'pending' && (
+                                <>
+                                  <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                                    Confirm
+                                  </Button>
+                                  <Button size="sm" variant="destructive">
+                                    Decline
+                                  </Button>
+                                </>
+                              )}
+                              <Button size="sm" variant="outline">
+                                Contact
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Rents Tab */}
+          <TabsContent value="rents">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Rent Management</CardTitle>
+                    <CardDescription>Track and manage rental payments</CardDescription>
+                  </div>
+                  <Button asChild>
+                    <Link href="/host/rents/create">Create Rent Agreement</Link>
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {rents.length === 0 ? (
+                  <div className="text-center py-8">
+                    <DollarSign className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No Rents to Manage</h3>
+                    <p className="text-gray-600">Rent tracking will appear here once you have tenants</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Property</TableHead>
+                        <TableHead>Tenant</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Frequency</TableHead>
+                        <TableHead>Next Due</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {rents.map((rent) => (
+                        <TableRow key={rent._id}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{rent.property.title}</p>
+                              <p className="text-sm text-gray-600">{rent.property.address.city}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{rent.tenant.name}</p>
+                              <p className="text-sm text-gray-600">{rent.tenant.email}</p>
+                              <p className="text-sm text-gray-600">{rent.tenant.phone}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <p className="font-medium">
+                              {rent.currency} {rent.amount.toLocaleString()}
+                            </p>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="capitalize">
+                              {rent.frequency}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">
+                                {new Date(rent.nextDue).toLocaleDateString()}
+                              </p>
+                              {(() => {
+                                const dueDate = new Date(rent.nextDue);
+                                const now = new Date();
+                                const diffTime = dueDate.getTime() - now.getTime();
+                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                
+                                if (diffDays < 0) {
+                                  return <p className="text-sm text-red-600">Overdue by {Math.abs(diffDays)} days</p>;
+                                } else if (diffDays <= 7) {
+                                  return <p className="text-sm text-orange-600">Due in {diffDays} days</p>;
+                                } else {
+                                  return <p className="text-sm text-gray-600">Due in {diffDays} days</p>;
+                                }
+                              })()}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={rent.status === 'active' ? 'default' : 'secondary'}>
+                              {rent.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button 
+                                size="sm" 
+                                className="bg-green-600 hover:bg-green-700"
+                                onClick={() => handleRentAction(rent._id, 'mark_paid')}
+                              >
+                                Mark Paid
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleRentAction(rent._id, 'send_reminder')}
+                              >
+                                Send Reminder
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
