@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,9 +10,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { CalendarIcon } from 'lucide-react';
 
+interface Property {
+  _id: string;
+  title: string;
+  address?: { city?: string; district?: string };
+  price: number;
+}
+
 export default function CreateRentPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loadingProperties, setLoadingProperties] = useState(true);
   const [formData, setFormData] = useState({
     propertyId: '',
     tenantName: '',
@@ -24,6 +34,41 @@ export default function CreateRentPage() {
     firstDueDate: '',
     notes: ''
   });
+
+  // Fetch host properties
+  useEffect(() => {
+    const fetchProperties = async () => {
+      try {
+        const res = await fetch('/api/host/properties');
+        if (res.ok) {
+          const json = await res.json();
+          setProperties(json.data || []);
+        }
+      } catch (err) {
+        console.error('Failed to load properties', err);
+      } finally {
+        setLoadingProperties(false);
+      }
+    };
+    fetchProperties();
+  }, []);
+
+  // Prefill from query params
+  useEffect(() => {
+    if (!searchParams) return;
+    const propertyId = searchParams.get('propertyId');
+    const tenantEmail = searchParams.get('tenantEmail');
+    const tenantName = searchParams.get('tenantName');
+    const amount = searchParams.get('amount');
+
+    setFormData((prev) => ({
+      ...prev,
+      propertyId: propertyId || prev.propertyId,
+      tenantEmail: tenantEmail || prev.tenantEmail,
+      tenantName: tenantName || prev.tenantName,
+      amount: amount || prev.amount
+    }));
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,8 +88,22 @@ export default function CreateRentPage() {
         })
       });
 
+      if (!tenantResponse.ok && tenantResponse.status !== 200) {
+        const errJson = await tenantResponse.json().catch(() => ({}));
+        alert(`Failed to create/find tenant: ${errJson.error || 'Unknown error'}`);
+        setLoading(false);
+        return;
+      }
+
       const tenant = await tenantResponse.json();
-      const tenantId = tenant.user?._id || tenant._id;
+      const tenantId = tenant.user?._id || tenant.data?.id || tenant._id;
+      
+      if (!tenantId) {
+        alert('Failed to get tenant ID');
+        console.error('Tenant response:', tenant);
+        setLoading(false);
+        return;
+      }
 
       // Create the rent agreement
       const rentResponse = await fetch('/api/rents', {
@@ -99,14 +158,22 @@ export default function CreateRentPage() {
                   value={formData.propertyId} 
                   onValueChange={(value) => setFormData({...formData, propertyId: value})}
                   required
+                  disabled={loadingProperties}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a property" />
+                    <SelectValue placeholder={loadingProperties ? 'Loading properties...' : 'Select a property'} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="prop1">Modern Apartment - Colombo 03</SelectItem>
-                    <SelectItem value="prop2">Villa - Kandy</SelectItem>
-                    <SelectItem value="prop3">House - Mount Lavinia</SelectItem>
+                    {properties.length === 0 && !loadingProperties && (
+                      <SelectItem value="none" disabled>
+                        No properties available
+                      </SelectItem>
+                    )}
+                    {properties.map((property) => (
+                      <SelectItem key={property._id} value={property._id}>
+                        {property.title} - {property.address?.city || 'N/A'} (LKR {property.price.toLocaleString()})
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

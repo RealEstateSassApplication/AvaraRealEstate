@@ -27,6 +27,8 @@ import {
   CheckCircle,
   AlertTriangle
 } from 'lucide-react';
+import ApplicationModal from '@/components/host/ApplicationModal';
+import NotificationPanel from '@/components/host/NotificationPanel';
 import PropertyCard from '@/components/property/PropertyCard';
 
 // Minimal shape returned from API
@@ -131,30 +133,46 @@ export default function HostDashboard() {
     occupancyRate: 0
   });
   const [rents, setRents] = useState<RentData[]>([]);
+  const [applications, setApplications] = useState<any[]>([]);
   const [bookings, setBookings] = useState<BookingData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'bookings' | 'rents'>('overview');
+  const [currentUserId, setCurrentUserId] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'bookings' | 'rents' | 'applications' | 'notifications'>('overview');
 
-  useEffect(() => { 
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const json = await res.json();
+          setCurrentUserId(json.user?._id || json._id || '');
+        }
+      } catch (err) {
+        console.error('Failed to fetch current user', err);
+      }
+    };
+
+    const fetchDashboardData = async () => {
+      try {
+        await Promise.all([
+          fetchProperties(),
+          fetchBookings(),
+          fetchApplications(),
+          fetchRents(),
+          fetchStats(),
+          fetchCurrentUser()
+        ]);
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+        setError('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchDashboardData();
   }, []);
-
-  const fetchDashboardData = async () => {
-    try {
-      await Promise.all([
-        fetchProperties(),
-        fetchBookings(),
-        fetchRents(),
-        fetchStats()
-      ]);
-    } catch (error) {
-      console.error('Failed to fetch dashboard data:', error);
-      setError('Failed to load dashboard data');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchStats = async () => {
     try {
@@ -177,6 +195,18 @@ export default function HostDashboard() {
       }
     } catch (err) {
       console.error('Failed to load rents', err);
+    }
+  };
+
+  const fetchApplications = async () => {
+    try {
+      const res = await fetch('/api/applications?host=true');
+      if (res.ok) {
+        const json = await res.json();
+        setApplications(json.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to load applications', err);
     }
   };
 
@@ -362,11 +392,13 @@ export default function HostDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="properties">Properties</TabsTrigger>
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
             <TabsTrigger value="rents">Rent Management</TabsTrigger>
+            <TabsTrigger value="applications">Applications</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -504,6 +536,36 @@ export default function HostDashboard() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Applications Tab */}
+          <TabsContent value="applications">
+            <Card>
+              <CardHeader>
+                <CardTitle>Rental Applications</CardTitle>
+                <CardDescription>Applications submitted by prospective tenants</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {applications.length === 0 && (
+                  <div className="text-center py-8 text-gray-600">No applications yet.</div>
+                )}
+                {applications.map((app) => (
+                  <div key={app._id} className="flex items-center justify-between py-4 border-b last:border-0">
+                    <div>
+                      <p className="font-medium">{app.property?.title || 'Property'}</p>
+                      <p className="text-sm text-gray-600">Applicant: {app?.user?.name || app?.user}</p>
+                      <p className="text-xs text-gray-500">Submitted: {new Date(app.submittedAt || app.createdAt).toLocaleString()}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <ApplicationModal application={app} onActionCompleted={() => fetchApplications()} />
+                      <a href={`/host/rents/create?propertyId=${app.property}&tenantEmail=${encodeURIComponent(app.user?.email || '')}&tenantName=${encodeURIComponent(app.user?.name || '')}&amount=${app.monthlyRent}`}>
+                        <Button size="sm" className="bg-teal-600 hover:bg-teal-700">Create Rent (prefill)</Button>
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Properties Tab */}
@@ -804,6 +866,19 @@ export default function HostDashboard() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Notifications Tab */}
+          <TabsContent value="notifications">
+            {currentUserId ? (
+              <NotificationPanel userId={currentUserId} />
+            ) : (
+              <Card>
+                <CardContent className="p-6">
+                  <p className="text-center text-gray-500">Loading notifications...</p>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
       </div>

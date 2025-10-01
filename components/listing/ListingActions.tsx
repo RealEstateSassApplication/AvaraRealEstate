@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Calendar } from '@/components/ui/calendar';
+import ApplicationForm from './ApplicationForm';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { CalendarDays, Users, MapPin, Wifi, Car, Mountain } from 'lucide-react';
@@ -39,9 +39,6 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
   const [loading, setLoading] = useState(false);
   const [showContact, setShowContact] = useState(false);
   const [showRentModal, setShowRentModal] = useState(false);
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
-  const [guestCount, setGuestCount] = useState(1);
   const [isSubmittingRent, setIsSubmittingRent] = useState(false);
 
   const toggleFavorite = async () => {
@@ -73,87 +70,10 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
     }
   };
 
-  const handleRentProperty = async () => {
-    if (!startDate || !endDate) {
-      toast({ title: 'Error', description: 'Please select start and end dates' });
-      return;
-    }
-
-    if (!property) {
-      toast({ title: 'Error', description: 'Property details not available' });
-      return;
-    }
-
-    setIsSubmittingRent(true);
-    try {
-      // Calculate total amount based on dates and rent frequency
-      const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      let totalAmount = 0;
-      if (property.rentFrequency === 'monthly') {
-        totalAmount = Math.ceil(diffDays / 30) * property.price;
-      } else if (property.rentFrequency === 'weekly') {
-        totalAmount = Math.ceil(diffDays / 7) * property.price;
-      } else {
-        totalAmount = diffDays * property.price; // daily rate
-      }
-
-      const bookingData = {
-        propertyId,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        guestCount,
-        totalAmount,
-        currency: property.currency || 'LKR',
-        guestDetails: {
-          adults: guestCount,
-          children: 0
-        },
-        specialRequests: 'Rental request via platform'
-      };
-
-      const res = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(bookingData)
-      });
-
-      if (res.ok) {
-        const result = await res.json();
-        toast({ 
-          title: 'Rental Request Sent!', 
-          description: 'Your rental request has been sent to the host. They will be notified and can approve or decline your request.' 
-        });
-        setShowRentModal(false);
-        // Reset form
-        setStartDate(undefined);
-        setEndDate(undefined);
-        setGuestCount(1);
-        
-        // Send notification to host
-        await fetch('/api/notifications', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'rental_request',
-            propertyId,
-            bookingId: result.data._id,
-            message: `New rental request for ${property.title}`,
-            recipientType: 'host'
-          })
-        }).catch(err => console.log('Notification error:', err));
-        
-      } else {
-        const error = await res.json();
-        toast({ title: 'Error', description: error.error || 'Failed to send rental request' });
-      }
-    } catch (error) {
-      console.error('Rent request error:', error);
-      toast({ title: 'Network Error', description: 'Failed to send rental request. Please try again.' });
-    } finally {
-      setIsSubmittingRent(false);
-    }
+  // New application flow replaces short-term booking
+  const handleApplicationSubmitted = () => {
+    toast({ title: 'Application Submitted', description: 'Your application has been sent to the host.' });
+    setShowRentModal(false);
   };
 
   const isRentable = property?.purpose === 'rent' || property?.purpose === 'short-term';
@@ -167,151 +87,52 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
           {isRentable && (
             <Dialog open={showRentModal} onOpenChange={setShowRentModal}>
               <DialogTrigger asChild>
-                <Button className="w-full bg-[#FF385C] hover:bg-[#E31C5F] text-white text-lg py-3 font-semibold">
-                  {property?.rentFrequency === 'monthly' ? 'Rent Monthly' :
-                   property?.rentFrequency === 'weekly' ? 'Rent Weekly' : 
-                   'Book Now'}
+                <Button
+                  className="w-full bg-[#FF385C] hover:bg-[#E31C5F] text-white text-lg py-3 font-semibold"
+                  onClick={async () => {
+                    console.log('Rent trigger clicked');
+                    try {
+                      const me = await fetch('/api/auth/me', { cache: 'no-store' });
+                      if (!me.ok) {
+                        toast({ title: 'Please sign in', description: 'You need to be signed in to request a rental.' });
+                        const next = encodeURIComponent(window.location.pathname + window.location.search);
+                        window.location.href = `/auth/login?next=${next}`;
+                        return;
+                      }
+                      setShowRentModal(true);
+                    } catch (err) {
+                      console.error('Auth check failed', err);
+                      toast({ title: 'Error', description: 'Could not verify login. Please sign in.' });
+                      const next = encodeURIComponent(window.location.pathname + window.location.search);
+                      window.location.href = `/auth/login?next=${next}`;
+                    }
+                  }}
+                >
+                  {property?.rentFrequency === 'monthly' ? 'Apply to Rent' : 'Apply to Rent'}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-md w-full">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <CalendarDays className="w-5 h-5" />
-                    Request to Rent
+                    Apply to Rent
                   </DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4 p-4">
-                  {/* Property Summary */}
+                <div className="space-y-4 p-4 max-h-[80vh] overflow-auto">
                   <div className="border rounded-lg p-3 bg-gray-50">
                     <div className="flex items-center gap-3 mb-2">
                       {property?.images && property.images.length > 0 && (
-                        <img 
-                          src={property.images[0]} 
-                          alt={property?.title} 
-                          className="w-12 h-12 rounded-lg object-cover" 
-                        />
+                        <img src={property.images[0]} alt={property?.title} className="w-12 h-12 rounded-lg object-cover" />
                       )}
                       <div>
                         <h3 className="font-semibold">{property?.title}</h3>
-                        <p className="text-sm text-gray-600 flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          {property?.address?.city}, {property?.address?.district}
-                        </p>
+                        <p className="text-sm text-gray-600 flex items-center gap-1"><MapPin className="w-3 h-3" />{property?.address?.city}, {property?.address?.district}</p>
                       </div>
                     </div>
-                    <div className="text-lg font-bold text-[#FF385C]">
-                      {property?.currency || 'LKR'} {property?.price.toLocaleString()}
-                      {property?.rentFrequency && (
-                        <span className="text-sm font-medium text-gray-600"> / {property.rentFrequency}</span>
-                      )}
-                    </div>
+                    <div className="text-lg font-bold text-[#FF385C]">{property?.currency || 'LKR'} {property?.price.toLocaleString()} <span className="text-sm font-medium text-gray-600">/ month</span></div>
                   </div>
 
-                  {/* Date Selection */}
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium">Start Date</label>
-                      <Calendar
-                        mode="single"
-                        selected={startDate}
-                        onSelect={setStartDate}
-                        disabled={(date) => date < new Date()}
-                        className="rounded-md border w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">End Date</label>
-                      <Calendar
-                        mode="single"
-                        selected={endDate}
-                        onSelect={setEndDate}
-                        disabled={(date) => date < new Date() || (startDate ? date <= startDate : false)}
-                        className="rounded-md border w-full"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Guest Count */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      Number of Guests
-                    </label>
-                    <div className="flex items-center justify-between border rounded-lg p-3">
-                      <span>Adults</span>
-                      <div className="flex items-center gap-3">
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          onClick={() => setGuestCount(Math.max(1, guestCount - 1))}
-                        >
-                          -
-                        </Button>
-                        <span className="w-8 text-center">{guestCount}</span>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          onClick={() => setGuestCount(guestCount + 1)}
-                        >
-                          +
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Amenities Preview */}
-                  {property?.amenities && property.amenities.length > 0 && (
-                    <div>
-                      <label className="text-sm font-medium">What's Included</label>
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {property.amenities.slice(0, 6).map((amenity) => (
-                          <Badge key={amenity} variant="secondary" className="text-xs">
-                            {amenity === 'wifi' && <Wifi className="w-3 h-3 mr-1" />}
-                            {amenity === 'parking' && <Car className="w-3 h-3 mr-1" />}
-                            {amenity === 'garden' && <Mountain className="w-3 h-3 mr-1" />}
-                            {amenity}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Total Calculation */}
-                  {startDate && endDate && (
-                    <div className="border-t pt-3">
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold">Total</span>
-                        <span className="text-lg font-bold text-[#FF385C]">
-                          {property?.currency || 'LKR'} {
-                            (() => {
-                              const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
-                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                              if (property?.rentFrequency === 'monthly') {
-                                return (Math.ceil(diffDays / 30) * (property?.price || 0)).toLocaleString();
-                              } else if (property?.rentFrequency === 'weekly') {
-                                return (Math.ceil(diffDays / 7) * (property?.price || 0)).toLocaleString();
-                              } else {
-                                return (diffDays * (property?.price || 0)).toLocaleString();
-                              }
-                            })()
-                          }
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Submit Button */}
-                  <Button 
-                    onClick={handleRentProperty}
-                    disabled={!startDate || !endDate || isSubmittingRent}
-                    className="w-full bg-[#FF385C] hover:bg-[#E31C5F] text-white py-3 font-semibold"
-                  >
-                    {isSubmittingRent ? 'Sending Request...' : 'Send Rental Request'}
-                  </Button>
-                  
-                  <p className="text-xs text-gray-600 text-center">
-                    Your request will be sent to the host for approval. No payment will be charged until approved.
-                  </p>
+                  <ApplicationForm propertyId={propertyId} monthlyRent={property?.price || 0} onSubmitted={handleApplicationSubmitted} />
                 </div>
               </DialogContent>
             </Dialog>

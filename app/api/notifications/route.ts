@@ -4,6 +4,7 @@ import User from '@/models/User';
 import Property from '@/models/Property';
 import Booking from '@/models/Booking';
 import NotificationService from '@/services/notificationService';
+import Notification from '@/models/Notification';
 
 export async function POST(request: NextRequest) {
   try {
@@ -103,11 +104,22 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     const type = searchParams.get('type');
+    const unreadOnly = searchParams.get('unreadOnly') === 'true';
 
-    // This would return stored notifications for a user
-    // For now, return empty array as we're focusing on real-time notifications
+    if (!userId) {
+      return NextResponse.json({ error: 'userId required' }, { status: 400 });
+    }
+
+    const Notification = (await import('@/models/Notification')).default;
+    const query: any = { user: userId };
+    if (unreadOnly) query.read = false;
+    if (type) query.type = type;
+
+    const notifications = await Notification.find(query).sort({ createdAt: -1 }).limit(50).lean();
+
     return NextResponse.json({ 
-      notifications: [],
+      notifications,
+      unreadCount: await Notification.countDocuments({ user: userId, read: false }),
       message: 'Notifications retrieved' 
     });
 
