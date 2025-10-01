@@ -28,6 +28,11 @@ export function verifyToken(token: string): { userId: string } | null {
 
 export async function getUserFromRequest(request: NextRequest): Promise<IUser | null> {
   try {
+    // During build time, there's no real request context
+    if (!request.headers) {
+      return null;
+    }
+
     const token = request.headers.get('authorization')?.replace('Bearer ', '') ||
                  request.cookies?.get?.('token')?.value || null;
 

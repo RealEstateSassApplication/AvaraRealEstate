@@ -17,19 +17,34 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    // optional query: ?userId= or ?hostId=
     const url = new URL(request.url);
     const userId = url.searchParams.get('userId');
     const hostId = url.searchParams.get('hostId');
+    const type = url.searchParams.get('type'); // 'host' or 'tenant'
+    
+    // If type is specified but no specific ID, try to get from session/headers
+    if (type && !userId && !hostId) {
+      // In a real app, get from session
+      const currentUserId = request.headers.get('user-id') || 'placeholder-user-id';
+      
+      if (type === 'host') {
+        const rents = await RentService.listRentsForHost(currentUserId);
+        return NextResponse.json({ ok: true, rents: rents });
+      } else if (type === 'tenant') {
+        const rents = await RentService.listRentsForUser(currentUserId);
+        return NextResponse.json({ ok: true, rents: rents });
+      }
+    }
+    
     if (userId) {
       const rents = await RentService.listRentsForUser(userId);
-      return NextResponse.json({ ok: true, data: rents });
+      return NextResponse.json({ ok: true, rents: rents });
     }
     if (hostId) {
       const rents = await RentService.listRentsForHost(hostId);
-      return NextResponse.json({ ok: true, data: rents });
+      return NextResponse.json({ ok: true, rents: rents });
     }
-    return NextResponse.json({ ok: true, data: [] });
+    return NextResponse.json({ ok: true, rents: [] });
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
   }
