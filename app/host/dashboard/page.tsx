@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +28,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import ApplicationModal from '@/components/host/ApplicationModal';
+import CreateMaintenanceModal from '@/components/host/CreateMaintenanceModal';
 import NotificationPanel from '@/components/host/NotificationPanel';
 import PropertyCard from '@/components/property/PropertyCard';
 
@@ -138,41 +139,12 @@ export default function HostDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string>('');
+  const [maintenanceRequests, setMaintenanceRequests] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'bookings' | 'rents' | 'applications' | 'notifications'>('overview');
 
-  useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        const res = await fetch('/api/auth/me');
-        if (res.ok) {
-          const json = await res.json();
-          setCurrentUserId(json.user?._id || json._id || '');
-        }
-      } catch (err) {
-        console.error('Failed to fetch current user', err);
-      }
-    };
+  
 
-    const fetchDashboardData = async () => {
-      try {
-        await Promise.all([
-          fetchProperties(),
-          fetchBookings(),
-          fetchApplications(),
-          fetchRents(),
-          fetchStats(),
-          fetchCurrentUser()
-        ]);
-      } catch (error) {
-        console.error('Failed to fetch dashboard data:', error);
-        setError('Failed to load dashboard data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, []);
+  // initial data load moved below after helper function declarations
 
   const fetchStats = async () => {
     try {
@@ -186,17 +158,70 @@ export default function HostDashboard() {
     }
   };
 
-  const fetchRents = async () => {
+  const fetchRents = useCallback(async (userId?: string) => {
     try {
-      const res = await fetch('/api/rents?type=host');
+      const hostId = userId || currentUserId;
+      if (!hostId) return;
+      const url = `/api/rents?type=host&hostId=${hostId}`;
+      const res = await fetch(url);
       if (res.ok) {
-        const data = await res.json();
-        setRents(data.rents || []);
+        const data = await res.json().catch(() => ({}));
+        setRents(data.rents || data.data || []);
       }
     } catch (err) {
       console.error('Failed to load rents', err);
     }
-  };
+  }, [currentUserId]);
+
+  const fetchMaintenanceRequests = useCallback(async (userId?: string) => {
+    try {
+      const hostId = userId || currentUserId;
+      if (!hostId) return;
+      const res = await fetch(`/api/maintenance?type=host&hostId=${hostId}`);
+      if (res.ok) {
+        const json = await res.json();
+        setMaintenanceRequests(json.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to load maintenance requests', err);
+    }
+  }, [currentUserId]);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        // First, fetch current user
+        let userId = '';
+        try {
+          const res = await fetch('/api/auth/me');
+          if (res.ok) {
+            const json = await res.json();
+            userId = json.user?._id || json._id || '';
+            setCurrentUserId(userId);
+          }
+        } catch (err) {
+          console.error('Failed to fetch current user', err);
+        }
+
+        // Then fetch other data
+        await Promise.all([
+          fetchProperties(),
+          fetchBookings(),
+          fetchApplications(),
+          userId ? fetchRents(userId) : Promise.resolve(),
+          userId ? fetchMaintenanceRequests(userId) : Promise.resolve(),
+          fetchStats()
+        ]);
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+        setError('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [fetchRents, fetchMaintenanceRequests]);
 
   const fetchApplications = async () => {
     try {
@@ -387,7 +412,9 @@ export default function HostDashboard() {
             <Button asChild>
               <Link href="/host/listings/create">Add Property</Link>
             </Button>
-            <Button variant="outline">Settings</Button>
+            <Button variant="outline" asChild>
+              <Link href="/host/settings">Settings</Link>
+            </Button>
           </div>
         </div>
 
@@ -542,28 +569,70 @@ export default function HostDashboard() {
           <TabsContent value="applications">
             <Card>
               <CardHeader>
-                <CardTitle>Rental Applications</CardTitle>
-                <CardDescription>Applications submitted by prospective tenants</CardDescription>
+                <div className="flex items-center justify-between w-full">
+                  <div>
+                    <CardTitle>Rental Applications</CardTitle>
+                    <CardDescription>Applications submitted by prospective tenants</CardDescription>
+                  </div>
+                  <div>
+                    <Button size="sm" asChild>
+                      <a href="/host/applications/create">New Application</a>
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                {applications.length === 0 && (
+                {applications.length === 0 ? (
                   <div className="text-center py-8 text-gray-600">No applications yet.</div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Property</TableHead>
+                        <TableHead>Applicant</TableHead>
+                        <TableHead>Submitted</TableHead>
+                        <TableHead>Monthly Rent</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {applications.map((app) => (
+                        <TableRow key={app._id}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{app.property?.title || app.property}</p>
+                              <p className="text-sm text-gray-600">{app.property?._id || ''}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{app.user?.name || app.user}</p>
+                              <p className="text-sm text-gray-600">{app.user?.email}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <p className="text-sm">{new Date(app.submittedAt || app.createdAt).toLocaleString()}</p>
+                          </TableCell>
+                          <TableCell>
+                            <p className="font-medium">{app.monthlyRent ? `${app.currency || 'LKR'} ${app.monthlyRent}` : '—'}</p>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={app.status === 'accepted' ? 'default' : app.status === 'rejected' ? 'destructive' : 'secondary'} className="capitalize">{app.status}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <ApplicationModal application={app} onActionCompleted={() => { fetchApplications(); fetchRents(); fetchMaintenanceRequests(); }} />
+                              <a href={`/host/rents/create?propertyId=${app.property}&tenantEmail=${encodeURIComponent(app.user?.email || '')}&tenantName=${encodeURIComponent(app.user?.name || '')}&amount=${app.monthlyRent}`}>
+                                <Button size="sm" className="bg-teal-600 hover:bg-teal-700">Create Rent</Button>
+                              </a>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 )}
-                {applications.map((app) => (
-                  <div key={app._id} className="flex items-center justify-between py-4 border-b last:border-0">
-                    <div>
-                      <p className="font-medium">{app.property?.title || 'Property'}</p>
-                      <p className="text-sm text-gray-600">Applicant: {app?.user?.name || app?.user}</p>
-                      <p className="text-xs text-gray-500">Submitted: {new Date(app.submittedAt || app.createdAt).toLocaleString()}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <ApplicationModal application={app} onActionCompleted={() => fetchApplications()} />
-                      <a href={`/host/rents/create?propertyId=${app.property}&tenantEmail=${encodeURIComponent(app.user?.email || '')}&tenantName=${encodeURIComponent(app.user?.name || '')}&amount=${app.monthlyRent}`}>
-                        <Button size="sm" className="bg-teal-600 hover:bg-teal-700">Create Rent (prefill)</Button>
-                      </a>
-                    </div>
-                  </div>
-                ))}
               </CardContent>
             </Card>
           </TabsContent>
@@ -764,9 +833,12 @@ export default function HostDashboard() {
                     <CardTitle>Rent Management</CardTitle>
                     <CardDescription>Track and manage rental payments</CardDescription>
                   </div>
-                  <Button asChild>
-                    <Link href="/host/rents/create">Create Rent Agreement</Link>
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <CreateMaintenanceModal properties={rawProperties} onCreated={() => fetchMaintenanceRequests()} />
+                    <Button asChild>
+                      <Link href="/host/rents/create">Create Rent Agreement</Link>
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -857,6 +929,117 @@ export default function HostDashboard() {
                               >
                                 Send Reminder
                               </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Maintenance Requests Section */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Maintenance Requests</CardTitle>
+                <CardDescription>Manage maintenance requests from tenants</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {maintenanceRequests.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600">No maintenance requests</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Property</TableHead>
+                        <TableHead>Tenant</TableHead>
+                        <TableHead>Issue</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Priority</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {maintenanceRequests.map((req) => (
+                        <TableRow key={req._id}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{req.property?.title || 'N/A'}</p>
+                              <p className="text-sm text-gray-600">{req.property?.address?.city}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{req.tenant?.name || 'N/A'}</p>
+                              <p className="text-sm text-gray-600">{req.tenant?.phone}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{req.title}</p>
+                              <p className="text-sm text-gray-600">{req.description?.substring(0, 50)}...</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="capitalize">
+                              {req.category?.replace('-', ' ')}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={req.priority === 'urgent' ? 'destructive' : req.priority === 'high' ? 'default' : 'secondary'}
+                              className="capitalize"
+                            >
+                              {req.priority}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={req.status === 'completed' ? 'default' : req.status === 'in-progress' ? 'secondary' : 'outline'}
+                              className="capitalize"
+                            >
+                              {req.status?.replace('-', ' ')}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <p className="text-sm">{new Date(req.createdAt).toLocaleDateString()}</p>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => alert(`Maintenance request details: ${JSON.stringify(req, null, 2)}`)}
+                              >
+                                View
+                              </Button>
+                              {req.status !== 'completed' && (
+                                <Button
+                                  size="sm"
+                                  className="bg-green-600 hover:bg-green-700"
+                                  onClick={async () => {
+                                    try {
+                                      const res = await fetch(`/api/maintenance/${req._id}`, {
+                                        method: 'PATCH',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ status: 'completed' })
+                                      });
+                                      if (res.ok) {
+                                        fetchMaintenanceRequests();
+                                      }
+                                    } catch (err) {
+                                      console.error('Failed to update maintenance request', err);
+                                    }
+                                  }}
+                                >
+                                  Mark Complete
+                                </Button>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>

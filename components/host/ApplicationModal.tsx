@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 
 interface Props {
   application: any;
@@ -15,6 +16,7 @@ interface Props {
 export default function ApplicationModal({ application, onClose, onActionCompleted }: Props) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   if (!application) return null;
 
@@ -35,7 +37,6 @@ export default function ApplicationModal({ application, onClose, onActionComplet
       }
     } catch (err) {
       console.error('Action error', err);
-      alert('Network error');
     } finally {
       setLoading(false);
     }
@@ -78,6 +79,7 @@ export default function ApplicationModal({ application, onClose, onActionComplet
         })
       });
 
+      
       if (!rentResp.ok) {
         const json = await rentResp.json().catch(() => ({}));
         alert(json.error || 'Failed to create rent');
@@ -91,6 +93,23 @@ export default function ApplicationModal({ application, onClose, onActionComplet
       alert('Failed to create rent');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm('Delete this application? This action cannot be undone.')) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/applications/${application._id}`, { method: 'DELETE' });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || 'Delete failed');
+      toast.success('Application deleted');
+      onClose?.();
+      onActionCompleted?.();
+    } catch (err: any) {
+      toast.error(err.message || 'Delete failed');
+    } finally {
+      setDeleting(false);
     }
   };
 
