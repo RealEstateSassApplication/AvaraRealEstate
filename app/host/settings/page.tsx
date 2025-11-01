@@ -1,14 +1,32 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { Bell, Lock, CreditCard, User, LogOut, AlertTriangle } from 'lucide-react';
+import Header from '@/components/ui/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+import { useCallback } from 'react';
 
 export default function HostSettingsPage() {
   const router = useRouter();
@@ -174,7 +192,7 @@ export default function HostSettingsPage() {
                   />
                 </div>
 
-                <Separator className="my-4" />
+                <div className="border-t my-4" />
 
                 <h3 className="text-lg font-semibold">Address</h3>
 
@@ -257,7 +275,7 @@ export default function HostSettingsPage() {
                   />
                 </div>
 
-                <Separator />
+                <div className="border-t my-4" />
 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
@@ -273,7 +291,7 @@ export default function HostSettingsPage() {
                   />
                 </div>
 
-                <Separator />
+                <div className="border-t my-4" />
 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
@@ -289,7 +307,7 @@ export default function HostSettingsPage() {
                   />
                 </div>
 
-                <Separator />
+                <div className="border-t my-4" />
 
                 <div className="space-y-2">
                   <Label htmlFor="currency">Preferred Currency</Label>
@@ -354,7 +372,7 @@ export default function HostSettingsPage() {
                   Change Password (Coming Soon)
                 </Button>
 
-                <Separator className="my-6" />
+                <div className="border-t my-6" />
 
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-red-600">Danger Zone</h3>
