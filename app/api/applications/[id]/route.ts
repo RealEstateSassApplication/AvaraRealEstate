@@ -16,7 +16,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
     // Only host or applicant may view the application
     const uid = (user as any)._id;
-    if (app.host?.toString() !== uid.toString() && app.user?.toString() !== uid.toString()) {
+    const appData = app as any;
+    if (appData.host?.toString() !== uid.toString() && appData.user?.toString() !== uid.toString()) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
