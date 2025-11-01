@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/ui/layout/Header';
 import SearchFilters from '@/components/search/SearchFilters';
@@ -63,12 +63,13 @@ function ListingsContent() {
 
   // Initialize filters from URL params
   const [filters, setFilters] = useState<SearchFilters>(() => {
+    if (!searchParams) return {};
     return {
-      search: searchParams.get('search') || undefined,
-      purpose: (searchParams.get('purpose') as any) || undefined,
-      type: searchParams.getAll('type'),
-      city: searchParams.get('city') || undefined,
-      district: searchParams.get('district') || undefined,
+      search: searchParams.get('search') ?? undefined,
+      purpose: (searchParams.get('purpose') as any) ?? undefined,
+      type: searchParams.getAll('type') ?? [],
+      city: searchParams.get('city') ?? undefined,
+      district: searchParams.get('district') ?? undefined,
       minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
       maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
       bedrooms: searchParams.get('bedrooms') ? Number(searchParams.get('bedrooms')) : undefined,
@@ -76,11 +77,7 @@ function ListingsContent() {
     };
   });
 
-  useEffect(() => {
-    searchProperties(1);
-  }, []);
-
-  const searchProperties = async (page: number = 1) => {
+  const searchProperties = useCallback(async (page: number = 1) => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -118,7 +115,11 @@ function ListingsContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    searchProperties(1);
+  }, [filters, searchProperties]);
 
   const handleFiltersChange = (newFilters: SearchFilters) => {
     setFilters(newFilters);
