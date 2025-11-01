@@ -24,16 +24,26 @@ export async function GET(request: Request) {
     
     // If type is specified but no specific ID, try to get from session/headers
     if (type && !userId && !hostId) {
-      // In a real app, get from session
-      const currentUserId = request.headers.get('user-id') || 'placeholder-user-id';
-      
-      if (type === 'host') {
-        const rents = await RentService.listRentsForHost(currentUserId);
-        return NextResponse.json({ ok: true, rents: rents });
-      } else if (type === 'tenant') {
-        const rents = await RentService.listRentsForUser(currentUserId);
-        return NextResponse.json({ ok: true, rents: rents });
-      }
+        // In a real app, get from session (we should not use a literal placeholder)
+        const currentUserId = request.headers.get('user-id');
+
+        // If we don't have a real current user id, return an empty set (don't pass placeholder into Mongoose)
+        if (!currentUserId) {
+          return NextResponse.json({ ok: true, rents: [] });
+        }
+
+        try {
+          if (type === 'host') {
+            const rents = await RentService.listRentsForHost(currentUserId);
+            return NextResponse.json({ ok: true, rents: rents });
+          } else if (type === 'tenant') {
+            const rents = await RentService.listRentsForUser(currentUserId);
+            return NextResponse.json({ ok: true, rents: rents });
+          }
+        } catch (err: any) {
+          // If RentService throws (e.g. invalid ObjectId), return empty result instead of bubbling Mongoose cast error
+          return NextResponse.json({ ok: true, rents: [] });
+        }
     }
     
     if (userId) {
