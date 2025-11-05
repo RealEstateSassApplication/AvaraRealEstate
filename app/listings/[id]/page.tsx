@@ -5,7 +5,6 @@ import Header from '@/components/ui/layout/Header';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import ListingActions from '@/components/listing/ListingActions';
-import CreateRequestModal from '@/components/maintenance/CreateRequestModal';
 import { MapPin, Wifi, Car, Mountain, Users, Bed, Bath, Square, Star, Verified } from 'lucide-react';
 
 interface PageProps { params: { id: string } }
@@ -244,8 +243,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
                   images: property.images
                 }}
               />
-               {/* Tenant-facing maintenance request button/modal */}
-               <CreateRequestModal propertyId={String(property._id)} />
+               {/* Maintenance requests are now only available through the tenant dashboard for active rentals */}
               </div>
 
               <div className="mt-6 p-4 bg-gray-50 rounded-lg">
