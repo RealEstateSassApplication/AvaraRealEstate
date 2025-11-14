@@ -106,6 +106,12 @@ export default function Header() {
             >
               Stay
             </Link>
+            <Link
+              href="/blog"
+              className="text-gray-700 hover:text-teal-600 font-medium transition-colors"
+            >
+              Blog
+            </Link>
             {user && (
               <>
                 {/* User personal dashboard */}
@@ -236,6 +242,13 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Stay
+              </Link>
+              <Link
+                href="/blog"
+                className="text-gray-700 hover:text-teal-600 font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Blog
               </Link>
 
               {user && (

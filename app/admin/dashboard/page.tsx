@@ -12,7 +12,9 @@ import {
   Clock,
   TrendingUp,
   AlertTriangle,
-  Star
+  Star,
+  FileText,
+  BarChart
 } from 'lucide-react';
 import Header from '@/components/ui/layout/Header';
 import { Button } from '@/components/ui/button';
@@ -212,6 +214,60 @@ export default function AdminDashboardPage() {
             change="+15% from last month"
             changeType="positive"
           />
+        </div>
+
+        {/* Quick Actions */}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Link href="/admin/blog">
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-teal-500">
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-gradient-to-br from-purple-500 to-pink-600 text-white p-4 rounded-lg">
+                      <FileText className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-900">Blog Management</h3>
+                      <p className="text-sm text-gray-600">Create and manage blog posts</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link href="/admin/dashboard?tab=analytics">
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-teal-500">
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-gradient-to-br from-blue-500 to-cyan-600 text-white p-4 rounded-lg">
+                      <BarChart className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-900">View Analytics</h3>
+                      <p className="text-sm text-gray-600">Platform statistics and insights</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link href="/admin/dashboard?tab=rent-management">
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-teal-500">
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-gradient-to-br from-orange-500 to-red-600 text-white p-4 rounded-lg">
+                      <DollarSign className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-900">Rent Management</h3>
+                      <p className="text-sm text-gray-600">Track and manage rental payments</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
         </div>
 
         {/* Main Content */}
