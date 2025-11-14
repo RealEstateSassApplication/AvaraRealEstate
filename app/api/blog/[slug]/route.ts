@@ -10,10 +10,15 @@ export async function GET(
   try {
     await dbConnect();
 
-    const post = await BlogPost.findOne({ 
-      slug: params.slug,
-      status: 'published'
-    })
+    // Find and increment views in one operation
+    const post = await BlogPost.findOneAndUpdate(
+      { 
+        slug: params.slug,
+        status: 'published'
+      },
+      { $inc: { views: 1 } },
+      { new: true } // Return updated document
+    )
       .populate('author', 'firstName lastName')
       .populate('comments.user', 'firstName lastName')
       .lean();
@@ -21,9 +26,6 @@ export async function GET(
     if (!post) {
       return NextResponse.json({ error: 'Blog post not found' }, { status: 404 });
     }
-
-    // Increment views
-    await BlogPost.findByIdAndUpdate(post._id, { $inc: { views: 1 } });
 
     return NextResponse.json({
       success: true,
