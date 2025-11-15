@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import TenantCreateRequestModal from '@/components/maintenance/TenantCreateRequestModal';
+import RentDetailsModal from '@/components/rent/RentDetailsModal';
 import { 
   Calendar, 
   CheckSquare, 
@@ -96,6 +97,8 @@ export default function UserDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
+  const [selectedRent, setSelectedRent] = useState<RentalAgreement | null>(null);
+  const [showRentModal, setShowRentModal] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -312,8 +315,15 @@ export default function UserDashboardPage() {
                                 Next due: {new Date(rental.nextDue).toLocaleDateString()}
                               </p>
                             </div>
-                            <Button size="sm" variant="outline" asChild>
-                              <Link href={`/user/rents/${rental._id}`}>View</Link>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedRent(rental);
+                                setShowRentModal(true);
+                              }}
+                            >
+                              View
                             </Button>
                           </div>
                         </div>
@@ -510,11 +520,16 @@ export default function UserDashboardPage() {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
-                              <Button size="sm" variant="outline" asChild>
-                                <Link href={`/user/rents/${rental._id}`}>
-                                  <Eye className="w-4 h-4 mr-1" />
-                                  View
-                                </Link>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedRent(rental);
+                                  setShowRentModal(true);
+                                }}
+                              >
+                                <Eye className="w-4 h-4 mr-1" />
+                                View
                               </Button>
                               {rental.status === 'active' && (
                                 <Button size="sm">
@@ -777,6 +792,20 @@ export default function UserDashboardPage() {
           onOpenChange={setShowMaintenanceModal}
           onSuccess={fetchDashboardData}
         />
+
+        {/* Rent Details Modal */}
+        {selectedRent && (
+          <RentDetailsModal
+            rent={selectedRent}
+            open={showRentModal}
+            onClose={() => {
+              setShowRentModal(false);
+              setSelectedRent(null);
+            }}
+            showActions={false}
+            userType="tenant"
+          />
+        )}
       </div>
     </div>
   );

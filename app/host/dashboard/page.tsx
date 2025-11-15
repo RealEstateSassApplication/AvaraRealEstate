@@ -31,6 +31,8 @@ import ApplicationModal from '@/components/host/ApplicationModal';
 import CreateMaintenanceModal from '@/components/host/CreateMaintenanceModal';
 import NotificationPanel from '@/components/host/NotificationPanel';
 import PropertyCard from '@/components/property/PropertyCard';
+import RentDetailsModal from '@/components/rent/RentDetailsModal';
+import CreateRentModal from '@/components/rent/CreateRentModal';
 
 // Minimal shape returned from API
 interface HostPropertyApi {
@@ -141,6 +143,10 @@ export default function HostDashboard() {
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [maintenanceRequests, setMaintenanceRequests] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'bookings' | 'rents' | 'applications' | 'notifications'>('overview');
+  const [selectedRent, setSelectedRent] = useState<RentData | null>(null);
+  const [showRentModal, setShowRentModal] = useState(false);
+  const [showCreateRentModal, setShowCreateRentModal] = useState(false);
+  const [rentPrefilledData, setRentPrefilledData] = useState<any>(null);
 
   
 
@@ -623,9 +629,23 @@ export default function HostDashboard() {
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <ApplicationModal application={app} onActionCompleted={() => { fetchApplications(); fetchRents(); fetchMaintenanceRequests(); }} />
-                              <a href={`/host/rents/create?propertyId=${app.property}&tenantEmail=${encodeURIComponent(app.user?.email || '')}&tenantName=${encodeURIComponent(app.user?.name || '')}&amount=${app.monthlyRent}`}>
-                                <Button size="sm" className="bg-teal-600 hover:bg-teal-700">Create Rent</Button>
-                              </a>
+                              <Button 
+                                size="sm" 
+                                className="bg-teal-600 hover:bg-teal-700"
+                                onClick={() => {
+                                  const propertyData = properties.find(p => p._id === app.property?._id || p._id === app.property);
+                                  setRentPrefilledData({
+                                    propertyId: app.property?._id || app.property,
+                                    tenantEmail: app.user?.email || '',
+                                    tenantName: app.user?.name || '',
+                                    amount: app.monthlyRent || propertyData?.price || '',
+                                    currency: app.currency || 'LKR'
+                                  });
+                                  setShowCreateRentModal(true);
+                                }}
+                              >
+                                Create Rent
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -835,8 +855,8 @@ export default function HostDashboard() {
                   </div>
                   <div className="flex items-center gap-2">
                     <CreateMaintenanceModal properties={rawProperties} onCreated={() => fetchMaintenanceRequests()} />
-                    <Button asChild>
-                      <Link href="/host/rents/create">Create Rent Agreement</Link>
+                    <Button onClick={() => setShowCreateRentModal(true)}>
+                      Create Rent Agreement
                     </Button>
                   </div>
                 </div>
@@ -915,6 +935,17 @@ export default function HostDashboard() {
                           </TableCell>
                           <TableCell>
                             <div className="flex space-x-2">
+                              <Button 
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedRent(rent);
+                                  setShowRentModal(true);
+                                }}
+                              >
+                                <Eye className="w-4 h-4 mr-1" />
+                                View
+                              </Button>
                               <Button 
                                 size="sm" 
                                 className="bg-green-600 hover:bg-green-700"
@@ -1014,7 +1045,22 @@ export default function HostDashboard() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => alert(`Maintenance request details: ${JSON.stringify(req, null, 2)}`)}
+                                onClick={() => {
+                                  // Format maintenance request to match rent structure
+                                  const maintenanceRent = {
+                                    _id: req._id,
+                                    property: req.property,
+                                    tenant: req.tenant,
+                                    amount: 0,
+                                    currency: 'LKR',
+                                    frequency: 'N/A',
+                                    nextDue: req.createdAt,
+                                    status: req.status,
+                                    notes: `${req.title}\n${req.description}\nCategory: ${req.category}\nPriority: ${req.priority}`
+                                  };
+                                  setSelectedRent(maintenanceRent as any);
+                                  setShowRentModal(true);
+                                }}
                               >
                                 View
                               </Button>
@@ -1064,6 +1110,40 @@ export default function HostDashboard() {
             )}
           </TabsContent>
         </Tabs>
+
+        {/* Rent Details Modal */}
+        {selectedRent && (
+          <RentDetailsModal
+            rent={selectedRent}
+            open={showRentModal}
+            onClose={() => {
+              setShowRentModal(false);
+              setSelectedRent(null);
+            }}
+            onMarkPaid={() => {
+              handleRentAction(selectedRent._id, 'mark_paid');
+              setShowRentModal(false);
+              setSelectedRent(null);
+            }}
+            showActions={true}
+            userType="host"
+          />
+        )}
+
+        {/* Create Rent Modal */}
+        <CreateRentModal
+          open={showCreateRentModal}
+          onClose={() => {
+            setShowCreateRentModal(false);
+            setRentPrefilledData(null);
+          }}
+          onSuccess={() => {
+            setShowCreateRentModal(false);
+            setRentPrefilledData(null);
+            fetchRents();
+          }}
+          prefilledData={rentPrefilledData}
+        />
       </div>
     </div>
   );
