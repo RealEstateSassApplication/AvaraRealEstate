@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import ApplicationForm from './ApplicationForm';
+import BookingModal from '@/components/booking/BookingModal';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { CalendarDays, Users, MapPin, Wifi, Car, Mountain } from 'lucide-react';
@@ -39,6 +40,7 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
   const [loading, setLoading] = useState(false);
   const [showContact, setShowContact] = useState(false);
   const [showRentModal, setShowRentModal] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false);
   const [isSubmittingRent, setIsSubmittingRent] = useState(false);
 
   const toggleFavorite = async () => {
@@ -70,45 +72,59 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
     }
   };
 
-  // New application flow replaces short-term booking
+  // New application flow for rent properties
   const handleApplicationSubmitted = () => {
     toast({ title: 'Application Submitted', description: 'Your application has been sent to the host.' });
     setShowRentModal(false);
   };
 
-  const isRentable = property?.purpose === 'rent' || property?.purpose === 'short-term';
+  const isRentable = property?.purpose === 'rent';
+  const isBooking = property?.purpose === 'booking';
   const isPurchasable = property?.purpose === 'sale';
+
+  const handleCheckAuth = async (callback: () => void) => {
+    try {
+      const me = await fetch('/api/auth/me', { cache: 'no-store' });
+      if (!me.ok) {
+        toast({ title: 'Please sign in', description: 'You need to be signed in to continue.' });
+        const next = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.href = `/auth/login?next=${next}`;
+        return;
+      }
+      callback();
+    } catch (err) {
+      console.error('Auth check failed', err);
+      toast({ title: 'Error', description: 'Could not verify login. Please sign in.' });
+      const next = encodeURIComponent(window.location.pathname + window.location.search);
+      window.location.href = `/auth/login?next=${next}`;
+    }
+  };
 
   return (
     <div>
       <div className="flex flex-col gap-3">
         {/* Main Action Buttons */}
         <div className="flex flex-col gap-2">
+          {/* Booking Button */}
+          {isBooking && (
+            <Button
+              className="w-full bg-[#FF385C] hover:bg-[#E31C5F] text-white text-lg py-3 font-semibold"
+              onClick={() => handleCheckAuth(() => setShowBookingModal(true))}
+            >
+              <CalendarDays className="w-5 h-5 mr-2" />
+              Book Now
+            </Button>
+          )}
+
+          {/* Long-term Rental Application Button */}
           {isRentable && (
             <Dialog open={showRentModal} onOpenChange={setShowRentModal}>
               <DialogTrigger asChild>
                 <Button
                   className="w-full bg-[#FF385C] hover:bg-[#E31C5F] text-white text-lg py-3 font-semibold"
-                  onClick={async () => {
-                    console.log('Rent trigger clicked');
-                    try {
-                      const me = await fetch('/api/auth/me', { cache: 'no-store' });
-                      if (!me.ok) {
-                        toast({ title: 'Please sign in', description: 'You need to be signed in to request a rental.' });
-                        const next = encodeURIComponent(window.location.pathname + window.location.search);
-                        window.location.href = `/auth/login?next=${next}`;
-                        return;
-                      }
-                      setShowRentModal(true);
-                    } catch (err) {
-                      console.error('Auth check failed', err);
-                      toast({ title: 'Error', description: 'Could not verify login. Please sign in.' });
-                      const next = encodeURIComponent(window.location.pathname + window.location.search);
-                      window.location.href = `/auth/login?next=${next}`;
-                    }
-                  }}
+                  onClick={() => handleCheckAuth(() => setShowRentModal(true))}
                 >
-                  {property?.rentFrequency === 'monthly' ? 'Apply to Rent' : 'Apply to Rent'}
+                  Apply to Rent
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-md w-full">
@@ -185,6 +201,27 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
           {favorite ? 'Remove from Favorites' : 'Add to Favorites'}
         </Button>
       </div>
+
+      {/* Booking Modal */}
+      {property && (
+        <BookingModal
+          open={showBookingModal}
+          onClose={() => setShowBookingModal(false)}
+          onSuccess={() => {
+            toast({ title: 'Booking Submitted', description: 'Your booking request has been sent to the host.' });
+            setShowBookingModal(false);
+          }}
+          property={{
+            _id: propertyId,
+            title: property.title,
+            price: property.price,
+            currency: property.currency,
+            type: property.type,
+            address: property.address,
+            images: property.images,
+          }}
+        />
+      )}
     </div>
   );
 }

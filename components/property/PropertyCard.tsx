@@ -12,7 +12,7 @@ interface Property {
   title: string;
   description: string;
   type: string;
-  purpose: 'rent' | 'sale' | 'short-term';
+  purpose: 'rent' | 'sale' | 'booking';
   price: number;
   currency: string;
   rentFrequency?: string;
@@ -74,7 +74,7 @@ export default function PropertyCard({
     if (purpose === 'rent' && frequency) {
       const freq = frequency === 'monthly' ? '/month' : frequency === 'weekly' ? '/week' : '/day';
       formattedPrice += freq;
-    } else if (purpose === 'short-term') {
+    } else if (purpose === 'booking') {
       formattedPrice += '/night';
     }
 
@@ -175,7 +175,7 @@ export default function PropertyCard({
                 </Badge>
               )}
               <Badge variant="outline" className="bg-white/90 capitalize">
-                {property.purpose === 'short-term' ? 'Stay' : property.purpose}
+                {property.purpose === 'booking' ? 'Booking' : property.purpose}
               </Badge>
             </div>
 
@@ -263,7 +263,7 @@ export default function PropertyCard({
               <div className="text-xl font-bold text-gray-900">
                 {formatPrice(property.price, property.currency, property.purpose, property.rentFrequency)}
               </div>
-              {property.purpose === 'short-term' && (
+              {property.purpose === 'booking' && (
                 <Button size="sm" variant="outline">
                   <Calendar className="w-4 h-4 mr-2" />
                   Check Dates

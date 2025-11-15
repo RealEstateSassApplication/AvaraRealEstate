@@ -213,7 +213,7 @@ export default function BookingsPage() {
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900">Booking Management</h1>
-          <p className="text-gray-600 mt-2">Manage all your short-term property bookings</p>
+          <p className="text-gray-600 mt-2">Manage all your booking property reservations</p>
         </div>
 
         {/* Stats Cards */}

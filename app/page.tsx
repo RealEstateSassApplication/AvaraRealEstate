@@ -16,7 +16,7 @@ interface Property {
   title: string;
   description: string;
   type: string;
-  purpose: 'rent' | 'sale' | 'short-term';
+  purpose: 'rent' | 'sale' | 'booking';
   price: number;
   currency: string;
   rentFrequency?: string;
@@ -195,7 +195,7 @@ export default function HomePage() {
                         <option value="any">Any</option>
                         <option value="rent">Rent</option>
                         <option value="sale">Buy</option>
-                        <option value="short-term">Short-term</option>
+                        <option value="booking">Booking</option>
                       </select>
                     </div>
                   </div>
@@ -222,7 +222,7 @@ export default function HomePage() {
                   <Link href="/listings?purpose=sale" className="border rounded-full px-4 py-2">Buy</Link>
                 </Button>
                 <Button asChild>
-                  <Link href="/listings?purpose=short-term" className="border rounded-full px-4 py-2">Short-term Stay</Link>
+                  <Link href="/listings?purpose=booking" className="border rounded-full px-4 py-2">Booking</Link>
                 </Button>
               </div>
             </motion.div>
@@ -343,7 +343,7 @@ export default function HomePage() {
                   <p className="text-sm text-slate-400">Sri Lanka</p>
                 </div>
               </div>
-              <p className="text-slate-400">Avara is the intelligent property platform in Sri Lanka for rentals, sales, and short-term stays.</p>
+              <p className="text-slate-400">Avara is the intelligent property platform in Sri Lanka for rentals, sales, and bookings.</p>
             </div>
 
             <div>
@@ -352,7 +352,7 @@ export default function HomePage() {
                 <Link href="/listings" className="block hover:text-white">All Properties</Link>
                 <Link href="/listings?purpose=rent" className="block hover:text-white">For Rent</Link>
                 <Link href="/listings?purpose=sale" className="block hover:text-white">For Sale</Link>
-                <Link href="/listings?purpose=short-term" className="block hover:text-white">Short-term Stay</Link>
+                <Link href="/listings?purpose=booking" className="block hover:text-white">Booking</Link>
               </div>
             </div>
 

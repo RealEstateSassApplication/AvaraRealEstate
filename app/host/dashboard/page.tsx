@@ -108,7 +108,7 @@ interface PropertyCardReady {
   title: string;
   description: string;
   type: string;
-  purpose: 'rent' | 'sale' | 'short-term';
+  purpose: 'rent' | 'sale' | 'booking';
   price: number;
   currency: string;
   rentFrequency?: string;
@@ -253,7 +253,7 @@ export default function HostDashboard() {
           title: p.title,
           description: p.description || p.title,
           type: (p.type as string) || 'apartment',
-          purpose: (p.purpose as 'rent' | 'sale' | 'short-term') || 'rent',
+          purpose: (p.purpose === 'short-term' ? 'booking' : p.purpose as 'rent' | 'sale' | 'booking') || 'rent',
           price: p.price,
           currency: p.currency || 'LKR',
           rentFrequency: p.rentFrequency,

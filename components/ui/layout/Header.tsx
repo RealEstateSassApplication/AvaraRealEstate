@@ -101,10 +101,10 @@ export default function Header() {
               Buy
             </Link>
             <Link
-              href="/listings?purpose=short-term"
+              href="/listings?purpose=booking"
               className="text-gray-700 hover:text-teal-600 font-medium transition-colors"
             >
-              Stay
+              Booking
             </Link>
             <Link
               href="/blog"
@@ -237,11 +237,11 @@ export default function Header() {
                 Buy
               </Link>
               <Link
-                href="/listings?purpose=short-term"
+                href="/listings?purpose=booking"
                 className="text-gray-700 hover:text-teal-600 font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Stay
+                Booking
               </Link>
               <Link
                 href="/blog"
