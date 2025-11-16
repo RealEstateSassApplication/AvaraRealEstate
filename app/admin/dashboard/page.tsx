@@ -719,7 +719,7 @@ export default function AdminDashboardPage() {
                         <span className="font-bold text-blue-900">LKR 8.5M (68%)</span>
                       </div>
                       <div className="flex justify-between items-center p-3 bg-green-50 rounded">
-                        <span className="font-medium text-green-900">Short-term Stays</span>
+                        <span className="font-medium text-green-900">Bookings</span>
                         <span className="font-bold text-green-900">LKR 2.8M (22%)</span>
                       </div>
                       <div className="flex justify-between items-center p-3 bg-purple-50 rounded">

@@ -8,20 +8,38 @@ export async function POST(request: NextRequest) {
   try {
   const user = await requireAuth(request) as unknown as UserLike;
     const body = await request.json();
-    const required = ['propertyId', 'startDate', 'endDate'];
-    const missing = required.filter(f => !body[f]);
-    if (missing.length) return NextResponse.json({ error: `Missing required fields: ${missing.join(', ')}`, reason: 'missing_fields' }, { status: 400 });
+    
+    // Support both old (startDate/endDate) and new (checkInDate/checkOutDate) field names
+    const startDate = body.startDate || body.checkInDate;
+    const endDate = body.endDate || body.checkOutDate;
+    const guestCount = body.guestCount || body.numberOfGuests || 1;
+    const totalAmount = body.totalAmount || body.totalPrice;
+    
+    const required = ['propertyId'];
+    if (!body.propertyId) {
+      return NextResponse.json({ error: 'Missing required field: propertyId', reason: 'missing_fields' }, { status: 400 });
+    }
+    if (!startDate || !endDate) {
+      return NextResponse.json({ error: 'Missing required fields: check-in and check-out dates', reason: 'missing_fields' }, { status: 400 });
+    }
+
+    // Build guest details from individual fields or existing object
+    const guestDetails = body.guestDetails || {
+      name: body.guestName,
+      email: body.guestEmail,
+      phone: body.guestPhone,
+    };
 
     const input: CreateBookingInput = {
       propertyId: body.propertyId,
   userId: (user._id as any).toString(),
-      startDate: body.startDate,
-      endDate: body.endDate,
-      guestCount: body.guestCount || 1,
-      totalAmount: body.totalAmount,
-      guestDetails: body.guestDetails,
+      startDate,
+      endDate,
+      guestCount,
+      totalAmount,
+      guestDetails,
       specialRequests: body.specialRequests,
-      currency: body.currency,
+      currency: body.currency || 'LKR',
       provider: body.provider,
       providerTransactionId: body.providerTransactionId
     };

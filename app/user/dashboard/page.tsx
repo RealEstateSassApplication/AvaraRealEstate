@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import TenantCreateRequestModal from '@/components/maintenance/TenantCreateRequestModal';
+import RentDetailsModal from '@/components/rent/RentDetailsModal';
 import { 
   Calendar, 
   CheckSquare, 
@@ -96,6 +97,8 @@ export default function UserDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
+  const [selectedRent, setSelectedRent] = useState<RentalAgreement | null>(null);
+  const [showRentModal, setShowRentModal] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -205,7 +208,7 @@ export default function UserDashboardPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">My Dashboard</h1>
-            <p className="text-gray-600 mt-2">Manage your rentals, stays, and applications</p>
+            <p className="text-gray-600 mt-2">Manage your rentals, bookings, and applications</p>
           </div>
           <Button asChild>
             <Link href="/listings">Browse Properties</Link>
@@ -232,7 +235,7 @@ export default function UserDashboardPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Upcoming Stays</p>
+                  <p className="text-sm font-medium text-gray-600">Upcoming Bookings</p>
                   <p className="text-2xl font-bold text-gray-900">{upcomingBookings.length}</p>
                 </div>
                 <div className="bg-gradient-to-br from-green-500 to-teal-600 text-white p-3 rounded-lg">
@@ -276,7 +279,7 @@ export default function UserDashboardPage() {
           <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="rentals">My Rentals</TabsTrigger>
-            <TabsTrigger value="bookings">My Stays</TabsTrigger>
+            <TabsTrigger value="bookings">My Bookings</TabsTrigger>
             <TabsTrigger value="applications">Applications</TabsTrigger>
             <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
             <TabsTrigger value="favorites">Favorites</TabsTrigger>
@@ -312,8 +315,15 @@ export default function UserDashboardPage() {
                                 Next due: {new Date(rental.nextDue).toLocaleDateString()}
                               </p>
                             </div>
-                            <Button size="sm" variant="outline" asChild>
-                              <Link href={`/user/rents/${rental._id}`}>View</Link>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedRent(rental);
+                                setShowRentModal(true);
+                              }}
+                            >
+                              View
                             </Button>
                           </div>
                         </div>
@@ -333,13 +343,13 @@ export default function UserDashboardPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Calendar className="w-5 h-5" />
-                    Upcoming Stays
+                    Upcoming Bookings
                   </CardTitle>
                   <CardDescription>Your confirmed bookings</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {upcomingBookings.length === 0 ? (
-                    <p className="text-gray-500 text-center py-8">No upcoming stays</p>
+                    <p className="text-gray-500 text-center py-8">No upcoming bookings</p>
                   ) : (
                     <div className="space-y-3">
                       {upcomingBookings.slice(0, 3).map((booking) => (
@@ -360,7 +370,7 @@ export default function UserDashboardPage() {
                       ))}
                       {upcomingBookings.length > 3 && (
                         <Button variant="ghost" className="w-full" onClick={() => setActiveTab('bookings')}>
-                          View All Stays
+                          View All Bookings
                         </Button>
                       )}
                     </div>
@@ -510,11 +520,16 @@ export default function UserDashboardPage() {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
-                              <Button size="sm" variant="outline" asChild>
-                                <Link href={`/user/rents/${rental._id}`}>
-                                  <Eye className="w-4 h-4 mr-1" />
-                                  View
-                                </Link>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedRent(rental);
+                                  setShowRentModal(true);
+                                }}
+                              >
+                                <Eye className="w-4 h-4 mr-1" />
+                                View
                               </Button>
                               {rental.status === 'active' && (
                                 <Button size="sm">
@@ -533,17 +548,17 @@ export default function UserDashboardPage() {
             </Card>
           </TabsContent>
 
-          {/* Bookings/Stays Tab */}
+          {/* Bookings Tab */}
           <TabsContent value="bookings">
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>My Stays</CardTitle>
-                    <CardDescription>Your booking history and upcoming stays</CardDescription>
+                    <CardTitle>My Bookings</CardTitle>
+                    <CardDescription>Your booking history and upcoming bookings</CardDescription>
                   </div>
                   <Button asChild>
-                    <Link href="/listings?type=stay">Book a Stay</Link>
+                    <Link href="/listings?purpose=booking">Book a Property</Link>
                   </Button>
                 </div>
               </CardHeader>
@@ -553,7 +568,7 @@ export default function UserDashboardPage() {
                     <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500 mb-4">No bookings yet</p>
                     <Button asChild>
-                      <Link href="/listings?type=stay">Browse Properties</Link>
+                      <Link href="/listings?purpose=booking">Browse Properties</Link>
                     </Button>
                   </div>
                 ) : (
@@ -777,6 +792,20 @@ export default function UserDashboardPage() {
           onOpenChange={setShowMaintenanceModal}
           onSuccess={fetchDashboardData}
         />
+
+        {/* Rent Details Modal */}
+        {selectedRent && (
+          <RentDetailsModal
+            rent={selectedRent}
+            open={showRentModal}
+            onClose={() => {
+              setShowRentModal(false);
+              setSelectedRent(null);
+            }}
+            showActions={false}
+            userType="tenant"
+          />
+        )}
       </div>
     </div>
   );

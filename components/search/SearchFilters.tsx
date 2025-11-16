@@ -25,7 +25,7 @@ import { Slider } from '@/components/ui/slider';
 
 interface SearchFilters {
   search?: string;
-  purpose?: 'rent' | 'sale' | 'short-term';
+  purpose?: 'rent' | 'sale' | 'booking';
   type?: string[];
   minPrice?: number;
   maxPrice?: number;
@@ -82,7 +82,7 @@ const sriLankanProvinces = [
 const PURPOSES = [
   { value: 'rent', label: 'Rent' },
   { value: 'sale', label: 'Buy' },
-  { value: 'short-term', label: 'Stay' },
+  { value: 'booking', label: 'Booking' },
 ];
 
 export default function SearchFilters({ 
@@ -134,7 +134,7 @@ export default function SearchFilters({
         return { min: 10000, max: 500000, step: 5000, default: [25000, 150000] };
       case 'sale':
         return { min: 1000000, max: 100000000, step: 500000, default: [5000000, 25000000] };
-      case 'short-term':
+      case 'booking':
         return { min: 1000, max: 50000, step: 500, default: [3000, 15000] };
       default:
         return { min: 1000, max: 100000000, step: 10000, default: [50000, 10000000] };
@@ -502,7 +502,7 @@ export default function SearchFilters({
         <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
           {localFilters.purpose && (
             <div className="flex items-center bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm">
-              {localFilters.purpose === 'short-term' ? 'Stay' : localFilters.purpose}
+              {localFilters.purpose === 'booking' ? 'Booking' : localFilters.purpose}
               <X
                 className="w-3 h-3 ml-1 cursor-pointer"
                 onClick={() => {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import BlogPost from '@/models/BlogPost';
+import User from '@/models/User';
 
 // GET /api/blog - Get published blog posts (public)
 export async function GET(request: NextRequest) {

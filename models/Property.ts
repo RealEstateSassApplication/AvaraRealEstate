@@ -5,7 +5,7 @@ export interface IProperty extends Document {
   description: string;
   owner: mongoose.Types.ObjectId;
   type: 'apartment' | 'house' | 'villa' | 'bungalow' | 'land' | 'commercial' | 'room';
-  purpose: 'rent' | 'sale' | 'short-term';
+  purpose: 'rent' | 'sale' | 'booking';
   status: 'active' | 'inactive' | 'pending' | 'rejected' | 'sold' | 'rented';
   price: number;
   currency: string;
@@ -34,7 +34,7 @@ export interface IProperty extends Document {
   availability: {
     immediate: boolean;
     availableFrom?: Date;
-    minimumStay?: number; // for short-term rentals
+    minimumStay?: number; // for booking rentals
     maximumStay?: number;
   };
   calendar: {
@@ -76,7 +76,7 @@ const PropertySchema = new Schema<IProperty>({
   },
   purpose: {
     type: String,
-    enum: ['rent', 'sale', 'short-term'],
+    enum: ['rent', 'sale', 'booking'],
     required: true
   },
   status: {
@@ -89,7 +89,7 @@ const PropertySchema = new Schema<IProperty>({
   rentFrequency: {
     type: String,
     enum: ['monthly', 'weekly', 'daily'],
-    required: function() { return this.purpose === 'rent' || this.purpose === 'short-term'; }
+    required: function() { return this.purpose === 'rent' || this.purpose === 'booking'; }
   },
   bedrooms: { type: Number, min: 0 },
   bathrooms: { type: Number, min: 0 },

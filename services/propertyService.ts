@@ -5,7 +5,7 @@ import User from '@/models/User';
 import { Types } from 'mongoose';
 
 export interface PropertyFilters {
-  purpose?: 'rent' | 'sale' | 'short-term';
+  purpose?: 'rent' | 'sale' | 'booking';
   type?: string[];
   minPrice?: number;
   maxPrice?: number;

@@ -136,7 +136,7 @@ export default function EditListingPage() {
             <select id="purpose" name="purpose" value={form.purpose} onChange={handleChange} className="w-full border rounded p-2">
               <option value="rent">Rent</option>
               <option value="sale">Sale</option>
-              <option value="short-term">Short-term</option>
+              <option value="booking">Booking</option>
             </select>
           </div>
 

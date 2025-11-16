@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Rent from '@/models/Rent';
+import Property from '@/models/Property';
+import User from '@/models/User';
 import { getUserFromRequest } from '@/lib/auth';
 
 // GET /api/user/rents/[id] - Get specific rent details for the logged-in user

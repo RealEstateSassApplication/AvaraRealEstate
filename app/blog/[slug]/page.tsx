@@ -24,9 +24,9 @@ interface BlogPost {
   excerpt: string;
   content: string;
   author: {
-    firstName: string;
-    lastName: string;
-  };
+    firstName?: string;
+    lastName?: string;
+  } | null;
   featuredImage: string;
   category: string;
   tags: string[];
@@ -127,7 +127,7 @@ export default function BlogDetailPage() {
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4" />
                 <span>
-                  {post.author.firstName} {post.author.lastName}
+                  {post.author?.firstName || 'Anonymous'} {post.author?.lastName || 'User'}
                 </span>
               </div>
               
@@ -180,21 +180,23 @@ export default function BlogDetailPage() {
           )}
 
           {/* Author Card */}
-          <Card className="mt-8">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                  {post.author.firstName.charAt(0)}{post.author.lastName.charAt(0)}
+          {post.author && (
+            <Card className="mt-8">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                    {post.author.firstName?.charAt(0) || 'A'}{post.author.lastName?.charAt(0) || 'U'}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">
+                      {post.author.firstName || 'Anonymous'} {post.author.lastName || 'User'}
+                    </h3>
+                    <p className="text-gray-600">Author</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-lg">
-                    {post.author.firstName} {post.author.lastName}
-                  </h3>
-                  <p className="text-gray-600">Author</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Navigation */}
           <div className="mt-8 flex justify-center">

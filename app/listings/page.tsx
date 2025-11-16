@@ -13,7 +13,7 @@ interface Property {
   title: string;
   description: string;
   type: string;
-  purpose: 'rent' | 'sale' | 'short-term';
+  purpose: 'rent' | 'sale' | 'booking';
   price: number;
   currency: string;
   rentFrequency?: string;
@@ -41,7 +41,7 @@ interface Property {
 
 interface SearchFilters {
   search?: string;
-  purpose?: 'rent' | 'sale' | 'short-term';
+  purpose?: 'rent' | 'sale' | 'booking';
   type?: string[];
   minPrice?: number;
   maxPrice?: number;
@@ -174,7 +174,7 @@ function ListingsContent() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
               {filters.purpose ? (
-                filters.purpose === 'short-term' ? 'Properties for Stay' :
+                filters.purpose === 'booking' ? 'Properties for Booking' :
                 filters.purpose === 'rent' ? 'Properties for Rent' :
                 'Properties for Sale'
               ) : 'All Properties'}
