@@ -1120,8 +1120,8 @@ export default function HostDashboard() {
               setShowRentModal(false);
               setSelectedRent(null);
             }}
-            onMarkPaid={() => {
-              handleRentAction(selectedRent._id, 'mark_paid');
+            onMarkPaid={async (rentId: string) => {
+              await handleRentAction(rentId, 'mark_paid');
               setShowRentModal(false);
               setSelectedRent(null);
             }}
