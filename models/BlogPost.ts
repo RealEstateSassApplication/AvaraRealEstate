@@ -103,4 +103,5 @@ BlogPostSchema.pre('save', function(next) {
   next();
 });
 
-export default mongoose.models.BlogPost || mongoose.model('BlogPost', BlogPostSchema);
+const BlogPost = (mongoose.models.BlogPost as any) || mongoose.model('BlogPost', BlogPostSchema);
+export default BlogPost;

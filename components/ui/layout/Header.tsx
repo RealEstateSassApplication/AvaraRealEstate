@@ -40,6 +40,30 @@ export default function Header() {
     return false;
   };
 
+  const isAdmin = (u: User | null) => {
+    if (!u) {
+      console.log('isAdmin: user is null');
+      return false;
+    }
+    console.log('isAdmin check for user:', { role: u.role, roles: u.roles });
+    
+    // Check roles array first
+    if (u.roles && Array.isArray(u.roles)) {
+      const hasAdmin = u.roles.includes('admin') || u.roles.includes('super-admin');
+      console.log('isAdmin (roles array):', hasAdmin);
+      return hasAdmin;
+    }
+    
+    // Check role field
+    if (u.role === 'admin' || u.role === 'super-admin') {
+      console.log('isAdmin (role field):', true);
+      return true;
+    }
+    
+    console.log('isAdmin: no admin role found');
+    return false;
+  };
+
   useEffect(() => {
     checkAuth();
   }, []);
@@ -51,6 +75,9 @@ export default function Header() {
         const json = await response.json();
         const u = json.data || json.user;
         if (u) {
+          console.log('User data from API:', u);
+          console.log('User roles:', u.roles);
+          console.log('User role:', u.role);
           setUser({ _id: u.id || u._id, name: u.name, email: u.email, role: u.role, roles: u.roles, profilePhoto: u.profilePhoto, listingsCount: u.listingsCount });
         }
       }
@@ -87,7 +114,7 @@ export default function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-6">
             <Link
               href="/listings?purpose=rent"
               className="text-gray-700 hover:text-teal-600 font-medium transition-colors"
@@ -115,14 +142,16 @@ export default function Header() {
             {user && (
               <>
                 {/* User personal dashboard */}
-                <Link href="/user/dashboard" className="text-gray-700 hover:text-teal-600 font-medium transition-colors">My Dashboard</Link>
+                <Link href="/user/dashboard" className="text-gray-700 hover:text-teal-600 font-medium transition-colors">Dashboard</Link>
                 {/* Host dashboard only if host role */}
                 {hasHostRole(user) && (
-                  <Link href="/host/dashboard" className="text-gray-700 hover:text-teal-600 font-medium transition-colors">Host Dashboard</Link>
+                  <Link href="/host/dashboard" className="text-gray-700 hover:text-teal-600 font-medium transition-colors">Host</Link>
                 )}
-                {/* Admin dashboard */}
-                {(user.roles?.includes('admin') || user.role === 'admin') && (
-                  <Link href="/admin/dashboard" className="text-gray-700 hover:text-teal-600 font-medium transition-colors">Admin</Link>
+                {/* Admin dashboard - prominently displayed */}
+                {isAdmin(user) && (
+                  <Link href="/admin/dashboard" className="text-blue-700 hover:text-blue-800 font-semibold transition-colors bg-blue-50 px-3 py-1.5 rounded-md border border-blue-300">
+                    Admin
+                  </Link>
                 )}
                 {/* 'Become a Host' link removed - hosts detected by listings or role */}
               </>
@@ -178,8 +207,8 @@ export default function Header() {
                                 <Link href="/host/dashboard">Host Dashboard</Link>
                               </DropdownMenuItem>
                             )}
-                            {(user.roles?.includes('admin') || user.role === 'admin') && (
-                              <DropdownMenuItem asChild>
+                            {isAdmin(user) && (
+                              <DropdownMenuItem asChild className="bg-blue-50 text-blue-700 font-semibold">
                                 <Link href="/admin/dashboard">Admin Panel</Link>
                               </DropdownMenuItem>
                             )}
@@ -288,10 +317,10 @@ export default function Header() {
                       Host Dashboard
                     </Link>
                   )}
-                  {(user.roles?.includes('admin') || user.role === 'admin') && (
+                  {isAdmin(user) && (
                     <Link
                       href="/admin/dashboard"
-                      className="text-gray-700 hover:text-teal-600 font-medium"
+                      className="text-blue-700 hover:text-blue-800 font-semibold bg-blue-50 px-3 py-2 rounded-md"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Admin Panel
