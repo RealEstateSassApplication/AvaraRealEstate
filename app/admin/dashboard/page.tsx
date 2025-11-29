@@ -14,12 +14,18 @@ import {
   AlertTriangle,
   Star,
   FileText,
-  BarChart
+  BarChart,
+  Trash2,
+  Wrench,
+  Search,
+  Filter,
+  Building
 } from 'lucide-react';
 import Header from '@/components/ui/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -29,6 +35,25 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 interface DashboardStats {
   totalProperties: number;
@@ -53,6 +78,61 @@ interface Property {
   type: string;
   createdAt: string;
   images: string[];
+  featured?: boolean;
+  verified?: boolean;
+  address?: {
+    city?: string;
+    district?: string;
+  };
+}
+
+interface Rent {
+  _id: string;
+  property: {
+    _id: string;
+    title: string;
+    images: string[];
+    address?: { city?: string; district?: string };
+  };
+  tenant: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  host: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  amount: number;
+  currency: string;
+  status: string;
+  dueDate: string;
+  createdAt: string;
+}
+
+interface MaintenanceRequest {
+  _id: string;
+  property: {
+    _id: string;
+    title: string;
+    images: string[];
+    address?: { city?: string; district?: string };
+  };
+  tenant: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  host: {
+    _id: string;
+    name: string;
+  };
+  title: string;
+  description: string;
+  priority: string;
+  status: string;
+  createdAt: string;
 }
 
 interface User {
@@ -67,6 +147,7 @@ interface User {
 }
 
 export default function AdminDashboardPage() {
+  const { toast } = useToast();
   const [stats, setStats] = useState<DashboardStats>({
     totalProperties: 0,
     pendingProperties: 0,
@@ -76,8 +157,15 @@ export default function AdminDashboardPage() {
     activeListings: 0,
   });
   const [pendingProperties, setPendingProperties] = useState<Property[]>([]);
+  const [allProperties, setAllProperties] = useState<Property[]>([]);
+  const [rents, setRents] = useState<Rent[]>([]);
+  const [maintenanceRequests, setMaintenanceRequests] = useState<MaintenanceRequest[]>([]);
   const [recentUsers, setRecentUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [propertyFilter, setPropertyFilter] = useState('all');
+  const [rentFilter, setRentFilter] = useState('all');
+  const [maintenanceFilter, setMaintenanceFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchDashboardData();
@@ -85,19 +173,43 @@ export default function AdminDashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
+      // Fetch stats
       const statsResponse = await fetch('/api/admin/stats');
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
         setStats(statsData);
       }
 
-      const propertiesResponse = await fetch('/api/admin/properties?status=pending&limit=5');
+      // Fetch pending properties
+      const propertiesResponse = await fetch('/api/admin/properties?status=pending&limit=10');
       if (propertiesResponse.ok) {
         const propertiesData = await propertiesResponse.json();
         setPendingProperties(propertiesData.properties || []);
       }
 
-      const usersResponse = await fetch('/api/admin/users?limit=5');
+      // Fetch all properties
+      const allPropertiesResponse = await fetch('/api/admin/properties?limit=50');
+      if (allPropertiesResponse.ok) {
+        const allPropertiesData = await allPropertiesResponse.json();
+        setAllProperties(allPropertiesData.properties || []);
+      }
+
+      // Fetch rents
+      const rentsResponse = await fetch('/api/admin/rents?limit=50');
+      if (rentsResponse.ok) {
+        const rentsData = await rentsResponse.json();
+        setRents(rentsData.rents || []);
+      }
+
+      // Fetch maintenance requests
+      const maintenanceResponse = await fetch('/api/admin/maintenance?limit=50');
+      if (maintenanceResponse.ok) {
+        const maintenanceData = await maintenanceResponse.json();
+        setMaintenanceRequests(maintenanceData.requests || []);
+      }
+
+      // Fetch users
+      const usersResponse = await fetch('/api/admin/users?limit=10');
       if (usersResponse.ok) {
         const usersData = await usersResponse.json();
         setRecentUsers(usersData.users || []);
@@ -123,11 +235,122 @@ export default function AdminDashboardPage() {
           pendingProperties: prev.pendingProperties - 1,
           activeListings: action === 'approve' ? prev.activeListings + 1 : prev.activeListings,
         }));
+        toast({
+          title: action === 'approve' ? 'Property Approved' : 'Property Rejected',
+          description: `The property has been ${action}ed successfully.`,
+        });
       }
     } catch (error) {
       console.error(`Failed to ${action} property:`, error);
+      toast({
+        title: 'Error',
+        description: `Failed to ${action} property.`,
+        variant: 'destructive',
+      });
     }
   };
+
+  const handleDeleteProperty = async (propertyId: string) => {
+    try {
+      const response = await fetch(`/api/admin/properties/${propertyId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setAllProperties(prev => prev.filter(p => p._id !== propertyId));
+        setPendingProperties(prev => prev.filter(p => p._id !== propertyId));
+        setStats(prev => ({
+          ...prev,
+          totalProperties: prev.totalProperties - 1,
+        }));
+        toast({
+          title: 'Property Deleted',
+          description: 'The property has been removed from the platform.',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to delete property:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete property.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleToggleFeatured = async (propertyId: string, currentFeatured: boolean) => {
+    try {
+      const response = await fetch(`/api/admin/properties/${propertyId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ featured: !currentFeatured }),
+      });
+
+      if (response.ok) {
+        setAllProperties(prev => 
+          prev.map(p => p._id === propertyId ? { ...p, featured: !currentFeatured } : p)
+        );
+        toast({
+          title: currentFeatured ? 'Featured Tag Removed' : 'Property Featured',
+          description: currentFeatured 
+            ? 'The property is no longer featured.' 
+            : 'The property is now featured on the homepage.',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to toggle featured:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update featured status.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleToggleVerified = async (propertyId: string, currentVerified: boolean) => {
+    try {
+      const response = await fetch(`/api/admin/properties/${propertyId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ verified: !currentVerified }),
+      });
+
+      if (response.ok) {
+        setAllProperties(prev => 
+          prev.map(p => p._id === propertyId ? { ...p, verified: !currentVerified } : p)
+        );
+        toast({
+          title: currentVerified ? 'Verification Removed' : 'Property Verified',
+          description: currentVerified 
+            ? 'The property verification has been removed.' 
+            : 'The property has been verified.',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to toggle verified:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update verification status.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Filter functions
+  const filteredProperties = allProperties.filter(property => {
+    const matchesFilter = propertyFilter === 'all' || property.status === propertyFilter;
+    const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      property.owner?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+
+  const filteredRents = rents.filter(rent => {
+    return rentFilter === 'all' || rent.status === rentFilter;
+  });
+
+  const filteredMaintenance = maintenanceRequests.filter(request => {
+    return maintenanceFilter === 'all' || request.status === maintenanceFilter;
+  });
 
   const StatCard = ({ title, value, icon: Icon, change, changeType }: any) => (
     <Card>
@@ -272,12 +495,14 @@ export default function AdminDashboardPage() {
 
         {/* Main Content */}
         <Tabs defaultValue="pending-properties" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="pending-properties">Pending Properties</TabsTrigger>
-            <TabsTrigger value="recent-users">Recent Users</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-7">
+            <TabsTrigger value="pending-properties">Pending</TabsTrigger>
+            <TabsTrigger value="all-properties">All Properties</TabsTrigger>
+            <TabsTrigger value="rentals">Rentals</TabsTrigger>
+            <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
+            <TabsTrigger value="recent-users">Users</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="rent-management">Rent Management</TabsTrigger>
-            <TabsTrigger value="financial-overview">Financial Overview</TabsTrigger>
+            <TabsTrigger value="financial-overview">Financial</TabsTrigger>
           </TabsList>
 
           {/* Pending Properties */}
@@ -374,6 +599,375 @@ export default function AdminDashboardPage() {
                                 <XCircle className="w-4 h-4" />
                               </Button>
                             </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* All Properties */}
+          <TabsContent value="all-properties">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Building className="w-5 h-5 mr-2 text-blue-500" />
+                    All Properties
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      <Input
+                        placeholder="Search properties..."
+                        className="pl-10 w-64"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                    </div>
+                    <Select value={propertyFilter} onValueChange={setPropertyFilter}>
+                      <SelectTrigger className="w-40">
+                        <SelectValue placeholder="Filter status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="approved">Approved</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="rejected">Rejected</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardTitle>
+                <CardDescription>
+                  Manage all properties on the platform
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {filteredProperties.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Building className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      No Properties Found
+                    </h3>
+                    <p className="text-gray-600">
+                      No properties match your current filters.
+                    </p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Property</TableHead>
+                        <TableHead>Owner</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Featured</TableHead>
+                        <TableHead>Verified</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredProperties.map((property) => (
+                        <TableRow key={property._id}>
+                          <TableCell>
+                            <div className="flex items-center space-x-3">
+                              <img
+                                src={property.images[0] || '/images/property-placeholder.jpg'}
+                                alt={property.title}
+                                className="w-12 h-12 rounded-lg object-cover"
+                              />
+                              <div>
+                                <p className="font-medium text-gray-900 line-clamp-1">
+                                  {property.title}
+                                </p>
+                                <p className="text-sm text-gray-500">{property.address?.city || 'N/A'}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{property.owner?.name || 'Unknown'}</p>
+                              <p className="text-sm text-gray-600">{property.owner?.email || ''}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" className="capitalize">
+                              {property.purpose}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge 
+                              className={
+                                property.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                property.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                              }
+                            >
+                              {property.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleToggleFeatured(property._id, !property.featured)}
+                              className={property.featured ? 'text-yellow-500' : 'text-gray-400'}
+                            >
+                              <Star className={`w-5 h-5 ${property.featured ? 'fill-yellow-500' : ''}`} />
+                            </Button>
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleToggleVerified(property._id, !property.verified)}
+                              className={property.verified ? 'text-green-500' : 'text-gray-400'}
+                            >
+                              <CheckCircle className={`w-5 h-5 ${property.verified ? 'fill-green-100' : ''}`} />
+                            </Button>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button asChild size="sm" variant="outline">
+                                <Link href={`/listings/${property._id}`}>
+                                  <Eye className="w-4 h-4" />
+                                </Link>
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button size="sm" variant="destructive">
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Property</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to delete &quot;{property.title}&quot;? This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDeleteProperty(property._id)}
+                                      className="bg-red-600 hover:bg-red-700"
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Rentals */}
+          <TabsContent value="rentals">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <DollarSign className="w-5 h-5 mr-2 text-green-500" />
+                    All Rentals
+                  </div>
+                  <Select value={rentFilter} onValueChange={setRentFilter}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="Filter status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="paid">Paid</SelectItem>
+                      <SelectItem value="overdue">Overdue</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </CardTitle>
+                <CardDescription>
+                  View all rental payments across the platform
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {filteredRents.length === 0 ? (
+                  <div className="text-center py-8">
+                    <DollarSign className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      No Rentals Found
+                    </h3>
+                    <p className="text-gray-600">
+                      No rental payments match your current filters.
+                    </p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Property</TableHead>
+                        <TableHead>Tenant</TableHead>
+                        <TableHead>Host</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Due Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredRents.map((rent) => (
+                        <TableRow key={rent._id}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium line-clamp-1">{rent.property?.title || 'Unknown Property'}</p>
+                              <p className="text-sm text-gray-500">{rent.property?.address?.city || 'N/A'}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{rent.tenant?.name || 'Unknown'}</p>
+                              <p className="text-sm text-gray-600">{rent.tenant?.email || ''}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{rent.host?.name || 'Unknown'}</p>
+                              <p className="text-sm text-gray-600">{rent.host?.email || ''}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <p className="font-semibold">
+                              {new Intl.NumberFormat('en-LK', {
+                                style: 'currency',
+                                currency: rent.currency || 'LKR',
+                                minimumFractionDigits: 0,
+                              }).format(rent.amount)}
+                            </p>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              className={
+                                rent.status === 'paid' ? 'bg-green-100 text-green-800' :
+                                rent.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                              }
+                            >
+                              {rent.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(rent.dueDate).toLocaleDateString()}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Maintenance Requests */}
+          <TabsContent value="maintenance">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Wrench className="w-5 h-5 mr-2 text-orange-500" />
+                    Maintenance Requests
+                  </div>
+                  <div className="flex gap-2">
+                    <Select value={maintenanceFilter} onValueChange={setMaintenanceFilter}>
+                      <SelectTrigger className="w-40">
+                        <SelectValue placeholder="Filter status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="in-progress">In Progress</SelectItem>
+                        <SelectItem value="resolved">Resolved</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardTitle>
+                <CardDescription>
+                  View all maintenance requests across properties
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {filteredMaintenance.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Wrench className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      No Maintenance Requests
+                    </h3>
+                    <p className="text-gray-600">
+                      No maintenance requests match your current filters.
+                    </p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Property</TableHead>
+                        <TableHead>Tenant</TableHead>
+                        <TableHead>Issue</TableHead>
+                        <TableHead>Priority</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredMaintenance.map((request) => (
+                        <TableRow key={request._id}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium line-clamp-1">{request.property?.title || 'Unknown Property'}</p>
+                              <p className="text-sm text-gray-500">{request.property?.address?.city || 'N/A'}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{request.tenant?.name || 'Unknown'}</p>
+                              <p className="text-sm text-gray-600">{request.tenant?.email || ''}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium line-clamp-1">{request.title}</p>
+                              <p className="text-sm text-gray-500 line-clamp-1">{request.description}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              className={
+                                request.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+                                request.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                                request.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-green-100 text-green-800'
+                              }
+                            >
+                              {request.priority}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              className={
+                                request.status === 'resolved' ? 'bg-green-100 text-green-800' :
+                                request.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                                'bg-yellow-100 text-yellow-800'
+                              }
+                            >
+                              {request.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(request.createdAt).toLocaleDateString()}
                           </TableCell>
                         </TableRow>
                       ))}
