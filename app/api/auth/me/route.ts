@@ -7,7 +7,20 @@ export async function GET(request: NextRequest) {
   try {
     const user = await getUserFromReq(request as any);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const roles = Array.isArray((user as any).roles) ? (user as any).roles : (user.role ? [user.role] : ['user']);
+    
+    // Get the single role field
+    const role = (user as any).role || 'user';
+    
+    // Build roles array - include both roles array and single role field
+    let roles: string[] = [];
+    if (Array.isArray((user as any).roles) && (user as any).roles.length > 0) {
+      roles = (user as any).roles;
+    } else if (role) {
+      roles = [role];
+    } else {
+      roles = ['user'];
+    }
+    
     // compute listings count from Property collection to ensure accuracy
     await dbConnect();
     const listingsCount = await Property.countDocuments({ owner: user._id });
@@ -18,7 +31,8 @@ export async function GET(request: NextRequest) {
       id: user._id,
       name: user.name,
       email: user.email,
-      roles,
+      role,  // Include single role field
+      roles, // Include roles array
       listingsCount,
       profilePhoto: (user as any).profilePhoto
     };

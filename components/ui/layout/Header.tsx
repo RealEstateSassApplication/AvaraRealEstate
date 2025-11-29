@@ -41,26 +41,20 @@ export default function Header() {
   };
 
   const isAdmin = (u: User | null) => {
-    if (!u) {
-      console.log('isAdmin: user is null');
-      return false;
-    }
-    console.log('isAdmin check for user:', { role: u.role, roles: u.roles });
+    if (!u) return false;
     
     // Check roles array first
     if (u.roles && Array.isArray(u.roles)) {
-      const hasAdmin = u.roles.includes('admin') || u.roles.includes('super-admin');
-      console.log('isAdmin (roles array):', hasAdmin);
-      return hasAdmin;
+      if (u.roles.includes('admin') || u.roles.includes('super-admin')) {
+        return true;
+      }
     }
     
-    // Check role field
+    // Check single role field
     if (u.role === 'admin' || u.role === 'super-admin') {
-      console.log('isAdmin (role field):', true);
       return true;
     }
     
-    console.log('isAdmin: no admin role found');
     return false;
   };
 
@@ -75,10 +69,15 @@ export default function Header() {
         const json = await response.json();
         const u = json.data || json.user;
         if (u) {
-          console.log('User data from API:', u);
-          console.log('User roles:', u.roles);
-          console.log('User role:', u.role);
-          setUser({ _id: u.id || u._id, name: u.name, email: u.email, role: u.role, roles: u.roles, profilePhoto: u.profilePhoto, listingsCount: u.listingsCount });
+          setUser({ 
+            _id: u.id || u._id, 
+            name: u.name, 
+            email: u.email, 
+            role: u.role, 
+            roles: u.roles, 
+            profilePhoto: u.profilePhoto, 
+            listingsCount: u.listingsCount 
+          });
         }
       }
     } catch (error) {
