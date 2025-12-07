@@ -52,6 +52,11 @@ export default function HostSettingsPage() {
     currency: 'LKR',
     language: 'en'
   });
+  const [security, setSecurity] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
 
   const fetchUserData = useCallback(async () => {
     try {
@@ -132,7 +137,46 @@ export default function HostSettingsPage() {
       }
     } catch (err) {
       console.error('Error updating preferences:', err);
-      alert('Failed to update preferences');
+      setLoading(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (security.newPassword !== security.confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+    if (security.newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: security.currentPassword,
+          newPassword: security.newPassword
+        })
+      });
+
+      const json = await res.json();
+
+      if (res.ok) {
+        toast.success('Password updated successfully');
+        setSecurity({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+      } else {
+        toast.error(json.error || 'Failed to update password');
+      }
+    } catch (err) {
+      console.error('Error changing password:', err);
+      toast.error('Failed to change password');
     } finally {
       setLoading(false);
     }
@@ -355,21 +399,36 @@ export default function HostSettingsPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="currentPassword">Current Password</Label>
-                  <Input id="currentPassword" type="password" />
+                  <Input
+                    id="currentPassword"
+                    type="password"
+                    value={security.currentPassword}
+                    onChange={(e) => setSecurity({ ...security, currentPassword: e.target.value })}
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="newPassword">New Password</Label>
-                  <Input id="newPassword" type="password" />
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    value={security.newPassword}
+                    onChange={(e) => setSecurity({ ...security, newPassword: e.target.value })}
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                  <Input id="confirmPassword" type="password" />
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={security.confirmPassword}
+                    onChange={(e) => setSecurity({ ...security, confirmPassword: e.target.value })}
+                  />
                 </div>
 
-                <Button disabled className="w-full mt-4">
-                  Change Password (Coming Soon)
+                <Button onClick={handleChangePassword} disabled={loading} className="w-full mt-4">
+                  {loading ? 'Updating...' : 'Change Password'}
                 </Button>
 
                 <div className="border-t my-6" />
