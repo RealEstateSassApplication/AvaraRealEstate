@@ -4,6 +4,8 @@ import BlogPost from '@/models/BlogPost';
 import User from '@/models/User';
 
 // GET /api/blog - Get published blog posts (public)
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
@@ -16,7 +18,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '9');
 
     const filter: any = { status: 'published' };
-    
+
     if (category) filter.category = category;
     if (tag) filter.tags = tag;
     if (search) {

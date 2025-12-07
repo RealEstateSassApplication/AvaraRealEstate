@@ -14,11 +14,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { 
-  Search, 
-  Calendar, 
-  User, 
-  Eye, 
+import {
+  Search,
+  Calendar,
+  User,
+  Eye,
   ArrowRight,
   FileText
 } from 'lucide-react';
@@ -42,6 +42,7 @@ interface BlogPost {
 export default function BlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
 
@@ -53,16 +54,21 @@ export default function BlogPage() {
   const fetchPosts = async () => {
     try {
       setLoading(true);
+      setError(null);
       const params = new URLSearchParams();
       if (categoryFilter !== 'all') params.append('category', categoryFilter);
 
       const response = await fetch(`/api/blog?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch posts');
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || errData.message || 'Failed to fetch posts');
+      }
 
       const data = await response.json();
       setPosts(data.posts || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching posts:', error);
+      setError(error.message || 'Failed to load blog posts');
     } finally {
       setLoading(false);
     }
@@ -77,6 +83,18 @@ export default function BlogPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h3 className="text-xl font-bold text-red-600 mb-2">Error Loading Posts</h3>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={() => fetchPosts()}>Try Again</Button>
+        </div>
       </div>
     );
   }
@@ -149,24 +167,24 @@ export default function BlogPage() {
                     <FileText className="w-16 h-16 text-blue-300" />
                   </div>
                 )}
-                
+
                 <CardContent className="p-6">
                   <div className="flex items-center gap-2 mb-3">
                     <Badge variant="secondary" className="text-xs">
                       {post.category.replace('-', ' ')}
                     </Badge>
                   </div>
-                  
+
                   <h3 className="text-xl font-bold mb-2 line-clamp-2 hover:text-blue-600">
                     <Link href={`/blog/${post.slug}`}>
                       {post.title}
                     </Link>
                   </h3>
-                  
+
                   <p className="text-gray-600 mb-4 line-clamp-3">
                     {post.excerpt}
                   </p>
-                  
+
                   <div className="flex items-center justify-between text-sm text-gray-500">
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-1">
@@ -179,14 +197,14 @@ export default function BlogPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-1 text-xs text-gray-400 mt-2">
                     <Calendar className="w-3 h-3" />
                     <span>
                       {formatDistanceToNow(new Date(post.publishedAt), { addSuffix: true })}
                     </span>
                   </div>
-                  
+
                   <Button variant="link" asChild className="mt-4 p-0">
                     <Link href={`/blog/${post.slug}`}>
                       Read More <ArrowRight className="w-4 h-4 ml-1" />
