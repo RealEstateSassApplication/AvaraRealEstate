@@ -6,6 +6,8 @@ import Booking from '@/models/Booking';
 import Transaction from '@/models/Transaction';
 import { requireRole } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     await requireRole(request, ['admin', 'super-admin']);
