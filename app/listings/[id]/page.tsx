@@ -69,11 +69,11 @@ export default async function ListingDetailPage({ params }: PageProps) {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-2 rounded-xl overflow-hidden">
             {/* Main Image */}
             <div className="lg:col-span-2 lg:row-span-2 relative aspect-video lg:aspect-square">
-              <Image 
-                src={mainImage} 
-                alt={property.title} 
-                fill 
-                className="object-cover hover:scale-105 transition-transform duration-300" 
+              <Image
+                src={mainImage}
+                alt={property.title}
+                fill
+                className="object-cover hover:scale-105 transition-transform duration-300"
                 priority
               />
               {property.featured && (
@@ -82,15 +82,15 @@ export default async function ListingDetailPage({ params }: PageProps) {
                 </div>
               )}
             </div>
-            
+
             {/* Additional Images */}
             {additionalImages.map((image, index) => (
               <div key={index} className="relative aspect-video">
-                <Image 
-                  src={image} 
-                  alt={`${property.title} - Image ${index + 2}`} 
-                  fill 
-                  className="object-cover hover:scale-105 transition-transform duration-300" 
+                <Image
+                  src={image}
+                  alt={`${property.title} - Image ${index + 2}`}
+                  fill
+                  className="object-cover hover:scale-105 transition-transform duration-300"
                 />
                 {index === 3 && additionalImages.length > 4 && (
                   <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -118,7 +118,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
                   </>
                 )}
               </div>
-              
+
               {/* Property Stats */}
               {!isLand && (
                 <div className="flex items-center gap-6 text-gray-600">
@@ -142,7 +142,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
                   )}
                 </div>
               )}
-              
+
               {property.landSize && (
                 <div className="flex items-center gap-1 text-gray-600">
                   <Mountain className="w-5 h-5" />
@@ -211,8 +211,12 @@ export default async function ListingDetailPage({ params }: PageProps) {
               <div className="mb-6">
                 <div className="text-2xl font-bold flex items-baseline gap-2">
                   <span className="text-3xl">{property.currency || 'LKR'} {property.price.toLocaleString()}</span>
-                  {property.rentFrequency && property.purpose !== 'sale' && (
-                    <span className="text-lg font-medium text-gray-600">/ {property.rentFrequency}</span>
+                  {property.purpose === 'booking' ? (
+                    <span className="text-lg font-medium text-gray-600">/ night</span>
+                  ) : (
+                    property.rentFrequency && property.purpose !== 'sale' && (
+                      <span className="text-lg font-medium text-gray-600">/ {property.rentFrequency}</span>
+                    )
                   )}
                 </div>
                 <div className="text-sm text-gray-600 capitalize mt-1">
@@ -223,27 +227,27 @@ export default async function ListingDetailPage({ params }: PageProps) {
               {/* Booking Actions */}
               <div>
                 <ListingActions
-                propertyId={String(property._id)}
-                initialFavorite={false}
-                hostContact={{
-                  name: (property.owner as any)?.name,
-                  email: (property.owner as any)?.email,
-                  phone: (property.owner as any)?.phone,
-                  verified: (property.owner as any)?.verified,
-                }}
-                property={{
-                  purpose: property.purpose,
-                  type: property.type,
-                  price: property.price,
-                  currency: property.currency,
-                  rentFrequency: property.rentFrequency,
-                  title: property.title,
-                  address: property.address,
-                  amenities: property.amenities,
-                  images: property.images
-                }}
-              />
-               {/* Maintenance requests are now only available through the tenant dashboard for active rentals */}
+                  propertyId={String(property._id)}
+                  initialFavorite={false}
+                  hostContact={{
+                    name: (property.owner as any)?.name,
+                    email: (property.owner as any)?.email,
+                    phone: (property.owner as any)?.phone,
+                    verified: (property.owner as any)?.verified,
+                  }}
+                  property={{
+                    purpose: property.purpose,
+                    type: property.type,
+                    price: property.price,
+                    currency: property.currency,
+                    rentFrequency: property.rentFrequency,
+                    title: property.title,
+                    address: property.address,
+                    amenities: property.amenities,
+                    images: property.images
+                  }}
+                />
+                {/* Maintenance requests are now only available through the tenant dashboard for active rentals */}
               </div>
 
               <div className="mt-6 p-4 bg-gray-50 rounded-lg">
