@@ -4,6 +4,8 @@ import NotificationService from './notificationService';
 import User from '@/models/User';
 import Property from '@/models/Property';
 
+import Application from '@/models/Application';
+
 type CreateRentInput = {
   propertyId: string;
   tenantId: string;
@@ -12,6 +14,7 @@ type CreateRentInput = {
   frequency?: 'monthly' | 'weekly' | 'yearly';
   firstDueDate: string | Date;
   notes?: string;
+  applicationId?: string;
 };
 
 export default class RentService {
@@ -26,6 +29,37 @@ export default class RentService {
       nextDue: new Date(payload.firstDueDate),
       notes: payload.notes || ''
     });
+
+    let appId = payload.applicationId;
+
+    if (!appId) {
+      try {
+        const matchingApp = await Application.findOne({
+          property: payload.propertyId,
+          user: payload.tenantId,
+          status: { $in: ['pending', 'accepted', 'more_info'] }
+        }).sort({ createdAt: -1 });
+
+        if (matchingApp) {
+          appId = matchingApp._id as string;
+        }
+      } catch (err) {
+        // ignore error during discovery
+      }
+    }
+
+    if (appId) {
+      try {
+        await Application.findByIdAndUpdate(appId, {
+          status: 'accepted',
+          rentAgreement: rent._id
+        });
+      } catch (err) {
+        console.error('Failed to update application status:', err);
+        // We don't fail the rent creation if application update fails, but we log it
+      }
+    }
+
     return rent;
   }
 

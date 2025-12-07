@@ -19,6 +19,7 @@ export interface IApplication extends Document {
   submittedAt: Date;
   reviewedAt?: Date;
   additionalNotes?: string;
+  rentAgreement?: mongoose.Types.ObjectId;
 }
 
 const ApplicationSchema = new Schema<IApplication>({
@@ -39,7 +40,8 @@ const ApplicationSchema = new Schema<IApplication>({
   status: { type: String, enum: ['pending', 'accepted', 'rejected', 'more_info'], default: 'pending' },
   submittedAt: { type: Date, default: () => new Date() },
   reviewedAt: { type: Date },
-  additionalNotes: { type: String }
+  additionalNotes: { type: String },
+  rentAgreement: { type: Schema.Types.ObjectId, ref: 'Rent' }
 }, {
   timestamps: true
 });
