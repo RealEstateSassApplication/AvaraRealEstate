@@ -6,9 +6,9 @@ import Property from '@/models/Property';
 
 export async function GET(request: NextRequest) {
   try {
-  const user = await getUserFromReq(request as any);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!hasRole(user, 'host')) return NextResponse.json({ error: 'Host role required' }, { status: 403 });
+    const user = await getUserFromReq(request as any);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!hasRole(user, 'host')) return NextResponse.json({ error: 'Host role required' }, { status: 403 });
     await dbConnect();
     const properties = await Property.find({ owner: user._id }).sort({ createdAt: -1 }).lean();
     return NextResponse.json({ data: properties });
@@ -20,9 +20,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-  const user = await getUserFromReq(request as any);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!hasRole(user, 'host')) return NextResponse.json({ error: 'Host role required' }, { status: 403 });
+    const user = await getUserFromReq(request as any);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!hasRole(user, 'host')) return NextResponse.json({ error: 'Host role required' }, { status: 403 });
     const body = await request.json();
     // basic required fields (address can be partially missing; we'll default it)
     const required = ['title', 'description', 'type', 'purpose', 'price'];
@@ -70,7 +70,16 @@ export async function POST(request: NextRequest) {
       images: Array.isArray(images) ? images : [],
       amenities: Array.isArray(amenities) ? amenities : [],
       owner: user._id,
-      status: 'pending'
+      status: 'pending',
+      availability: {
+        minimumStay: body.minStay ? Number(body.minStay) : 1,
+        maximumStay: body.maxStay ? Number(body.maxStay) : undefined,
+        immediate: true
+      },
+      policies: {
+        checkInTime: body.checkInTime || '14:00',
+        checkOutTime: body.checkOutTime || '11:00'
+      }
     };
 
     // We intentionally do not accept lat/lng coordinates anymore.
