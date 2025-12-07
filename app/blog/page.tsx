@@ -185,9 +185,9 @@ export default function BlogPage() {
                   <div className="flex items-center gap-3 text-sm text-gray-500 mb-4">
                     <div className="flex items-center gap-1.5">
                       <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-teal-500 to-blue-500 flex items-center justify-center text-[10px] text-white font-bold">
-                        {post.author.firstName.charAt(0)}
+                        {post.author?.firstName ? post.author.firstName.charAt(0) : 'A'}
                       </div>
-                      <span className="font-medium text-gray-700">{post.author.firstName}</span>
+                      <span className="font-medium text-gray-700">{post.author?.firstName || 'Author'}</span>
                     </div>
                     <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
                     <div className="flex items-center gap-1.5">
