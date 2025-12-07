@@ -3,6 +3,7 @@ import { requireAuth } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import Application from '@/models/Application';
 import Property from '@/models/Property';
+import User from '@/models/User';
 import NotificationService from '@/services/notificationService';
 import Notification from '@/models/Notification';
 
@@ -18,6 +19,24 @@ export async function POST(request: NextRequest) {
     const property = await Property.findById(body.propertyId).populate('owner');
     if (!property) return NextResponse.json({ error: 'Property not found', reason: 'not_found' }, { status: 404 });
 
+    // Determine applicant
+    let applicantId = (user as any)._id;
+    let applicantName = (user as any).name;
+
+    if (body.applicantEmail) {
+      // Check if current user is the host
+      const isHost = (property.owner as any)._id.toString() === (user as any)._id.toString();
+      if (!isHost) {
+        return NextResponse.json({ error: 'Only the property host can create applications for others' }, { status: 403 });
+      }
+      const applicant = await User.findOne({ email: body.applicantEmail.toLowerCase() });
+      if (!applicant) {
+        return NextResponse.json({ error: 'Applicant with this email not found' }, { status: 404 });
+      }
+      applicantId = applicant._id;
+      applicantName = applicant.name;
+    }
+
     // Build application record
     const durationMonths = Number(body.durationMonths);
     const monthlyRent = Number(body.monthlyRent || property.price || 0);
@@ -25,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     const app = await Application.create({
       property: property._id,
-      user: (user as any)._id,
+      user: applicantId,
       host: (property.owner as any)._id,
       startDate: new Date(body.startDate),
       durationMonths,
@@ -40,33 +59,43 @@ export async function POST(request: NextRequest) {
       emergencyContactPhone: body.emergencyContactPhone,
       additionalNotes: body.additionalNotes
     });
-    // Notify host (WhatsApp / SMS / in-app) about new application
-    try {
-      const host = property.owner as any;
-      if (host?.phone) {
-        const hostMessage = `🏠 New rental application for "${property.title}"\nApplicant: ${body.fullName || (user as any).name || 'Unknown'}\nStart: ${body.startDate}\nDuration: ${durationMonths} months\nCheck dashboard: https://avararrealestate.com/host/dashboard`;
-        let sent = false;
-        if (process.env.WHATSAPP_API_KEY) {
-          try { await NotificationService.sendWhatsApp(host.phone, hostMessage); sent = true; } catch(e) { console.log('WhatsApp failed'); }
-        }
-        if (!sent && process.env.TWILIO_SID) {
-          try { await NotificationService.sendSMS(host.phone, hostMessage); sent = true; } catch(e) { console.log('SMS failed'); }
-        }
-      }
 
-      // Persist in-app notification for host
-      try {
+    // Notify host/applicant
+    try {
+      // If created by host, notify applicant? Or if created by applicant, notify host (existing logic)
+      if (body.applicantEmail) {
+        // Created by host for applicant
+        // Notify applicant? (Skip for now to match current scope, generic host notify below might need adjustment)
+        // Actually the code below notifies the host.
+      } else {
+        // Created by applicant, notify host
         const host = property.owner as any;
-        if (host && host._id) {
-          await Notification.create({
-            user: (host as any)._id,
-            type: 'application_submitted',
-            message: `New application for ${property.title} from ${(user as any).name || 'Applicant'}`,
-            metadata: { applicationId: app._id, propertyId: property._id }
-          });
+        if (host?.phone) {
+          const hostMessage = `🏠 New rental application for "${property.title}"\nApplicant: ${body.fullName || applicantName || 'Unknown'}\nStart: ${body.startDate}\nDuration: ${durationMonths} months\nCheck dashboard: https://avararrealestate.com/host/dashboard`;
+          let sent = false;
+          // Env vars might be missing in dev, catch errors silently
+          if (process.env.WHATSAPP_API_KEY) {
+            try { await NotificationService.sendWhatsApp(host.phone, hostMessage); sent = true; } catch (e) { console.log('WhatsApp failed'); }
+          }
+          if (!sent && process.env.TWILIO_SID) {
+            try { await NotificationService.sendSMS(host.phone, hostMessage); sent = true; } catch (e) { console.log('SMS failed'); }
+          }
         }
-      } catch (nerr) {
-        console.error('Failed to persist in-app notification:', nerr);
+
+        // Persist in-app notification for host
+        try {
+          const host = property.owner as any;
+          if (host && host._id) {
+            await Notification.create({
+              user: (host as any)._id,
+              type: 'application_submitted',
+              message: `New application for ${property.title} from ${applicantName || 'Applicant'}`,
+              metadata: { applicationId: app._id, propertyId: property._id }
+            });
+          }
+        } catch (nerr) {
+          console.error('Failed to persist in-app notification:', nerr);
+        }
       }
     } catch (notifyErr) {
       console.error('Failed to notify host of application:', notifyErr);

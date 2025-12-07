@@ -24,7 +24,7 @@ export default function RegisterPage() {
     phone: '',
     password: '',
     confirmPassword: '',
-  role: 'user',
+    role: 'user',
     agreeToTerms: false
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -79,7 +79,7 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -144,93 +144,105 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center space-x-2">
-            <div className="bg-gradient-to-r from-teal-500 to-blue-600 text-white p-3 rounded-lg">
-              <MapPin className="w-8 h-8" />
+    <div className="min-h-screen grid lg:grid-cols-2">
+      {/* Left: Decorative Image */}
+      <div className="hidden lg:block relative bg-gray-900">
+        <div
+          className="absolute inset-0 bg-[url('https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg')] bg-cover bg-center opacity-60"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent" />
+        <div className="relative h-full flex flex-col justify-end p-12 text-white">
+          <div className="flex items-center space-x-2 mb-8">
+            <div className="bg-white/20 backdrop-blur-md p-2 rounded-lg">
+              <MapPin className="w-6 h-6 text-white" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Avara</h1>
-              <p className="text-sm text-gray-500">Sri Lanka</p>
-            </div>
-          </Link>
+            <span className="text-xl font-bold">Avara</span>
+          </div>
+          <h2 className="text-4xl font-bold mb-4 max-w-md leading-tight">
+            Start your journey with us today.
+          </h2>
+          <p className="text-gray-300 max-w-sm mb-8 text-lg">
+            Create an account to list properties, book stays, and find your next home.
+          </p>
         </div>
+      </div>
 
-        <Card className="shadow-xl">
-            <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
-            <CardDescription className="text-center">
-              Join Avara to find your perfect property
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {error && (
-              <Alert className="mb-4 border-red-200 bg-red-50">
-                <AlertDescription className="text-red-800">
-                  {error}
-                </AlertDescription>
-              </Alert>
-            )}
+      {/* Right: Register Form */}
+      <div className="flex items-center justify-center p-8 bg-white overflow-y-auto">
+        <div className="w-full max-w-md space-y-6">
+          <div className="text-center lg:text-left">
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900">Create an account</h1>
+            <p className="text-sm text-gray-500 mt-2">
+              Enter your details to get started
+            </p>
+          </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  type="text"
-                  placeholder="Enter your full name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  disabled={loading}
-                />
-              </div>
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="Enter your email address"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  disabled={loading}
-                />
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                name="name"
+                type="text"
+                placeholder="John Doe"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                disabled={loading}
+                className="h-11 bg-gray-50 border-gray-200 focus:bg-white"
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  placeholder="0771234567"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                  disabled={loading}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="name@example.com"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                disabled={loading}
+                className="h-11 bg-gray-50 border-gray-200 focus:bg-white"
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="role">I want to</Label>
-                <Select value={formData.role} onValueChange={handleRoleChange}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="user">Find a property</SelectItem>
-                    <SelectItem value="host">List my property</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                name="phone"
+                type="tel"
+                placeholder="+94 77 123 4567"
+                value={formData.phone}
+                onChange={handleChange}
+                required
+                disabled={loading}
+                className="h-11 bg-gray-50 border-gray-200 focus:bg-white"
+              />
+            </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="role">I want to</Label>
+              <Select value={formData.role} onValueChange={handleRoleChange}>
+                <SelectTrigger className="h-11 bg-gray-50 border-gray-200 focus:bg-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">Find a property</SelectItem>
+                  <SelectItem value="host">List my property</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
@@ -238,108 +250,90 @@ export default function RegisterPage() {
                     id="password"
                     name="password"
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="Create a strong password"
+                    placeholder="••••••••"
                     value={formData.password}
                     onChange={handleChange}
                     required
                     disabled={loading}
+                    className="h-11 bg-gray-50 border-gray-200 focus:bg-white pr-10"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    className="absolute right-0 top-0 h-full px-2 text-gray-400"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Label htmlFor="confirmPassword">Confirm</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
                     name="confirmPassword"
                     type={showConfirmPassword ? 'text' : 'password'}
-                    placeholder="Confirm your password"
+                    placeholder="••••••••"
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     required
                     disabled={loading}
+                    className="h-11 bg-gray-50 border-gray-200 focus:bg-white pr-10"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    className="absolute right-0 top-0 h-full px-2 text-gray-400"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
-                    {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="agreeToTerms"
-                  name="agreeToTerms"
-                  checked={formData.agreeToTerms}
-                  onCheckedChange={(checked) => 
-                    setFormData({ ...formData, agreeToTerms: checked as boolean })
-                  }
-                  disabled={loading}
-                />
-                <Label htmlFor="agreeToTerms" className="text-sm">
-                  I agree to the{' '}
-                  <Link href="/terms" className="text-teal-600 hover:text-teal-500">
-                    Terms of Service
-                  </Link>{' '}
-                  and{' '}
-                  <Link href="/privacy" className="text-teal-600 hover:text-teal-500">
-                    Privacy Policy
-                  </Link>
-                </Label>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700"
-                disabled={loading}
-              >
-                {loading ? 'Creating Account...' : 'Create Account'}
-              </Button>
-            </form>
-
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="bg-white px-2 text-gray-500">Already have an account?</span>
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <Link href="/auth/login">
-                  <Button variant="outline" className="w-full">
-                    Sign In
-                  </Button>
-                </Link>
               </div>
             </div>
-          </CardContent>
-        </Card>
+
+            <div className="flex items-center space-x-2 pt-2">
+              <Checkbox
+                id="agreeToTerms"
+                name="agreeToTerms"
+                checked={formData.agreeToTerms}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, agreeToTerms: checked as boolean })
+                }
+                disabled={loading}
+              />
+              <Label htmlFor="agreeToTerms" className="text-sm font-normal text-gray-600">
+                I agree to the{' '}
+                <Link href="/terms" className="text-gray-900 underline hover:text-teal-600">
+                  Terms
+                </Link>{' '}
+                and{' '}
+                <Link href="/privacy" className="text-gray-900 underline hover:text-teal-600">
+                  Privacy Policy
+                </Link>
+              </Label>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full h-11 bg-gray-900 hover:bg-gray-800 text-white font-medium mt-2"
+              disabled={loading}
+            >
+              {loading ? 'Creating Account...' : 'Create Account'}
+            </Button>
+          </form>
+
+          <div className="text-center text-sm">
+            <span className="text-gray-500">Already have an account? </span>
+            <Link href="/auth/login" className="font-semibold text-teal-600 hover:text-teal-500">
+              Sign in
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

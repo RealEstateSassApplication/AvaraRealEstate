@@ -5,10 +5,12 @@ import Booking from '@/models/Booking';
 import Rent from '@/models/Rent';
 import { getUserFromRequest } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
-    
+
     // Get the authenticated user
     const user = await getUserFromRequest(request);
     if (!user) {
@@ -16,26 +18,26 @@ export async function GET(request: NextRequest) {
     }
 
     const userId = (user._id as any).toString();
-    
+
     // Get all properties owned by this host
     const properties = await Property.find({ owner: userId });
     const propertyIds = properties.map(p => p._id);
 
     // Get bookings for host's properties
-    const bookings = await Booking.find({ 
-      property: { $in: propertyIds } 
+    const bookings = await Booking.find({
+      property: { $in: propertyIds }
     });
 
     // Get rents for host's properties
-    const rents = await Rent.find({ 
-      property: { $in: propertyIds } 
+    const rents = await Rent.find({
+      property: { $in: propertyIds }
     });
 
     // Calculate stats
     const totalProperties = properties.length;
     const activeListings = properties.filter(p => p.status === 'active').length;
     const totalBookings = bookings.length;
-    
+
     // Calculate total revenue from confirmed bookings
     const totalRevenue = bookings
       .filter(b => b.status === 'confirmed' && b.paymentStatus === 'paid')

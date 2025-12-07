@@ -4,17 +4,19 @@ import { requireAuth } from '@/lib/auth';
 
 interface UserLike { _id: string | { toString(): string }; role?: string }
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
-  const user = await requireAuth(request) as unknown as UserLike;
+    const user = await requireAuth(request) as unknown as UserLike;
     const body = await request.json();
-    
+
     // Support both old (startDate/endDate) and new (checkInDate/checkOutDate) field names
     const startDate = body.startDate || body.checkInDate;
     const endDate = body.endDate || body.checkOutDate;
     const guestCount = body.guestCount || body.numberOfGuests || 1;
     const totalAmount = body.totalAmount || body.totalPrice;
-    
+
     const required = ['propertyId'];
     if (!body.propertyId) {
       return NextResponse.json({ error: 'Missing required field: propertyId', reason: 'missing_fields' }, { status: 400 });
@@ -32,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     const input: CreateBookingInput = {
       propertyId: body.propertyId,
-  userId: (user._id as any).toString(),
+      userId: (user._id as any).toString(),
       startDate,
       endDate,
       guestCount,
@@ -75,14 +77,14 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-  const user = await requireAuth(request) as unknown as UserLike;
+    const user = await requireAuth(request) as unknown as UserLike;
     const { searchParams } = new URL(request.url);
     const page = Number(searchParams.get('page')) || 1;
     const limit = Number(searchParams.get('limit')) || 10;
     const type = searchParams.get('type');
     const result = type === 'host'
-  ? await BookingService.getBookingsByHost((user._id as any).toString(), page, limit)
-  : await BookingService.getBookingsByUser((user._id as any).toString(), page, limit);
+      ? await BookingService.getBookingsByHost((user._id as any).toString(), page, limit)
+      : await BookingService.getBookingsByUser((user._id as any).toString(), page, limit);
     return NextResponse.json(result);
   } catch (err: any) {
     console.error('Booking GET error:', err);

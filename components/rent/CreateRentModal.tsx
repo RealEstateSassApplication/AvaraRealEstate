@@ -35,6 +35,7 @@ interface CreateRentModalProps {
     tenantPhone?: string;
     amount?: string | number;
     currency?: string;
+    applicationId?: string;
   };
 }
 
@@ -61,6 +62,7 @@ export default function CreateRentModal({
     frequency: 'monthly',
     firstDueDate: '',
     notes: '',
+    applicationId: prefilledData?.applicationId || '',
   });
 
   useEffect(() => {
@@ -76,6 +78,7 @@ export default function CreateRentModal({
           tenantPhone: prefilledData.tenantPhone || prev.tenantPhone,
           amount: prefilledData.amount ? String(prefilledData.amount) : prev.amount,
           currency: prefilledData.currency || prev.currency,
+          applicationId: prefilledData.applicationId || prev.applicationId,
         }));
       } else {
         resetForm();
@@ -109,103 +112,24 @@ export default function CreateRentModal({
       frequency: 'monthly',
       firstDueDate: '',
       notes: '',
+      applicationId: prefilledData?.applicationId || '',
     });
     setError(null);
     setSuccess(false);
   };
 
-  const handleChange = (field: string, value: string) => {
+  const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    setError(null);
-  };
-
-  const validateForm = () => {
-    if (!formData.propertyId) {
-      setError('Please select a property');
-      return false;
-    }
-
-    if (!formData.tenantId && !formData.tenantEmail && !formData.tenantName) {
-      setError('Please provide Tenant ID, Email, or Name');
-      return false;
-    }
-
-    if (!formData.amount || Number(formData.amount) <= 0) {
-      setError('Please enter a valid rent amount');
-      return false;
-    }
-
-    if (!formData.firstDueDate) {
-      setError('Please select the first due date');
-      return false;
-    }
-
-    // Validate date is not in the past
-    const dueDate = new Date(formData.firstDueDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (dueDate < today) {
-      setError('Due date cannot be in the past');
-      return false;
-    }
-
-    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(false);
-
-    if (!validateForm()) {
-      return;
-    }
-
     setLoading(true);
+    setError(null);
 
     try {
-      let tenantId = formData.tenantId;
-
-      // If tenant ID not provided, create/find tenant
-      if (!tenantId) {
-        const tenantPayload = {
-          name: formData.tenantName || formData.tenantEmail,
-          email: formData.tenantEmail,
-          phone: formData.tenantPhone || '0000000000',
-          role: 'tenant',
-          skipPassword: true,
-        };
-
-        const tenantResponse = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(tenantPayload),
-        });
-
-        if (!tenantResponse.ok) {
-          const errorData = await tenantResponse.json().catch(() => ({}));
-          throw new Error(errorData.error || 'Failed to create/find tenant');
-        }
-
-        const tenantData = await tenantResponse.json();
-        
-        // Extract tenant ID from various possible response formats
-        tenantId =
-          tenantData.user?._id ||
-          tenantData.data?._id ||
-          tenantData._id ||
-          tenantData.user?.id ||
-          tenantData.data?.id ||
-          tenantData.id;
-
-        if (!tenantId) {
-          console.error('Tenant response:', tenantData);
-          throw new Error('Failed to extract tenant ID from response');
-        }
-      }
-
       // Create rent
+      const tenantId = formData.tenantId;
       const rentPayload = {
         propertyId: formData.propertyId,
         tenantId,
@@ -214,6 +138,7 @@ export default function CreateRentModal({
         frequency: formData.frequency,
         firstDueDate: formData.firstDueDate,
         notes: formData.notes,
+        applicationId: formData.applicationId,
       };
 
       await RentServiceClient.create(rentPayload);
@@ -299,7 +224,7 @@ export default function CreateRentModal({
           {/* Tenant Information */}
           <div className="space-y-4 border-t pt-4">
             <h3 className="font-semibold text-sm text-gray-700">Tenant Information</h3>
-            
+
             <div className="space-y-2">
               <Label htmlFor="tenantId">Tenant ID (Optional)</Label>
               <Input
@@ -435,13 +360,13 @@ export default function CreateRentModal({
 
           {/* Actions */}
           <div className="flex items-center justify-end space-x-3 border-t pt-4">
-            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={loading} className="border-gray-200 text-gray-700 hover:bg-gray-50">
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={loading || loadingProperties}
-              className="bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700"
+              className="bg-black text-white hover:bg-gray-800 transition-colors shadow-sm"
             >
               {loading ? (
                 <>
@@ -449,7 +374,7 @@ export default function CreateRentModal({
                   Creating...
                 </>
               ) : (
-                'Create Rent Agreement'
+                'Create Agreement'
               )}
             </Button>
           </div>

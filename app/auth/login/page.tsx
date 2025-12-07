@@ -46,7 +46,7 @@ export default function LoginPage() {
 
       if (response.ok) {
         // Successful login; redirect based on role if provided
-  const role = data.data?.role;
+        const role = data.data?.role;
         const target = role === 'admin' ? '/admin/dashboard' : role === 'host' ? '/host/dashboard' : '/';
         router.push(target);
         router.refresh();
@@ -61,130 +61,129 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center space-x-2">
-            <div className="bg-gradient-to-r from-teal-500 to-blue-600 text-white p-3 rounded-lg">
-              <MapPin className="w-8 h-8" />
+    <div className="min-h-screen grid lg:grid-cols-2">
+      {/* Left: Decorative Image */}
+      <div className="hidden lg:block relative bg-gray-900">
+        <div
+          className="absolute inset-0 bg-[url('https://images.pexels.com/photos/3288102/pexels-photo-3288102.jpeg')] bg-cover bg-center opacity-60"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent" />
+        <div className="relative h-full flex flex-col justify-end p-12 text-white">
+          <div className="flex items-center space-x-2 mb-8">
+            <div className="bg-white/20 backdrop-blur-md p-2 rounded-lg">
+              <MapPin className="w-6 h-6 text-white" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Avara</h1>
-              <p className="text-sm text-gray-500">Sri Lanka</p>
-            </div>
-          </Link>
+            <span className="text-xl font-bold">Avara</span>
+          </div>
+          <h2 className="text-4xl font-bold mb-4 max-w-md leading-tight">
+            Find the perfect place to call home.
+          </h2>
+          <p className="text-gray-300 max-w-sm mb-8 text-lg">
+            Join thousands of satisfied users finding their dream properties in Sri Lanka.
+          </p>
         </div>
+      </div>
 
-        <Card className="shadow-xl">
-            <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">Welcome Back</CardTitle>
-            <CardDescription className="text-center">
-              Sign in to your Avara account
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {error && (
-              <Alert className="mb-4 border-red-200 bg-red-50">
-                <AlertDescription className="text-red-800">
-                  {error}
-                </AlertDescription>
-              </Alert>
-            )}
+      {/* Right: Login Form */}
+      <div className="flex items-center justify-center p-8 bg-white">
+        <div className="w-full max-w-md space-y-8">
+          <div className="text-center lg:text-left">
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900">Welcome back</h1>
+            <p className="text-sm text-gray-500 mt-2">
+              Enter your credentials to access your account
+            </p>
+          </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email or Phone Number</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="text"
-                  placeholder="Enter your email or phone number"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  disabled={loading}
-                />
-              </div>
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Enter your password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    disabled={loading}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-gray-700">Email Address</Label>
+              <Input
+                id="email"
+                name="email"
+                type="text"
+                placeholder="name@example.com"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                disabled={loading}
+                className="h-11 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+                autoComplete="username"
+              />
+            </div>
 
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-gray-700">Password</Label>
                 <Link
                   href="/auth/forgot-password"
-                  className="text-sm text-teal-600 hover:text-teal-500"
+                  className="text-sm font-medium text-teal-600 hover:text-teal-500"
                 >
                   Forgot password?
                 </Link>
               </div>
-
-              <Button
-                type="submit"
-                className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700"
-                disabled={loading}
-              >
-                {loading ? 'Signing in...' : 'Sign In'}
-              </Button>
-            </form>
-
-            <div className="mt-6">
               <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="bg-white px-2 text-gray-500">New to Avara?</span>
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <Link href="/auth/register">
-                  <Button variant="outline" className="w-full">
-                    Create Account
-                  </Button>
-                </Link>
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  disabled={loading}
+                  className="h-11 bg-gray-50 border-gray-200 focus:bg-white transition-colors pr-10"
+                  autoComplete="current-password"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-gray-600"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
               </div>
             </div>
 
-            <div className="mt-6 text-center text-xs text-gray-500">
-              By signing in, you agree to our{' '}
-              <Link href="/terms" className="text-teal-600 hover:text-teal-500">
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link href="/privacy" className="text-teal-600 hover:text-teal-500">
-                Privacy Policy
-              </Link>
+            <Button
+              type="submit"
+              className="w-full h-11 bg-gray-900 hover:bg-gray-800 text-white font-medium transition-all"
+              disabled={loading}
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
+            </Button>
+          </form>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-gray-200" />
             </div>
-          </CardContent>
-        </Card>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-gray-500">Or continue with</span>
+            </div>
+          </div>
+
+          <div className="text-center text-sm">
+            <span className="text-gray-500">Don&apos;t have an account? </span>
+            <Link href="/auth/register" className="font-semibold text-teal-600 hover:text-teal-500">
+              Create an account
+            </Link>
+          </div>
+
+          <p className="text-center text-xs text-gray-400 mt-6">
+            By clicking continue, you agree to our{' '}
+            <Link href="/terms" className="underline hover:text-gray-600">Terms of Service</Link>{' '}
+            and{' '}
+            <Link href="/privacy" className="underline hover:text-gray-600">Privacy Policy</Link>.
+          </p>
+        </div>
       </div>
     </div>
   );

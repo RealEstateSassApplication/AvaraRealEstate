@@ -42,19 +42,19 @@ export default function Header() {
 
   const isAdmin = (u: User | null) => {
     if (!u) return false;
-    
+
     // Check roles array first
     if (u.roles && Array.isArray(u.roles)) {
       if (u.roles.includes('admin') || u.roles.includes('super-admin')) {
         return true;
       }
     }
-    
+
     // Check single role field
     if (u.role === 'admin' || u.role === 'super-admin') {
       return true;
     }
-    
+
     return false;
   };
 
@@ -69,14 +69,14 @@ export default function Header() {
         const json = await response.json();
         const u = json.data || json.user;
         if (u) {
-          setUser({ 
-            _id: u.id || u._id, 
-            name: u.name, 
-            email: u.email, 
-            role: u.role, 
-            roles: u.roles, 
-            profilePhoto: u.profilePhoto, 
-            listingsCount: u.listingsCount 
+          setUser({
+            _id: u.id || u._id,
+            name: u.name,
+            email: u.email,
+            role: u.role,
+            roles: u.roles,
+            profilePhoto: u.profilePhoto,
+            listingsCount: u.listingsCount
           });
         }
       }
@@ -98,7 +98,7 @@ export default function Header() {
   };
 
   return (
-  <header className="bg-card sticky top-0 z-50 shadow-sm border-b">
+    <header className="bg-card sticky top-0 z-50 shadow-sm border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -171,19 +171,19 @@ export default function Header() {
                       </Button>
                     </Link>
 
-          <div className="flex items-center gap-2">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Link href="/user/profile" className="hidden sm:inline-block">
-                              <Avatar>
-                                {user.profilePhoto ? (
-                                  <AvatarImage src={user.profilePhoto} alt={user.name} />
-                                ) : (
-                                  <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
-                                )}
-                              </Avatar>
-                            </Link>
-                          </DropdownMenuTrigger>
+                    <div className="flex items-center gap-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Link href="/user/profile" className="hidden sm:inline-block">
+                            <Avatar>
+                              {user.profilePhoto ? (
+                                <AvatarImage src={user.profilePhoto} alt={user.name} />
+                              ) : (
+                                <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
+                              )}
+                            </Avatar>
+                          </Link>
+                        </DropdownMenuTrigger>
                         <DropdownMenuContent className="w-56" align="end" forceMount>
                           <div className="flex items-center justify-start gap-2 p-2">
                             <div className="flex flex-col space-y-1 leading-none">
@@ -195,9 +195,7 @@ export default function Header() {
                             <DropdownMenuItem asChild>
                               <Link href="/user/profile">Profile</Link>
                             </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link href="/bookings">My Bookings</Link>
-                            </DropdownMenuItem>
+
                             <DropdownMenuItem asChild>
                               <Link href="/user/dashboard">My Dashboard</Link>
                             </DropdownMenuItem>

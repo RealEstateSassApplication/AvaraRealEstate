@@ -39,14 +39,14 @@ export default class BookingService {
 
   static async createBooking(payload: CreateBookingInput) {
     await dbConnect();
-    const session = await mongoose.startSession();
-    session.startTransaction();
+
     try {
       const property = await Property.findById(payload.propertyId).populate('owner');
       if (!property) throw new Error('Property not found');
+      // Status check: allow active properties
       if (property.status !== 'active') throw new Error('Property not available');
 
-  const available = await this.checkAvailability((property._id as any).toString(), payload.startDate, payload.endDate);
+      const available = await this.checkAvailability((property._id as any).toString(), payload.startDate, payload.endDate);
       if (!available) throw new Error('Property not available for selected dates');
 
       const start = new Date(payload.startDate);
@@ -70,19 +70,16 @@ export default class BookingService {
         paymentStatus: 'pending'
       } as any;
 
-      const [booking] = await Booking.create([bookingDoc], { session });
-      const [tx] = await Transaction.create([{ booking: booking._id, from: payload.userId, to: (property.owner as any)._id, amount: totalAmount, currency: payload.currency || 'LKR', type: 'booking', provider: payload.provider || 'manual', providerTransactionId: payload.providerTransactionId || '', status: 'pending' }], { session });
+      const booking = await Booking.create(bookingDoc);
+      const tx = await Transaction.create({ booking: booking._id, from: payload.userId, to: (property.owner as any)._id, amount: totalAmount, currency: payload.currency || 'LKR', type: 'booking', provider: payload.provider || 'manual', providerTransactionId: payload.providerTransactionId || '', status: 'pending' });
 
       // Block dates temporarily
       const datesToBlock = eachDayOfInterval({ start, end });
-      await Property.findByIdAndUpdate(property._id, { $addToSet: { 'calendar.blockedDates': { $each: datesToBlock } } }, { session });
+      await Property.findByIdAndUpdate(property._id, { $addToSet: { 'calendar.blockedDates': { $each: datesToBlock } } });
 
-      await session.commitTransaction();
-      session.endSession();
       return { booking, transaction: tx };
     } catch (err) {
-      await session.abortTransaction();
-      session.endSession();
+      console.error("Booking creation failed:", err);
       throw err;
     }
   }

@@ -44,6 +44,9 @@ interface Property {
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'Buy' | 'Rent' | 'Book' | 'Sell'>('Buy');
+  const [propertyType, setPropertyType] = useState('All Types');
+  const [budget, setBudget] = useState('Flexible');
   const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [counters, setCounters] = useState({ props: 0, customers: 0, cities: 0 });
@@ -80,12 +83,53 @@ export default function HomePage() {
   };
 
   const handleSearch = () => {
+    const params = new URLSearchParams();
+
+    // Search query
     const trimmed = searchQuery.trim();
-    if (trimmed) {
-      window.location.href = `/listings?search=${encodeURIComponent(trimmed)}`;
-    } else {
-      window.location.href = '/listings';
+    if (trimmed) params.append('search', trimmed);
+
+    // Purpose mapping
+    if (activeTab === 'Buy') params.append('purpose', 'sale');
+    else if (activeTab === 'Rent') params.append('purpose', 'rent');
+    else if (activeTab === 'Book') params.append('purpose', 'booking');
+    // 'Sell' usually redirects to a listing flow, but for now we search 'sale' or handle differently.
+    // Assuming 'Sell' is for listing a property, we might want to redirect to list property page?
+    // Following user UI, let's treat it as a filter for now or maybe just 'sale'.
+    // If Tab is 'Sell', maybe the user wants to see what's for sale? Or list?
+    // Given the context of a search bar, 'Buy' looks for Sales. 'Sell' is ambiguous in search.
+    // Let's assume 'Buy' -> purpose=sale.
+    // If user clicked 'Sell' tab and searches, maybe they want to see sales to compare?
+    // Or maybe we treat it as 'sale'.
+    // Actually, distinct 'Buy' vs 'Sell' tabs usually imply user intent.
+    // 'Buy' = I want to buy (Show me sales).
+    // 'Sell' = I want to sell (List my property).
+    // If activeTab === 'Sell', we should probably redirect to listing creation or evaluation.
+    if (activeTab === 'Sell') {
+      window.location.href = '/host/listings/create';
+      return;
     }
+
+    // Type mapping
+    if (propertyType !== 'All Types') {
+      params.append('type', propertyType.toLowerCase());
+    }
+
+    // Budget mapping
+    if (budget !== 'Flexible') {
+      if (budget === '$100k - $500k') {
+        params.append('minPrice', '100000');
+        params.append('maxPrice', '500000');
+      } else if (budget === '$500k - $1M') {
+        params.append('minPrice', '500000');
+        params.append('maxPrice', '1000000');
+      } else if (budget === '$1M+') {
+        params.append('minPrice', '1000000');
+      }
+    }
+
+    const queryString = params.toString();
+    window.location.href = queryString ? `/listings?${queryString}` : '/listings';
   };
 
   const stats = [
@@ -100,132 +144,145 @@ export default function HomePage() {
       <Header />
 
       {/* HERO */}
-      <section className="relative overflow-hidden">
-        <div
-          className="absolute inset-0 bg-[url('https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg')] bg-cover bg-center opacity-30 blur-sm"
-          aria-hidden
-        />
+      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+        {/* Background Image with Overlay */}
+        <div className="absolute inset-0">
+          <div
+            className="absolute inset-0 bg-[url('https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg')] bg-cover bg-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-900/90 to-gray-900/40" />
+        </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+
+            {/* Left Content */}
             <motion.div
-              initial={{ opacity: 0, x: -40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="text-white space-y-8"
             >
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight">
-                Find your next property with
-                <br />
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-blue-600">Avara</span>
-              </h1>
-
-              <p className="mt-6 text-lg text-slate-700 max-w-xl">
-                Avara — an intelligent property platform for Sri Lanka. Premium listings, verified owners, and precise search powered by modern technology.
-              </p>
-
-              <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                <Button
-                  size="lg"
-                  className="shadow-xl px-8"
-                  onClick={() => (window.location.href = '/listings')}
-                >
-                  Browse Properties
-                </Button>
-
-                <ListPropertyButton size="lg" variant="ghost" className="border border-slate-200">List Your Property</ListPropertyButton>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm font-medium">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
+                </span>
+                #1 Real Estate Platform in Sri Lanka
               </div>
 
-              {/* refined trust line */}
-              <div className="mt-8 flex gap-4 items-center text-sm text-slate-600">
-                <div>Trusted by</div>
-                <div className="inline-flex items-center gap-3">
-                  <div className="px-3 py-1 bg-white rounded-md shadow-sm">Leading agencies</div>
-                  <div className="px-3 py-1 bg-white rounded-md shadow-sm">Verified listings</div>
-                  <div className="px-3 py-1 bg-white rounded-md shadow-sm">Secure payments</div>
+              <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold leading-tight tracking-tight">
+                Find a home <br />
+                that suits <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500">
+                  your lifestyle.
+                </span>
+              </h1>
+
+              <p className="text-lg text-gray-300 max-w-lg leading-relaxed">
+                Discover a curated selection of premium properties, from modern apartments in Colombo to serene villas by the coast.
+              </p>
+
+              <div className="flex flex-wrap gap-4 pt-4">
+                <Button
+                  size="lg"
+                  className="bg-white text-gray-900 hover:bg-gray-100 text-lg h-12 px-8"
+                  onClick={() => window.location.href = '/listings'}
+                >
+                  Start Exploring
+                </Button>
+                <div className="flex -space-x-4 items-center">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="w-10 h-10 rounded-full border-2 border-gray-900 bg-gray-700 overflow-hidden">
+                      <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="User" />
+                    </div>
+                  ))}
+                  <div className="pl-6 text-sm text-gray-400">
+                    <span className="text-white font-bold">15k+</span> Happy Customers
+                  </div>
                 </div>
               </div>
             </motion.div>
 
-            {/* SEARCH CARD */}
+            {/* Right Search Card */}
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.15 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
             >
-              <Card className="backdrop-blur-md bg-white/80 shadow-2xl ring-1 ring-slate-100">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="flex-1">
-                      <label className="text-xs text-slate-500">Search</label>
-                      <div className="relative mt-2">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+              <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl p-2 rounded-2xl">
+                <CardContent className="p-6 space-y-6">
+                  <div className="flex items-center gap-4 border-b border-gray-100 pb-4">
+                    {(['Buy', 'Rent', 'Book', 'Sell'] as const).map((tab) => (
+                      <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className={`text-sm font-medium pb-4 -mb-4 transition-colors ${activeTab === tab
+                            ? 'text-gray-900 border-b-2 border-gray-900 font-semibold'
+                            : 'text-gray-500 hover:text-gray-900'
+                          }`}
+                      >
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Location</label>
+                      <div className="relative">
+                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                         <Input
-                          placeholder="Search by city, neighbourhood, or property type"
-                          className="pl-10 pr-4 h-12"
+                          placeholder="City, neighborhood, or address"
+                          className="h-14 pl-12 bg-gray-50 border-gray-100 focus:bg-white text-lg"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                         />
                       </div>
-
-                      {searchQuery.trim() && (
-                        <div className="mt-2 bg-white border rounded-md shadow-sm p-2">
-                          {['Colombo', 'Kandy', 'Galle', 'Negombo']
-                            .filter((s) => s.toLowerCase().includes(searchQuery.toLowerCase()))
-                            .slice(0, 4)
-                            .map((s) => (
-                              <button
-                                key={s}
-                                className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 rounded"
-                                onClick={() => {
-                                  setSearchQuery(s);
-                                  window.location.href = `/listings?city=${encodeURIComponent(s)}`;
-                                }}
-                              >
-                                {s}
-                              </button>
-                            ))}
-                        </div>
-                      )}
                     </div>
 
-                    <div className="w-40">
-                      <label className="text-xs text-slate-500">Purpose</label>
-                      <select className="block w-full mt-2 h-12 rounded-md border border-slate-200 px-3 bg-white" defaultValue="any">
-                        <option value="any">Any</option>
-                        <option value="rent">Rent</option>
-                        <option value="sale">Buy</option>
-                        <option value="booking">Booking</option>
-                      </select>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</label>
+                        <select
+                          className="w-full h-14 bg-gray-50 border-gray-100 rounded-md px-4 text-gray-700 outline-none focus:ring-2 focus:ring-black/5"
+                          value={propertyType}
+                          onChange={(e) => setPropertyType(e.target.value)}
+                        >
+                          <option>All Types</option>
+                          <option>House</option>
+                          <option>Apartment</option>
+                          <option>Land</option>
+                          <option>Villa</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Budget</label>
+                        <select
+                          className="w-full h-14 bg-gray-50 border-gray-100 rounded-md px-4 text-gray-700 outline-none focus:ring-2 focus:ring-black/5"
+                          value={budget}
+                          onChange={(e) => setBudget(e.target.value)}
+                        >
+                          <option>Flexible</option>
+                          <option>$100k - $500k</option>
+                          <option>$500k - $1M</option>
+                          <option>$1M+</option>
+                        </select>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex gap-4 mt-2">
-                    <Button size="lg" className="flex-1" onClick={handleSearch}>
-                      Search Properties
-                    </Button>
-                    <Button size="lg" variant="outline" className="w-36">
-                      Advanced
+                    <Button
+                      size="lg"
+                      className="w-full h-14 text-lg bg-gray-900 hover:bg-black transition-all"
+                      onClick={handleSearch}
+                    >
+                      {activeTab === 'Sell' ? 'List My Property' : 'Search Properties'}
                     </Button>
                   </div>
-
-                  <div className="mt-4 text-sm text-slate-500">Examples: Colombo, 2 bedroom apartment, Bentota beach house</div>
                 </CardContent>
               </Card>
-
-              {/* Quick links below search */}
-              <div className="mt-6 flex gap-3 flex-wrap">
-                <Button asChild>
-                  <Link href="/listings?purpose=rent" className="border rounded-full px-4 py-2">Rent</Link>
-                </Button>
-                <Button asChild>
-                  <Link href="/listings?purpose=sale" className="border rounded-full px-4 py-2">Buy</Link>
-                </Button>
-                <Button asChild>
-                  <Link href="/listings?purpose=booking" className="border rounded-full px-4 py-2">Booking</Link>
-                </Button>
-              </div>
             </motion.div>
+
           </div>
         </div>
       </section>

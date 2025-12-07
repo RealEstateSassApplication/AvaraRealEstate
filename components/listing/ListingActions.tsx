@@ -108,7 +108,7 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
           {/* Booking Button */}
           {isBooking && (
             <Button
-              className="w-full bg-[#FF385C] hover:bg-[#E31C5F] text-white text-lg py-3 font-semibold"
+              className="w-full h-12 bg-gray-900 hover:bg-black text-white text-lg font-medium transition-all shadow-lg hover:shadow-xl"
               onClick={() => handleCheckAuth(() => setShowBookingModal(true))}
             >
               <CalendarDays className="w-5 h-5 mr-2" />
@@ -121,7 +121,7 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
             <Dialog open={showRentModal} onOpenChange={setShowRentModal}>
               <DialogTrigger asChild>
                 <Button
-                  className="w-full bg-[#FF385C] hover:bg-[#E31C5F] text-white text-lg py-3 font-semibold"
+                  className="w-full h-12 bg-gray-900 hover:bg-black text-white text-lg font-medium transition-all shadow-lg hover:shadow-xl"
                   onClick={() => handleCheckAuth(() => setShowRentModal(true))}
                 >
                   Apply to Rent

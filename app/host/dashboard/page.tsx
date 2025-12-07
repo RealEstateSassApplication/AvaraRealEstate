@@ -148,7 +148,7 @@ export default function HostDashboard() {
   const [showCreateRentModal, setShowCreateRentModal] = useState(false);
   const [rentPrefilledData, setRentPrefilledData] = useState<any>(null);
 
-  
+
 
   // initial data load moved below after helper function declarations
 
@@ -301,9 +301,8 @@ export default function HostDashboard() {
             <p className="text-sm font-medium text-gray-600">{title}</p>
             <p className="text-2xl font-bold text-gray-900">{value}</p>
             {change && (
-              <p className={`text-sm flex items-center mt-1 ${
-                changeType === 'positive' ? 'text-green-600' : 'text-red-600'
-              }`}>
+              <p className={`text-sm flex items-center mt-1 ${changeType === 'positive' ? 'text-green-600' : 'text-red-600'
+                }`}>
                 <TrendingUp className="w-4 h-4 mr-1" />
                 {change}
               </p>
@@ -337,7 +336,7 @@ export default function HostDashboard() {
 
   const handleToggleFeatured = async (id: string, current: boolean) => {
     try {
-  setProperties((prev) => prev.map((p) => (p._id === id ? { ...p, featured: !current } : p)));
+      setProperties((prev) => prev.map((p) => (p._id === id ? { ...p, featured: !current } : p)));
       setRawProperties((prev) => prev.map((p) => (p._id === id ? { ...p, featured: !current } : p)));
       const res = await fetch(`/api/properties/${id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ featured: !current })
@@ -501,16 +500,16 @@ export default function HostDashboard() {
                         </div>
                       </div>
                       <div className="flex space-x-1">
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           className="bg-green-600 hover:bg-green-700 text-xs px-2 py-1"
                           onClick={() => handleBookingAction(booking._id, 'approve')}
                         >
                           Approve
                         </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
+                        <Button
+                          size="sm"
+                          variant="outline"
                           className="text-xs px-2 py-1"
                           onClick={() => handleBookingAction(booking._id, 'decline')}
                         >
@@ -629,8 +628,8 @@ export default function HostDashboard() {
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <ApplicationModal application={app} onActionCompleted={() => { fetchApplications(); fetchRents(); fetchMaintenanceRequests(); }} />
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 className="bg-teal-600 hover:bg-teal-700"
                                 onClick={() => {
                                   const propertyData = properties.find(p => p._id === app.property?._id || p._id === app.property);
@@ -639,7 +638,8 @@ export default function HostDashboard() {
                                     tenantEmail: app.user?.email || '',
                                     tenantName: app.user?.name || '',
                                     amount: app.monthlyRent || propertyData?.price || '',
-                                    currency: app.currency || 'LKR'
+                                    currency: app.currency || 'LKR',
+                                    applicationId: app._id,
                                   });
                                   setShowCreateRentModal(true);
                                 }}
@@ -681,7 +681,7 @@ export default function HostDashboard() {
                         <PropertyCard property={property} />
                         <div className="p-4 space-y-3">
                           <div className="flex items-center justify-between">
-                            <Badge 
+                            <Badge
                               variant={property.verified ? 'default' : 'secondary'}
                               className={property.verified ? 'bg-green-100 text-green-800' : ''}
                             >
@@ -704,15 +704,15 @@ export default function HostDashboard() {
                                 Edit
                               </Link>
                             </Button>
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="outline"
                               onClick={() => handleToggleFeatured(property._id, property.featured)}
                             >
                               <Star className="w-4 h-4" />
                             </Button>
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="destructive"
                               onClick={() => handleDelete(property._id)}
                             >
@@ -787,10 +787,10 @@ export default function HostDashboard() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge 
+                            <Badge
                               variant={
                                 booking.status === 'confirmed' ? 'default' :
-                                booking.status === 'pending' ? 'secondary' : 'destructive'
+                                  booking.status === 'pending' ? 'secondary' : 'destructive'
                               }
                             >
                               {booking.status}
@@ -805,15 +805,15 @@ export default function HostDashboard() {
                             <div className="flex space-x-2">
                               {booking.status === 'pending' && (
                                 <>
-                                  <Button 
-                                    size="sm" 
+                                  <Button
+                                    size="sm"
                                     className="bg-green-600 hover:bg-green-700"
                                     onClick={() => handleBookingAction(booking._id, 'approve')}
                                   >
                                     Approve
                                   </Button>
-                                  <Button 
-                                    size="sm" 
+                                  <Button
+                                    size="sm"
                                     variant="destructive"
                                     onClick={() => handleBookingAction(booking._id, 'decline')}
                                   >
@@ -822,8 +822,8 @@ export default function HostDashboard() {
                                 </>
                               )}
                               {booking.status === 'confirmed' && (
-                                <Button 
-                                  size="sm" 
+                                <Button
+                                  size="sm"
                                   variant="outline"
                                   onClick={() => handleBookingAction(booking._id, 'cancel')}
                                 >
@@ -917,7 +917,7 @@ export default function HostDashboard() {
                                 const now = new Date();
                                 const diffTime = dueDate.getTime() - now.getTime();
                                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                                
+
                                 if (diffDays < 0) {
                                   return <p className="text-sm text-red-600">Overdue by {Math.abs(diffDays)} days</p>;
                                 } else if (diffDays <= 7) {
@@ -935,7 +935,7 @@ export default function HostDashboard() {
                           </TableCell>
                           <TableCell>
                             <div className="flex space-x-2">
-                              <Button 
+                              <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => {
@@ -946,15 +946,15 @@ export default function HostDashboard() {
                                 <Eye className="w-4 h-4 mr-1" />
                                 View
                               </Button>
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 className="bg-green-600 hover:bg-green-700"
                                 onClick={() => handleRentAction(rent._id, 'mark_paid')}
                               >
                                 Mark Paid
                               </Button>
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="outline"
                                 onClick={() => handleRentAction(rent._id, 'send_reminder')}
                               >
