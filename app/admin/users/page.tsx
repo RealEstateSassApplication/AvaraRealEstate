@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, Search, Mail, Phone, Shield, CheckCircle, XCircle } from 'lucide-react';
+import { Users, Search, Mail, Phone, Shield, CheckCircle, XCircle, MoreVertical, Trash2, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -14,12 +14,46 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 
 export default function AdminUsersPage() {
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Edit State
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [editingUser, setEditingUser] = useState<any>(null);
+    const [editForm, setEditForm] = useState({ role: '', verified: false });
+
+    // Delete State
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+    const [deletingUser, setDeletingUser] = useState<any>(null);
 
     useEffect(() => {
         fetchUsers();
@@ -38,6 +72,59 @@ export default function AdminUsersPage() {
             toast.error('Failed to load users');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleEditClick = (user: any) => {
+        setEditingUser(user);
+        setEditForm({ role: user.role, verified: user.verified });
+        setIsEditOpen(true);
+    };
+
+    const handleSaveEdit = async () => {
+        if (!editingUser) return;
+        try {
+            const res = await fetch(`/api/admin/users/${editingUser._id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editForm)
+            });
+
+            if (!res.ok) throw new Error('Failed to update user');
+
+            const data = await res.json();
+            setUsers(users.map(u => u._id === editingUser._id ? data.user : u));
+            toast.success('User updated successfully');
+            setIsEditOpen(false);
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to update user');
+        }
+    };
+
+    const handleDeleteClick = (user: any) => {
+        setDeletingUser(user);
+        setIsDeleteOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!deletingUser) return;
+        try {
+            const res = await fetch(`/api/admin/users/${deletingUser._id}`, {
+                method: 'DELETE'
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to delete user');
+            }
+
+            setUsers(users.filter(u => u._id !== deletingUser._id));
+            toast.success('User deleted successfully');
+            setIsDeleteOpen(false);
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || 'Failed to delete user');
         }
     };
 
@@ -86,6 +173,7 @@ export default function AdminUsersPage() {
                                         <TableHead>Role</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead>Joined</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -125,6 +213,29 @@ export default function AdminUsersPage() {
                                                     {new Date(user.createdAt).toLocaleDateString()}
                                                 </span>
                                             </TableCell>
+                                            <TableCell className="text-right">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                                            <span className="sr-only">Open menu</span>
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                        <DropdownMenuItem onClick={() => handleEditClick(user)}>
+                                                            <Edit className="mr-2 h-4 w-4" /> Edit Details
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem
+                                                            onClick={() => handleDeleteClick(user)}
+                                                            className="text-red-600 focus:text-red-600"
+                                                        >
+                                                            <Trash2 className="mr-2 h-4 w-4" /> Delete User
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -132,6 +243,76 @@ export default function AdminUsersPage() {
                         )}
                     </CardContent>
                 </Card>
+
+                {/* Edit Dialog */}
+                <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Edit User</DialogTitle>
+                            <DialogDescription>
+                                Update user role and verification status.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="role" className="text-right">
+                                    Role
+                                </Label>
+                                <div className="col-span-3">
+                                    <Select
+                                        value={editForm.role}
+                                        onValueChange={(val) => setEditForm({ ...editForm, role: val })}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a role" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="user">User</SelectItem>
+                                            <SelectItem value="tenant">Tenant</SelectItem>
+                                            <SelectItem value="host">Host</SelectItem>
+                                            <SelectItem value="admin">Admin</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="verified" className="text-right">
+                                    Verified
+                                </Label>
+                                <div className="col-span-3 flex items-center space-x-2">
+                                    <Switch
+                                        id="verified"
+                                        checked={editForm.verified}
+                                        onCheckedChange={(checked) => setEditForm({ ...editForm, verified: checked })}
+                                    />
+                                    <Label htmlFor="verified">
+                                        {editForm.verified ? 'Verified User' : 'Unverified'}
+                                    </Label>
+                                </div>
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setIsEditOpen(false)}>Cancel</Button>
+                            <Button onClick={handleSaveEdit}>Save Changes</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Delete Warning Dialog */}
+                <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Delete User</DialogTitle>
+                            <DialogDescription>
+                                Are you sure you want to delete <strong>{deletingUser?.name}</strong>? This action cannot be undone.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setIsDeleteOpen(false)}>Cancel</Button>
+                            <Button variant="destructive" onClick={confirmDelete}>Delete User</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </div>
     );
