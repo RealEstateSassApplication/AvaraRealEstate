@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
@@ -20,7 +20,9 @@ import {
   User,
   Eye,
   ArrowRight,
-  FileText
+  TrendingUp,
+  Sparkles,
+  BookOpen
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -82,51 +84,51 @@ export default function BlogPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h3 className="text-xl font-bold text-red-600 mb-2">Error Loading Posts</h3>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <Button onClick={() => fetchPosts()}>Try Again</Button>
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+          <p className="text-gray-500 animate-pulse">Loading articles...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
-        <div className="max-w-7xl mx-auto px-6">
-          <h1 className="text-5xl font-bold mb-4">Avara Blog</h1>
-          <p className="text-xl text-blue-100">
-            Insights, tips, and news about real estate in Sri Lanka
-          </p>
+    <div className="min-h-screen bg-gray-50/50">
+      {/* Modern Hero Section with Mesh Gradient */}
+      <div className="relative overflow-hidden bg-white">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-teal-100/50 via-blue-50/30 to-transparent opacity-70"></div>
+        <div className="relative max-w-7xl mx-auto px-6 py-24 sm:py-32">
+          <div className="text-center max-w-3xl mx-auto space-y-6">
+            <Badge variant="secondary" className="bg-teal-50 text-teal-700 hover:bg-teal-100 transition-colors px-4 py-1.5 rounded-full text-sm font-medium border border-teal-100 mb-4">
+              <Sparkles className="w-3.5 h-3.5 mr-2 inline-block" />
+              Discover Insights
+            </Badge>
+            <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-gray-900 leading-[1.1]">
+              The Avara <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-blue-600">Journal</span>
+            </h1>
+            <p className="text-xl text-gray-600 leading-relaxed font-light">
+              Expert advice, market analysis, and the latest trends in Sri Lankan real estate.
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        {/* Filters */}
-        <div className="mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+      <div className="max-w-7xl mx-auto px-6 py-12 -mt-10 relative z-10">
+        {/* Modern Filter Bar */}
+        <div className="bg-white/80 backdrop-blur-xl border border-white/20 shadow-xl rounded-2xl p-4 mb-12">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <Input
-                placeholder="Search posts..."
+                placeholder="Search articles..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-12 bg-white/50 border-gray-200 focus:bg-white transition-all h-12 text-base rounded-xl"
               />
             </div>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by category" />
+              <SelectTrigger className="w-full md:w-64 h-12 rounded-xl border-gray-200 bg-white/50 focus:bg-white">
+                <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
@@ -144,72 +146,75 @@ export default function BlogPage() {
 
         {/* Blog Posts Grid */}
         {filteredPosts.length === 0 ? (
-          <div className="text-center py-16">
-            <FileText className="w-20 h-20 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-2xl font-semibold text-gray-700 mb-2">No posts found</h3>
-            <p className="text-gray-500">Try adjusting your search or filters</p>
+          <div className="text-center py-24 bg-white rounded-3xl border border-dashed border-gray-200">
+            <BookOpen className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+            <h3 className="text-2xl font-semibold text-gray-900 mb-2">No articles found</h3>
+            <p className="text-gray-500">We couldn't find any posts matching your search.</p>
+            <Button variant="link" onClick={() => { setSearchTerm(''); setCategoryFilter('all'); }} className="mt-4 text-teal-600">
+              Clear filters
+            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredPosts.map((post) => (
-              <Card key={post._id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                {post.featuredImage ? (
-                  <div className="relative h-48 w-full">
+            {filteredPosts.map((post, index) => (
+              <Card
+                key={post._id}
+                className="group border-0 bg-white shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 rounded-2xl overflow-hidden flex flex-col h-full"
+              >
+                <div className="relative aspect-[16/10] overflow-hidden">
+                  {post.featuredImage ? (
                     <Image
                       src={post.featuredImage}
                       alt={post.title}
                       fill
-                      className="object-cover"
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                  </div>
-                ) : (
-                  <div className="h-48 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
-                    <FileText className="w-16 h-16 text-blue-300" />
-                  </div>
-                )}
-
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Badge variant="secondary" className="text-xs">
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-teal-50 to-blue-50 flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-teal-100 group-hover:to-blue-100 transition-colors">
+                      <Sparkles className="w-12 h-12 text-teal-200" />
+                    </div>
+                  )}
+                  <div className="absolute top-4 left-4">
+                    <Badge className="bg-white/90 backdrop-blur text-gray-800 hover:bg-white border-0 shadow-sm text-xs font-semibold px-2.5 py-0.5">
                       {post.category.replace('-', ' ')}
                     </Badge>
                   </div>
+                </div>
 
-                  <h3 className="text-xl font-bold mb-2 line-clamp-2 hover:text-blue-600">
-                    <Link href={`/blog/${post.slug}`}>
+                <CardContent className="flex flex-col flex-grow p-6">
+                  <div className="flex items-center gap-3 text-sm text-gray-500 mb-4">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-teal-500 to-blue-500 flex items-center justify-center text-[10px] text-white font-bold">
+                        {post.author.firstName.charAt(0)}
+                      </div>
+                      <span className="font-medium text-gray-700">{post.author.firstName}</span>
+                    </div>
+                    <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>{formatDistanceToNow(new Date(post.publishedAt), { addSuffix: true })}</span>
+                    </div>
+                  </div>
+
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 leading-tight group-hover:text-teal-600 transition-colors">
+                    <Link href={`/blog/${post.slug}`} className="before:absolute before:inset-0">
                       {post.title}
                     </Link>
                   </h3>
 
-                  <p className="text-gray-600 mb-4 line-clamp-3">
+                  <p className="text-gray-600 mb-6 line-clamp-3 text-sm leading-relaxed flex-grow">
                     {post.excerpt}
                   </p>
 
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1">
-                        <User className="w-4 h-4" />
-                        <span>{post.author.firstName}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Eye className="w-4 h-4" />
-                        <span>{post.views || 0}</span>
-                      </div>
+                  <div className="flex items-center justify-between pt-6 border-t border-gray-100 mt-auto">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
+                      <Eye className="w-3.5 h-3.5 text-gray-400" />
+                      {post.views || 0} reads
                     </div>
-                  </div>
-
-                  <div className="flex items-center gap-1 text-xs text-gray-400 mt-2">
-                    <Calendar className="w-3 h-3" />
-                    <span>
-                      {formatDistanceToNow(new Date(post.publishedAt), { addSuffix: true })}
+                    <span className="text-teal-600 text-sm font-semibold flex items-center group-hover:translate-x-1 transition-transform">
+                      Read Article <ArrowRight className="w-4 h-4 ml-1" />
                     </span>
                   </div>
-
-                  <Button variant="link" asChild className="mt-4 p-0">
-                    <Link href={`/blog/${post.slug}`}>
-                      Read More <ArrowRight className="w-4 h-4 ml-1" />
-                    </Link>
-                  </Button>
                 </CardContent>
               </Card>
             ))}

@@ -278,23 +278,23 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleToggleFeatured = async (propertyId: string, currentFeatured: boolean) => {
+  const handleToggleFeatured = async (propertyId: string, newFeaturedStatus: boolean) => {
     try {
       const response = await fetch(`/api/admin/properties/${propertyId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ featured: !currentFeatured }),
+        body: JSON.stringify({ featured: newFeaturedStatus }),
       });
 
       if (response.ok) {
-        setAllProperties(prev => 
-          prev.map(p => p._id === propertyId ? { ...p, featured: !currentFeatured } : p)
+        setAllProperties(prev =>
+          prev.map(p => p._id === propertyId ? { ...p, featured: newFeaturedStatus } : p)
         );
         toast({
-          title: currentFeatured ? 'Featured Tag Removed' : 'Property Featured',
-          description: currentFeatured 
-            ? 'The property is no longer featured.' 
-            : 'The property is now featured on the homepage.',
+          title: newFeaturedStatus ? 'Property Featured' : 'Featured Tag Removed',
+          description: newFeaturedStatus
+            ? 'The property is now featured on the homepage.'
+            : 'The property is no longer featured.',
         });
       }
     } catch (error) {
@@ -307,23 +307,23 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleToggleVerified = async (propertyId: string, currentVerified: boolean) => {
+  const handleToggleVerified = async (propertyId: string, newVerifiedStatus: boolean) => {
     try {
       const response = await fetch(`/api/admin/properties/${propertyId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ verified: !currentVerified }),
+        body: JSON.stringify({ verified: newVerifiedStatus }),
       });
 
       if (response.ok) {
-        setAllProperties(prev => 
-          prev.map(p => p._id === propertyId ? { ...p, verified: !currentVerified } : p)
+        setAllProperties(prev =>
+          prev.map(p => p._id === propertyId ? { ...p, verified: newVerifiedStatus } : p)
         );
         toast({
-          title: currentVerified ? 'Verification Removed' : 'Property Verified',
-          description: currentVerified 
-            ? 'The property verification has been removed.' 
-            : 'The property has been verified.',
+          title: newVerifiedStatus ? 'Property Verified' : 'Verification Removed',
+          description: newVerifiedStatus
+            ? 'The property has been verified.'
+            : 'The property verification has been removed.',
         });
       }
     } catch (error) {
@@ -360,9 +360,8 @@ export default function AdminDashboardPage() {
             <p className="text-sm font-medium text-gray-600">{title}</p>
             <p className="text-2xl font-bold text-gray-900">{value}</p>
             {change && (
-              <p className={`text-sm flex items-center mt-1 ${
-                changeType === 'positive' ? 'text-green-600' : 'text-red-600'
-              }`}>
+              <p className={`text-sm flex items-center mt-1 ${changeType === 'positive' ? 'text-green-600' : 'text-red-600'
+                }`}>
                 <TrendingUp className="w-4 h-4 mr-1" />
                 {change}
               </p>
@@ -699,11 +698,11 @@ export default function AdminDashboardPage() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <Badge 
+                            <Badge
                               className={
                                 property.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                property.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-red-100 text-red-800'
+                                  property.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-red-100 text-red-800'
                               }
                             >
                               {property.status}
@@ -853,8 +852,8 @@ export default function AdminDashboardPage() {
                             <Badge
                               className={
                                 rent.status === 'paid' ? 'bg-green-100 text-green-800' :
-                                rent.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-red-100 text-red-800'
+                                  rent.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-red-100 text-red-800'
                               }
                             >
                               {rent.status}
@@ -947,9 +946,9 @@ export default function AdminDashboardPage() {
                             <Badge
                               className={
                                 request.priority === 'urgent' ? 'bg-red-100 text-red-800' :
-                                request.priority === 'high' ? 'bg-orange-100 text-orange-800' :
-                                request.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-green-100 text-green-800'
+                                  request.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                                    request.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                      'bg-green-100 text-green-800'
                               }
                             >
                               {request.priority}
@@ -959,8 +958,8 @@ export default function AdminDashboardPage() {
                             <Badge
                               className={
                                 request.status === 'resolved' ? 'bg-green-100 text-green-800' :
-                                request.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-                                'bg-yellow-100 text-yellow-800'
+                                  request.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                                    'bg-yellow-100 text-yellow-800'
                               }
                             >
                               {request.status}
@@ -1179,7 +1178,7 @@ export default function AdminDashboardPage() {
                       </Button>
                     </div>
                   </div>
-                  
+
                   <Table>
                     <TableHeader>
                       <TableRow>

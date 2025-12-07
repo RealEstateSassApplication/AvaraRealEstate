@@ -360,13 +360,13 @@ export default function CreateRentModal({
 
           {/* Actions */}
           <div className="flex items-center justify-end space-x-3 border-t pt-4">
-            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={loading} className="border-gray-200 text-gray-700 hover:bg-gray-50">
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={loading || loadingProperties}
-              className="bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700"
+              className="bg-black text-white hover:bg-gray-800 transition-colors shadow-sm"
             >
               {loading ? (
                 <>
@@ -374,7 +374,7 @@ export default function CreateRentModal({
                   Creating...
                 </>
               ) : (
-                'Create Rent Agreement'
+                'Create Agreement'
               )}
             </Button>
           </div>
