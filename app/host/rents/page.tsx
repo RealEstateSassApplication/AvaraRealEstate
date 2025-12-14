@@ -71,11 +71,11 @@ export default function HostRentsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return 'bg-green-100 text-green-800';
+        return 'bg-gray-900 text-white';
       case 'paused':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gray-500 text-white';
       case 'cancelled':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gray-300 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -102,7 +102,7 @@ export default function HostRentsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 flex items-center justify-between">
@@ -114,7 +114,7 @@ export default function HostRentsPage() {
           </div>
           <Button
             onClick={() => setShowCreateModal(true)}
-            className="bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700"
+            className="bg-black text-white hover:bg-gray-800 transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Rent Agreement
@@ -122,53 +122,53 @@ export default function HostRentsPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
+          <Card className="border border-gray-200 shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Rents</p>
+                  <p className="text-sm font-medium text-gray-500">Total Rents</p>
                   <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
                 </div>
-                <div className="bg-blue-100 text-blue-600 p-3 rounded-lg">
+                <div className="bg-gray-100 text-gray-700 p-3 rounded-lg">
                   <Home className="w-6 h-6" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border border-gray-200 shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Active</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.active}</p>
+                  <p className="text-sm font-medium text-gray-500">Active</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.active}</p>
                 </div>
-                <div className="bg-green-100 text-green-600 p-3 rounded-lg">
+                <div className="bg-gray-900 text-white p-3 rounded-lg">
                   <Calendar className="w-6 h-6" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border border-gray-200 shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Overdue</p>
-                  <p className="text-2xl font-bold text-red-600">{stats.overdue}</p>
+                  <p className="text-sm font-medium text-gray-500">Overdue</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.overdue}</p>
                 </div>
-                <div className="bg-red-100 text-red-600 p-3 rounded-lg">
+                <div className="bg-gray-200 text-gray-700 p-3 rounded-lg">
                   <AlertCircle className="w-6 h-6" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border border-gray-200 shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Monthly Income</p>
+                  <p className="text-sm font-medium text-gray-500">Monthly Income</p>
                   <p className="text-2xl font-bold text-gray-900">
                     {new Intl.NumberFormat('en-LK', {
                       style: 'currency',
@@ -177,7 +177,7 @@ export default function HostRentsPage() {
                     }).format(stats.totalAmount)}
                   </p>
                 </div>
-                <div className="bg-purple-100 text-purple-600 p-3 rounded-lg">
+                <div className="bg-gray-100 text-gray-700 p-3 rounded-lg">
                   <DollarSign className="w-6 h-6" />
                 </div>
               </div>
@@ -185,11 +185,11 @@ export default function HostRentsPage() {
           </Card>
         </div>
 
-        <Card>
+        <Card className="border border-gray-200 shadow-sm">
           <CardContent className="p-6">
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-teal-600" />
+                <Loader2 className="w-8 h-8 animate-spin text-gray-900" />
                 <span className="ml-3 text-gray-600">Loading rents...</span>
               </div>
             ) : rents.length === 0 ? (
@@ -203,7 +203,7 @@ export default function HostRentsPage() {
                 </p>
                 <Button
                   onClick={() => setShowCreateModal(true)}
-                  className="bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700"
+                  className="bg-black text-white hover:bg-gray-800 transition-colors shadow-sm"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Create Rent Agreement
@@ -302,7 +302,7 @@ export default function HostRentsPage() {
                                 size="sm"
                                 variant="default"
                                 onClick={() => handleMarkPaid(rent._id)}
-                                className="bg-green-600 hover:bg-green-700"
+                                className="bg-black text-white hover:bg-gray-800"
                               >
                                 Mark Paid
                               </Button>

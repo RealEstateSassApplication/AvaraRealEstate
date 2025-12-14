@@ -47,7 +47,7 @@ export default function RentDetailsModal({
 
   const handleMarkPaid = async () => {
     if (!onMarkPaid) return;
-    
+
     setLoading(true);
     try {
       await onMarkPaid(rent._id);
@@ -62,11 +62,11 @@ export default function RentDetailsModal({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return 'bg-green-500';
+        return 'bg-gray-900';
       case 'paused':
-        return 'bg-yellow-500';
+        return 'bg-gray-500';
       case 'cancelled':
-        return 'bg-red-500';
+        return 'bg-gray-300';
       default:
         return 'bg-gray-500';
     }
@@ -120,7 +120,7 @@ export default function RentDetailsModal({
           {/* Property Information */}
           <div className="space-y-3">
             <h3 className="font-semibold text-lg flex items-center space-x-2">
-              <Home className="w-5 h-5 text-teal-600" />
+              <Home className="w-5 h-5 text-gray-700" />
               <span>Property</span>
             </h3>
             <div className="bg-gray-50 rounded-lg p-4 space-y-2">
@@ -149,7 +149,7 @@ export default function RentDetailsModal({
             <>
               <div className="space-y-3">
                 <h3 className="font-semibold text-lg flex items-center space-x-2">
-                  <User className="w-5 h-5 text-blue-600" />
+                  <User className="w-5 h-5 text-gray-700" />
                   <span>Tenant</span>
                 </h3>
                 <div className="bg-gray-50 rounded-lg p-4 space-y-2">
@@ -175,7 +175,7 @@ export default function RentDetailsModal({
           {/* Payment Information */}
           <div className="space-y-3">
             <h3 className="font-semibold text-lg flex items-center space-x-2">
-              <DollarSign className="w-5 h-5 text-green-600" />
+              <DollarSign className="w-5 h-5 text-gray-700" />
               <span>Payment Details</span>
             </h3>
             <div className="grid grid-cols-2 gap-4">
@@ -203,10 +203,10 @@ export default function RentDetailsModal({
           {/* Due Date Information */}
           <div className="space-y-3">
             <h3 className="font-semibold text-lg flex items-center space-x-2">
-              <Calendar className="w-5 h-5 text-purple-600" />
+              <Calendar className="w-5 h-5 text-gray-700" />
               <span>Due Date</span>
             </h3>
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4">
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm text-gray-600 mb-1">Next Payment Due</div>
@@ -220,8 +220,8 @@ export default function RentDetailsModal({
                       {daysUntilDue === 0
                         ? 'Due today'
                         : daysUntilDue === 1
-                        ? 'Due tomorrow'
-                        : `Due in ${daysUntilDue} days`}
+                          ? 'Due tomorrow'
+                          : `Due in ${daysUntilDue} days`}
                     </div>
                   )}
                   {isOverdue && (
@@ -233,7 +233,7 @@ export default function RentDetailsModal({
                 {isOverdue ? (
                   <AlertCircle className="w-12 h-12 text-red-500" />
                 ) : (
-                  <Clock className="w-12 h-12 text-purple-500" />
+                  <Clock className="w-12 h-12 text-gray-500" />
                 )}
               </div>
             </div>
@@ -245,7 +245,7 @@ export default function RentDetailsModal({
               <Separator />
               <div className="space-y-3">
                 <h3 className="font-semibold text-lg flex items-center space-x-2">
-                  <Bell className="w-5 h-5 text-orange-600" />
+                  <Bell className="w-5 h-5 text-gray-700" />
                   <span>Reminders</span>
                 </h3>
                 <div className="bg-gray-50 rounded-lg p-4 space-y-2">
@@ -302,7 +302,7 @@ export default function RentDetailsModal({
                 <Button
                   onClick={handleMarkPaid}
                   disabled={loading}
-                  className="bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700"
+                  className="bg-black text-white hover:bg-gray-800 transition-colors shadow-sm"
                 >
                   {loading ? (
                     'Processing...'

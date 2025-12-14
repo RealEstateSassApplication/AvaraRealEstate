@@ -50,13 +50,11 @@ export default class RentService {
 
     if (appId) {
       try {
-        await Application.findByIdAndUpdate(appId, {
-          status: 'accepted',
-          rentAgreement: rent._id
-        });
+        // Delete the application once rent agreement is created
+        await Application.findByIdAndDelete(appId);
       } catch (err) {
-        console.error('Failed to update application status:', err);
-        // We don't fail the rent creation if application update fails, but we log it
+        console.error('Failed to delete application:', err);
+        // We don't fail the rent creation if application deletion fails, but we log it
       }
     }
 
