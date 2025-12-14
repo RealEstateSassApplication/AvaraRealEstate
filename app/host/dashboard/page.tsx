@@ -1011,7 +1011,7 @@ export default function HostDashboard() {
                               </Button>
                               <Button
                                 size="sm"
-                                className="bg-green-600 hover:bg-green-700"
+                                className="bg-black text-white hover:bg-gray-800"
                                 onClick={() => handleRentAction(rent._id, 'mark_paid')}
                               >
                                 Mark Paid
