@@ -35,6 +35,7 @@ import NotificationPanel from '@/components/host/NotificationPanel';
 import PropertyCard from '@/components/property/PropertyCard';
 import RentDetailsModal from '@/components/rent/RentDetailsModal';
 import CreateRentModal from '@/components/rent/CreateRentModal';
+import { toast } from 'sonner';
 
 // Minimal shape returned from API
 interface HostPropertyApi {
@@ -377,15 +378,15 @@ export default function HostDashboard() {
       if (response.ok) {
         const result = await response.json();
         // Show success message
-        alert(`Booking ${action}d successfully!`);
+        toast.success(`Booking ${action}d successfully!`);
         fetchBookings(); // Refresh booking data
       } else {
         const error = await response.json();
-        alert(`Failed to ${action} booking: ${error.error}`);
+        toast.error(`Failed to ${action} booking: ${error.error}`);
       }
     } catch (error) {
       console.error(`Failed to ${action} booking:`, error);
-      alert(`Network error: Failed to ${action} booking`);
+      toast.error(`Network error: Failed to ${action} booking`);
     }
   };
 
@@ -396,10 +397,16 @@ export default function HostDashboard() {
       });
 
       if (response.ok) {
+        const actionLabel = action === 'mark_paid' ? 'marked as paid' : 'reminder sent';
+        toast.success(`Rent ${actionLabel} successfully!`);
         fetchRents(); // Refresh rent data
+      } else {
+        const error = await response.json().catch(() => ({}));
+        toast.error(error.error || `Failed to ${action.replace('_', ' ')}`);
       }
     } catch (error) {
       console.error(`Failed to ${action} rent:`, error);
+      toast.error(`Network error: Failed to ${action.replace('_', ' ')}`);
     }
   };
 
@@ -410,14 +417,15 @@ export default function HostDashboard() {
       const res = await fetch(`/api/applications/${applicationId}`, { method: 'DELETE' });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        alert(json.error || 'Failed to delete application');
+        toast.error(json.error || 'Failed to delete application');
         return;
       }
       // Remove from local state
       setApplications((prev) => prev.filter((a) => a._id !== applicationId));
+      toast.success('Application deleted successfully!');
     } catch (err) {
       console.error('Delete application failed', err);
-      alert('Failed to delete application');
+      toast.error('Failed to delete application');
     }
   };
 
