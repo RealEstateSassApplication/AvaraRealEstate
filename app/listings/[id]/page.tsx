@@ -290,9 +290,32 @@ export default async function ListingDetailPage({ params }: PageProps) {
                   </div>
                   <p className="text-slate-600 leading-relaxed">The host is a verified Avara member. We've confirmed their identity to ensure a safe experience for you.</p>
 
-                  <Button variant="outline" className="mt-4 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white transition-colors px-6 py-5 text-base font-semibold">
-                    Contact Host
-                  </Button>
+                  {/* Contact Details */}
+                  <div className="mt-4 p-4 bg-white rounded-xl border border-slate-200 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-600">Name</span>
+                      <span className="font-medium text-slate-900">{(property.owner as any)?.name || 'Host'}</span>
+                    </div>
+                    {(property.owner as any)?.email && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-600">Email</span>
+                        <a href={`mailto:${(property.owner as any)?.email}`} className="font-medium text-slate-900 hover:underline">
+                          {(property.owner as any)?.email}
+                        </a>
+                      </div>
+                    )}
+                    {(property.owner as any)?.phone && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-600">Phone</span>
+                        <a href={`tel:${(property.owner as any)?.phone}`} className="font-medium text-slate-900 hover:underline">
+                          {(property.owner as any)?.phone}
+                        </a>
+                      </div>
+                    )}
+                    {!(property.owner as any)?.email && !(property.owner as any)?.phone && (
+                      <p className="text-sm text-slate-500">No direct contact details available. Use the Contact Host button below.</p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
