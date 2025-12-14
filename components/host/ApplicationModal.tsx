@@ -7,15 +7,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  Calendar, 
-  DollarSign, 
-  Home, 
-  Briefcase, 
-  Users, 
+import {
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  DollarSign,
+  Home,
+  Briefcase,
+  Users,
   AlertCircle,
   CheckCircle,
   Clock,
@@ -63,13 +63,13 @@ export default function ApplicationModal({ application, onClose, onActionComplet
     switch (status?.toLowerCase()) {
       case 'accepted':
       case 'approved':
-        return 'bg-green-100 text-green-800';
+        return 'bg-gray-900 text-white';
       case 'rejected':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gray-400 text-white';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gray-600 text-white';
       case 'more_info':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-gray-500 text-white';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -150,8 +150,8 @@ export default function ApplicationModal({ application, onClose, onActionComplet
             <CardContent className="space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="bg-blue-100 p-2 rounded-lg">
-                    <User className="w-5 h-5 text-blue-600" />
+                  <div className="bg-gray-100 p-2 rounded-lg">
+                    <User className="w-5 h-5 text-gray-700" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Full Name</p>
@@ -159,8 +159,8 @@ export default function ApplicationModal({ application, onClose, onActionComplet
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="bg-green-100 p-2 rounded-lg">
-                    <Mail className="w-5 h-5 text-green-600" />
+                  <div className="bg-gray-100 p-2 rounded-lg">
+                    <Mail className="w-5 h-5 text-gray-700" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Email</p>
@@ -168,8 +168,8 @@ export default function ApplicationModal({ application, onClose, onActionComplet
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="bg-purple-100 p-2 rounded-lg">
-                    <Phone className="w-5 h-5 text-purple-600" />
+                  <div className="bg-gray-100 p-2 rounded-lg">
+                    <Phone className="w-5 h-5 text-gray-700" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Phone</p>
@@ -177,8 +177,8 @@ export default function ApplicationModal({ application, onClose, onActionComplet
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="bg-orange-100 p-2 rounded-lg">
-                    <Briefcase className="w-5 h-5 text-orange-600" />
+                  <div className="bg-gray-100 p-2 rounded-lg">
+                    <Briefcase className="w-5 h-5 text-gray-700" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Employment Status</p>
@@ -201,7 +201,7 @@ export default function ApplicationModal({ application, onClose, onActionComplet
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm text-gray-600">Monthly Rent</p>
-                  <p className="text-xl font-bold text-blue-600">
+                  <p className="text-xl font-bold text-gray-900">
                     {application.currency || 'LKR'} {application.monthlyRent?.toLocaleString() || 'N/A'}
                   </p>
                 </div>
@@ -276,30 +276,30 @@ export default function ApplicationModal({ application, onClose, onActionComplet
           <div className="flex flex-wrap gap-3 pt-2">
             {application.status === 'pending' && (
               <>
-                <Button 
+                <Button
                   size="default"
-                  className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-none"
-                  onClick={() => handleAction('accept')} 
+                  className="bg-black text-white hover:bg-gray-800 flex-1 sm:flex-none"
+                  onClick={() => handleAction('accept')}
                   disabled={loading}
                 >
                   <CheckCircle className="w-4 h-4 mr-2" />
                   Accept Application
                 </Button>
-                <Button 
+                <Button
                   size="default"
                   variant="destructive"
                   className="flex-1 sm:flex-none"
-                  onClick={() => handleAction('reject', { reason: 'Not suitable' })} 
+                  onClick={() => handleAction('reject', { reason: 'Not suitable' })}
                   disabled={loading}
                 >
                   <AlertCircle className="w-4 h-4 mr-2" />
                   Reject
                 </Button>
-                <Button 
+                <Button
                   size="default"
                   variant="outline"
                   className="flex-1 sm:flex-none"
-                  onClick={() => handleAction('request-info', { request: 'Please provide proof of income' })} 
+                  onClick={() => handleAction('request-info', { request: 'Please provide proof of income' })}
                   disabled={loading}
                 >
                   <Clock className="w-4 h-4 mr-2" />
@@ -308,7 +308,7 @@ export default function ApplicationModal({ application, onClose, onActionComplet
               </>
             )}
             <div className="flex-1" />
-            <Button 
+            <Button
               size="default"
               variant="outline"
               onClick={() => setOpen(false)}

@@ -324,7 +324,7 @@ export default function HostDashboard() {
               </p>
             )}
           </div>
-          <div className="bg-gradient-to-br from-teal-500 to-blue-600 text-white p-3 rounded-lg">
+          <div className="bg-black text-white p-3 rounded-lg">
             <Icon className="w-6 h-6" />
           </div>
         </div>
@@ -447,7 +447,7 @@ export default function HostDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
