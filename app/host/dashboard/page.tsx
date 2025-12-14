@@ -26,7 +26,8 @@ import {
   Clock,
   CheckCircle,
   AlertTriangle,
-  RefreshCw
+  RefreshCw,
+  Trash2
 } from 'lucide-react';
 import ApplicationModal from '@/components/host/ApplicationModal';
 import CreateMaintenanceModal from '@/components/host/CreateMaintenanceModal';
@@ -402,6 +403,24 @@ export default function HostDashboard() {
     }
   };
 
+  const handleDeleteApplication = async (applicationId: string) => {
+    const ok = confirm('Are you sure you want to delete this application? This action cannot be undone.');
+    if (!ok) return;
+    try {
+      const res = await fetch(`/api/applications/${applicationId}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        alert(json.error || 'Failed to delete application');
+        return;
+      }
+      // Remove from local state
+      setApplications((prev) => prev.filter((a) => a._id !== applicationId));
+    } catch (err) {
+      console.error('Delete application failed', err);
+      alert('Failed to delete application');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white">
@@ -659,7 +678,7 @@ export default function HostDashboard() {
                               <ApplicationModal application={app} onActionCompleted={() => { fetchApplications(); fetchRents(); fetchMaintenanceRequests(); }} />
                               <Button
                                 size="sm"
-                                className="bg-teal-600 hover:bg-teal-700"
+                                className="bg-black text-white hover:bg-gray-800"
                                 onClick={() => {
                                   const propertyData = properties.find(p => p._id === app.property?._id || p._id === app.property);
                                   setRentPrefilledData({
@@ -674,6 +693,13 @@ export default function HostDashboard() {
                                 }}
                               >
                                 Create Rent
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDeleteApplication(app._id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
                               </Button>
                             </div>
                           </TableCell>
@@ -1170,6 +1196,7 @@ export default function HostDashboard() {
             setShowCreateRentModal(false);
             setRentPrefilledData(null);
             fetchRents();
+            fetchApplications(); // Refresh applications list (the application gets deleted when rent is created)
           }}
           prefilledData={rentPrefilledData}
         />

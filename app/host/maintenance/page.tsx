@@ -163,13 +163,13 @@ export default function MaintenancePage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gray-500 text-white';
       case 'in_progress':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-gray-700 text-white';
       case 'completed':
-        return 'bg-green-100 text-green-800';
+        return 'bg-gray-900 text-white';
       case 'cancelled':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gray-300 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -178,13 +178,13 @@ export default function MaintenancePage() {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'critical':
-        return 'bg-red-100 text-red-800';
+        return 'bg-black text-white';
       case 'high':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-gray-800 text-white';
       case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gray-500 text-white';
       case 'low':
-        return 'bg-green-100 text-green-800';
+        return 'bg-gray-300 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -201,7 +201,7 @@ export default function MaintenancePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-white">
         <Header />
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="animate-pulse space-y-4">
@@ -214,7 +214,7 @@ export default function MaintenancePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -251,9 +251,9 @@ export default function MaintenancePage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Pending</p>
-                  <p className="text-3xl font-bold text-yellow-600">{stats.pending}</p>
+                  <p className="text-3xl font-bold text-gray-500">{stats.pending}</p>
                 </div>
-                <Clock className="w-12 h-12 text-yellow-500 opacity-20" />
+                <Clock className="w-12 h-12 text-gray-400 opacity-20" />
               </div>
             </CardContent>
           </Card>
@@ -263,9 +263,9 @@ export default function MaintenancePage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">In Progress</p>
-                  <p className="text-3xl font-bold text-blue-600">{stats.inProgress}</p>
+                  <p className="text-3xl font-bold text-gray-700">{stats.inProgress}</p>
                 </div>
-                <AlertCircle className="w-12 h-12 text-blue-500 opacity-20" />
+                <AlertCircle className="w-12 h-12 text-gray-500 opacity-20" />
               </div>
             </CardContent>
           </Card>
@@ -275,9 +275,9 @@ export default function MaintenancePage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Completed</p>
-                  <p className="text-3xl font-bold text-green-600">{stats.completed}</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats.completed}</p>
                 </div>
-                <CheckCircle className="w-12 h-12 text-green-500 opacity-20" />
+                <CheckCircle className="w-12 h-12 text-gray-600 opacity-20" />
               </div>
             </CardContent>
           </Card>
