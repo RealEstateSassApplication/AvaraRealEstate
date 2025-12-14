@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { Metadata } from 'next';
 import Image from 'next/image';
 import PropertyService from '@/services/propertyService';
 import Header from '@/components/ui/layout/Header';
@@ -6,11 +7,77 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import ListingActions from '@/components/listing/ListingActions';
+import { RealEstateListingSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { MapPin, Wifi, Car, Mountain, Users, Bed, Bath, Square, Star, Verified } from 'lucide-react';
 
 interface PageProps { params: { id: string } }
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://avara.lk';
+
 export const revalidate = 0; // always fresh in dev
+
+// Generate dynamic metadata for each property page
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const property = await PropertyService.getById(params.id, true);
+
+  if (!property) {
+    return {
+      title: 'Property Not Found',
+      description: 'The property you are looking for does not exist.',
+    };
+  }
+
+  const purposeText = property.purpose === 'sale' ? 'for Sale' :
+    property.purpose === 'rent' ? 'for Rent' :
+      'for Booking';
+
+  const title = `${property.title} | ${property.type} ${purposeText} in ${property.address?.city}`;
+  const description = property.description?.substring(0, 160) ||
+    `${property.type} ${purposeText} in ${property.address?.city}, ${property.address?.district}. ${property.bedrooms || ''} bedrooms, ${property.bathrooms || ''} bathrooms. Price: ${property.currency} ${property.price?.toLocaleString()}`;
+
+  const images = property.images?.length > 0
+    ? property.images.map((img: string) => ({
+      url: img,
+      width: 1200,
+      height: 630,
+      alt: property.title,
+    }))
+    : [{ url: `${BASE_URL}/og-image.jpg`, width: 1200, height: 630, alt: 'Avara Real Estate' }];
+
+  return {
+    title,
+    description,
+    keywords: [
+      `${property.type} ${purposeText} ${property.address?.city}`,
+      `property ${property.address?.city}`,
+      `${property.type} Sri Lanka`,
+      property.address?.district,
+      'Avara Real Estate',
+    ].filter(Boolean),
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      locale: 'en_LK',
+      url: `${BASE_URL}/listings/${params.id}`,
+      siteName: 'Avara Real Estate',
+      images,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: property.images?.[0] || `${BASE_URL}/og-image.jpg`,
+    },
+    alternates: {
+      canonical: `${BASE_URL}/listings/${params.id}`,
+    },
+    other: {
+      'geo.region': 'LK',
+      'geo.placename': property.address?.city || 'Sri Lanka',
+    },
+  };
+}
 
 export default async function ListingDetailPage({ params }: PageProps) {
   const property = await PropertyService.getById(params.id, true);
@@ -33,6 +100,36 @@ export default async function ListingDetailPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-20">
+      {/* JSON-LD Structured Data for SEO */}
+      <RealEstateListingSchema
+        name={property.title}
+        description={property.description || ''}
+        url={`${BASE_URL}/listings/${params.id}`}
+        image={property.images || []}
+        price={property.price}
+        priceCurrency={property.currency || 'LKR'}
+        address={{
+          street: property.address?.street,
+          city: property.address?.city || '',
+          district: property.address?.district || '',
+          country: 'Sri Lanka'
+        }}
+        propertyType={property.type}
+        purpose={property.purpose}
+        bedrooms={property.bedrooms}
+        bathrooms={property.bathrooms}
+        floorSize={property.areaSqft}
+        datePosted={property.createdAt?.toISOString()}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: BASE_URL },
+          { name: 'Listings', url: `${BASE_URL}/listings` },
+          { name: property.address?.city || 'Property', url: `${BASE_URL}/listings?city=${property.address?.city}` },
+          { name: property.title, url: `${BASE_URL}/listings/${params.id}` },
+        ]}
+      />
+
       <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
