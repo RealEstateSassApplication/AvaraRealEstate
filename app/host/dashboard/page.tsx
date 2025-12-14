@@ -25,7 +25,8 @@ import {
   Star,
   Clock,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  RefreshCw
 } from 'lucide-react';
 import ApplicationModal from '@/components/host/ApplicationModal';
 import CreateMaintenanceModal from '@/components/host/CreateMaintenanceModal';
@@ -147,6 +148,8 @@ export default function HostDashboard() {
   const [showRentModal, setShowRentModal] = useState(false);
   const [showCreateRentModal, setShowCreateRentModal] = useState(false);
   const [rentPrefilledData, setRentPrefilledData] = useState<any>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
 
 
@@ -194,7 +197,9 @@ export default function HostDashboard() {
   }, [currentUserId]);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchDashboardData = async (silent = false) => {
+      if (!silent) setLoading(true);
+      setRefreshing(true);
       try {
         // First, fetch current user
         let userId = '';
@@ -218,15 +223,24 @@ export default function HostDashboard() {
           userId ? fetchMaintenanceRequests(userId) : Promise.resolve(),
           fetchStats()
         ]);
+        setLastUpdated(new Date());
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
         setError('Failed to load dashboard data');
       } finally {
         setLoading(false);
+        setRefreshing(false);
       }
     };
 
     fetchDashboardData();
+
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchDashboardData(true);
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, [fetchRents, fetchMaintenanceRequests]);
 
   const fetchApplications = async () => {
@@ -414,6 +428,21 @@ export default function HostDashboard() {
             <p className="text-gray-600 mt-2">Manage your properties, tenants and rental income</p>
           </div>
           <div className="flex items-center gap-3">
+            {lastUpdated && (
+              <span className="text-sm text-gray-500 hidden md:inline">
+                Updated: {lastUpdated.toLocaleTimeString()}
+              </span>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.location.reload()}
+              disabled={refreshing}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+            </Button>
             <Button asChild>
               <Link href="/host/listings/create">Add Property</Link>
             </Button>

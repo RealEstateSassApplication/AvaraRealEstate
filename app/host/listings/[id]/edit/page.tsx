@@ -136,22 +136,58 @@ export default function EditListingPage() {
 
         <div>
           <Label htmlFor="images">Images</Label>
-          <input id="images" type="file" accept="image/*" onChange={async (e) => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            const res = await fetch('/api/uploads/signed-url', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fileName: file.name, contentType: file.type }) });
-            const json = await res.json();
-            if (!res.ok) { setError('Failed to get upload url'); return; }
-            try {
-              await fetch(json.signedUrl, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
-              setImages((s) => [...s, json.publicUrl]);
-            } catch (err) { setError('Upload failed'); }
-          }} />
+          <div className="mt-2">
+            <input
+              id="images"
+              type="file"
+              accept="image/*"
+              multiple
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 cursor-pointer"
+              onChange={async (e) => {
+                const files = e.target.files;
+                if (!files || files.length === 0) return;
 
-          <div className="flex gap-2 mt-2">
+                for (const file of Array.from(files)) {
+                  try {
+                    const res = await fetch('/api/uploads/signed-url', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ fileName: file.name, contentType: file.type })
+                    });
+                    const json = await res.json();
+                    if (!res.ok) { setError('Failed to get upload url'); continue; }
+
+                    // Fix: Use uploadUrl instead of signedUrl
+                    const uploadRes = await fetch(json.uploadUrl, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': file.type },
+                      body: file
+                    });
+
+                    if (uploadRes.ok) {
+                      setImages((s) => [...s, json.publicUrl]);
+                    } else {
+                      setError(`Failed to upload ${file.name}`);
+                    }
+                  } catch (err) {
+                    setError('Upload failed');
+                  }
+                }
+              }}
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-2 mt-3">
             {images.map((src) => (
-              <div key={src} className="w-24 h-24 relative">
+              <div key={src} className="w-24 h-24 relative group">
                 <Image src={src} alt="preview" fill className="object-cover rounded" />
+                <button
+                  type="button"
+                  onClick={() => setImages(images.filter(img => img !== src))}
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs hover:bg-red-600"
+                >
+                  ×
+                </button>
               </div>
             ))}
           </div>
