@@ -25,7 +25,9 @@ import {
   Star,
   Clock,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  RefreshCw,
+  Trash2
 } from 'lucide-react';
 import ApplicationModal from '@/components/host/ApplicationModal';
 import CreateMaintenanceModal from '@/components/host/CreateMaintenanceModal';
@@ -33,6 +35,7 @@ import NotificationPanel from '@/components/host/NotificationPanel';
 import PropertyCard from '@/components/property/PropertyCard';
 import RentDetailsModal from '@/components/rent/RentDetailsModal';
 import CreateRentModal from '@/components/rent/CreateRentModal';
+import { toast } from 'sonner';
 
 // Minimal shape returned from API
 interface HostPropertyApi {
@@ -147,6 +150,8 @@ export default function HostDashboard() {
   const [showRentModal, setShowRentModal] = useState(false);
   const [showCreateRentModal, setShowCreateRentModal] = useState(false);
   const [rentPrefilledData, setRentPrefilledData] = useState<any>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
 
 
@@ -194,7 +199,9 @@ export default function HostDashboard() {
   }, [currentUserId]);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchDashboardData = async (silent = false) => {
+      if (!silent) setLoading(true);
+      setRefreshing(true);
       try {
         // First, fetch current user
         let userId = '';
@@ -218,15 +225,24 @@ export default function HostDashboard() {
           userId ? fetchMaintenanceRequests(userId) : Promise.resolve(),
           fetchStats()
         ]);
+        setLastUpdated(new Date());
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
         setError('Failed to load dashboard data');
       } finally {
         setLoading(false);
+        setRefreshing(false);
       }
     };
 
     fetchDashboardData();
+
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchDashboardData(true);
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, [fetchRents, fetchMaintenanceRequests]);
 
   const fetchApplications = async () => {
@@ -308,7 +324,7 @@ export default function HostDashboard() {
               </p>
             )}
           </div>
-          <div className="bg-gradient-to-br from-teal-500 to-blue-600 text-white p-3 rounded-lg">
+          <div className="bg-black text-white p-3 rounded-lg">
             <Icon className="w-6 h-6" />
           </div>
         </div>
@@ -362,15 +378,15 @@ export default function HostDashboard() {
       if (response.ok) {
         const result = await response.json();
         // Show success message
-        alert(`Booking ${action}d successfully!`);
+        toast.success(`Booking ${action}d successfully!`);
         fetchBookings(); // Refresh booking data
       } else {
         const error = await response.json();
-        alert(`Failed to ${action} booking: ${error.error}`);
+        toast.error(`Failed to ${action} booking: ${error.error}`);
       }
     } catch (error) {
       console.error(`Failed to ${action} booking:`, error);
-      alert(`Network error: Failed to ${action} booking`);
+      toast.error(`Network error: Failed to ${action} booking`);
     }
   };
 
@@ -381,10 +397,35 @@ export default function HostDashboard() {
       });
 
       if (response.ok) {
+        const actionLabel = action === 'mark_paid' ? 'marked as paid' : 'reminder sent';
+        toast.success(`Rent ${actionLabel} successfully!`);
         fetchRents(); // Refresh rent data
+      } else {
+        const error = await response.json().catch(() => ({}));
+        toast.error(error.error || `Failed to ${action.replace('_', ' ')}`);
       }
     } catch (error) {
       console.error(`Failed to ${action} rent:`, error);
+      toast.error(`Network error: Failed to ${action.replace('_', ' ')}`);
+    }
+  };
+
+  const handleDeleteApplication = async (applicationId: string) => {
+    const ok = confirm('Are you sure you want to delete this application? This action cannot be undone.');
+    if (!ok) return;
+    try {
+      const res = await fetch(`/api/applications/${applicationId}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        toast.error(json.error || 'Failed to delete application');
+        return;
+      }
+      // Remove from local state
+      setApplications((prev) => prev.filter((a) => a._id !== applicationId));
+      toast.success('Application deleted successfully!');
+    } catch (err) {
+      console.error('Delete application failed', err);
+      toast.error('Failed to delete application');
     }
   };
 
@@ -406,7 +447,7 @@ export default function HostDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -414,6 +455,21 @@ export default function HostDashboard() {
             <p className="text-gray-600 mt-2">Manage your properties, tenants and rental income</p>
           </div>
           <div className="flex items-center gap-3">
+            {lastUpdated && (
+              <span className="text-sm text-gray-500 hidden md:inline">
+                Updated: {lastUpdated.toLocaleTimeString()}
+              </span>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.location.reload()}
+              disabled={refreshing}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+            </Button>
             <Button asChild>
               <Link href="/host/listings/create">Add Property</Link>
             </Button>
@@ -630,7 +686,7 @@ export default function HostDashboard() {
                               <ApplicationModal application={app} onActionCompleted={() => { fetchApplications(); fetchRents(); fetchMaintenanceRequests(); }} />
                               <Button
                                 size="sm"
-                                className="bg-teal-600 hover:bg-teal-700"
+                                className="bg-black text-white hover:bg-gray-800"
                                 onClick={() => {
                                   const propertyData = properties.find(p => p._id === app.property?._id || p._id === app.property);
                                   setRentPrefilledData({
@@ -645,6 +701,13 @@ export default function HostDashboard() {
                                 }}
                               >
                                 Create Rent
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDeleteApplication(app._id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
                               </Button>
                             </div>
                           </TableCell>
@@ -948,7 +1011,7 @@ export default function HostDashboard() {
                               </Button>
                               <Button
                                 size="sm"
-                                className="bg-green-600 hover:bg-green-700"
+                                className="bg-black text-white hover:bg-gray-800"
                                 onClick={() => handleRentAction(rent._id, 'mark_paid')}
                               >
                                 Mark Paid
@@ -1141,6 +1204,7 @@ export default function HostDashboard() {
             setShowCreateRentModal(false);
             setRentPrefilledData(null);
             fetchRents();
+            fetchApplications(); // Refresh applications list (the application gets deleted when rent is created)
           }}
           prefilledData={rentPrefilledData}
         />

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Home, ExternalLink, ShieldCheck, Mail, MapPin, Search } from 'lucide-react';
+import { Home, ExternalLink, ShieldCheck, Mail, MapPin, Search, MoreVertical, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -16,12 +16,32 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
 export default function AdminPropertiesPage() {
     const [properties, setProperties] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Delete State
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+    const [deletingProperty, setDeletingProperty] = useState<any>(null);
 
     useEffect(() => {
         fetchProperties();
@@ -44,11 +64,83 @@ export default function AdminPropertiesPage() {
         }
     };
 
+    const handleVerify = async (propertyId: string) => {
+        try {
+            const res = await fetch(`/api/admin/properties/${propertyId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'active', verified: true })
+            });
+            if (!res.ok) throw new Error('Failed to verify property');
+            const data = await res.json();
+            setProperties(properties.map(p => p._id === propertyId ? data.property : p));
+            toast.success('Property verified and published');
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to verify property');
+        }
+    };
+
+    const handleReject = async (propertyId: string) => {
+        try {
+            const res = await fetch(`/api/admin/properties/${propertyId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'rejected' })
+            });
+            if (!res.ok) throw new Error('Failed to reject property');
+            const data = await res.json();
+            setProperties(properties.map(p => p._id === propertyId ? data.property : p));
+            toast.success('Property rejected');
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to reject property');
+        }
+    };
+
+    const handleDeleteClick = (property: any) => {
+        setDeletingProperty(property);
+        setIsDeleteOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!deletingProperty) return;
+        try {
+            const res = await fetch(`/api/admin/properties/${deletingProperty._id}`, {
+                method: 'DELETE'
+            });
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to delete property');
+            }
+            setProperties(properties.filter(p => p._id !== deletingProperty._id));
+            toast.success('Property deleted successfully');
+            setIsDeleteOpen(false);
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || 'Failed to delete property');
+        }
+    };
+
     const filteredProperties = properties.filter(p =>
         p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (p.owner?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (p.address?.city || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const getStatusBadgeVariant = (status: string) => {
+        switch (status) {
+            case 'active':
+            case 'published':
+                return 'default';
+            case 'rejected':
+                return 'destructive';
+            case 'pending':
+                return 'secondary';
+            default:
+                return 'outline';
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 p-6">
@@ -94,7 +186,7 @@ export default function AdminPropertiesPage() {
                                         <TableHead>Owner</TableHead>
                                         <TableHead>Price</TableHead>
                                         <TableHead>Status</TableHead>
-                                        <TableHead>Actions</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -129,16 +221,52 @@ export default function AdminPropertiesPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant={property.status === 'published' ? 'default' : 'secondary'}>
-                                                    {property.status}
-                                                </Badge>
+                                                <div className="flex items-center gap-2">
+                                                    <Badge variant={getStatusBadgeVariant(property.status)}>
+                                                        {property.status}
+                                                    </Badge>
+                                                    {property.verified && (
+                                                        <span title="Verified">
+                                                            <ShieldCheck className="w-4 h-4 text-green-600" />
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </TableCell>
-                                            <TableCell>
-                                                <Button variant="ghost" size="sm" asChild>
-                                                    <Link href={`/listings/${property._id}`} target="_blank">
-                                                        <ExternalLink className="w-4 h-4" />
-                                                    </Link>
-                                                </Button>
+                                            <TableCell className="text-right">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                                            <span className="sr-only">Open menu</span>
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                        <DropdownMenuItem asChild>
+                                                            <Link href={`/listings/${property._id}`} target="_blank">
+                                                                <ExternalLink className="mr-2 h-4 w-4" /> View Listing
+                                                            </Link>
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
+                                                        {property.status !== 'active' && !property.verified && (
+                                                            <DropdownMenuItem onClick={() => handleVerify(property._id)} className="text-green-600 focus:text-green-600">
+                                                                <CheckCircle className="mr-2 h-4 w-4" /> Verify & Publish
+                                                            </DropdownMenuItem>
+                                                        )}
+                                                        {property.status !== 'rejected' && (
+                                                            <DropdownMenuItem onClick={() => handleReject(property._id)} className="text-orange-600 focus:text-orange-600">
+                                                                <XCircle className="mr-2 h-4 w-4" /> Reject
+                                                            </DropdownMenuItem>
+                                                        )}
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem
+                                                            onClick={() => handleDeleteClick(property)}
+                                                            className="text-red-600 focus:text-red-600"
+                                                        >
+                                                            <Trash2 className="mr-2 h-4 w-4" /> Delete Property
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </TableCell>
                                         </TableRow>
                                     ))}
@@ -147,7 +275,24 @@ export default function AdminPropertiesPage() {
                         )}
                     </CardContent>
                 </Card>
+
+                {/* Delete Warning Dialog */}
+                <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Delete Property</DialogTitle>
+                            <DialogDescription>
+                                Are you sure you want to delete <strong>{deletingProperty?.title}</strong>? This action cannot be undone and will remove all associated data.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setIsDeleteOpen(false)}>Cancel</Button>
+                            <Button variant="destructive" onClick={confirmDelete}>Delete Property</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </div>
     );
 }
+

@@ -101,7 +101,7 @@ export default function CreateApplicationPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
+        <div className="min-h-screen bg-white py-8">
             <div className="max-w-2xl mx-auto px-4">
                 <Button variant="ghost" asChild className="mb-6 pl-0 hover:bg-transparent">
                     <Link href="/host/dashboard" className="flex items-center text-gray-600 hover:text-gray-900">
@@ -110,7 +110,7 @@ export default function CreateApplicationPage() {
                     </Link>
                 </Button>
 
-                <Card>
+                <Card className="border border-gray-200 shadow-sm">
                     <CardHeader>
                         <CardTitle className="text-2xl">Create Rental Application</CardTitle>
                         <CardDescription>

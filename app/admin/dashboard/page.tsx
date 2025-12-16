@@ -19,7 +19,8 @@ import {
   Wrench,
   Search,
   Filter,
-  Building
+  Building,
+  RefreshCw
 } from 'lucide-react';
 import Header from '@/components/ui/layout/Header';
 import { Button } from '@/components/ui/button';
@@ -166,12 +167,23 @@ export default function AdminDashboardPage() {
   const [rentFilter, setRentFilter] = useState('all');
   const [maintenanceFilter, setMaintenanceFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
+  // Auto-refresh every 30 seconds
   useEffect(() => {
     fetchDashboardData();
+
+    const interval = setInterval(() => {
+      fetchDashboardData(true); // true = silent refresh (no full loading state)
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (silent = false) => {
+    if (!silent) setLoading(true);
+    setRefreshing(true);
     try {
       // Fetch stats
       const statsResponse = await fetch('/api/admin/stats');
@@ -215,10 +227,12 @@ export default function AdminDashboardPage() {
         setRecentUsers(usersData.users || []);
       }
 
+      setLastUpdated(new Date());
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -399,11 +413,30 @@ export default function AdminDashboardPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2">
-            Manage properties, users, and platform operations
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+            <p className="text-gray-600 mt-2">
+              Manage properties, users, and platform operations
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            {lastUpdated && (
+              <span className="text-sm text-gray-500">
+                Last updated: {lastUpdated.toLocaleTimeString()}
+              </span>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchDashboardData()}
+              disabled={refreshing}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? 'Refreshing...' : 'Refresh'}
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}

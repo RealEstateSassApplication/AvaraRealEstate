@@ -330,17 +330,38 @@ export default function CreateListingPage() {
                     id="images"
                     type="file"
                     accept="image/*"
+                    multiple
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      const res = await fetch('/api/uploads/signed-url', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fileName: file.name, contentType: file.type }) });
-                      const json = await res.json();
-                      if (!res.ok) { setError('Failed to get upload url'); return; }
-                      try {
-                        await fetch(json.signedUrl, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
-                        setImages((s) => [...s, json.publicUrl]);
-                      } catch (err) { setError('Upload failed'); }
+                      const files = e.target.files;
+                      if (!files || files.length === 0) return;
+
+                      for (const file of Array.from(files)) {
+                        try {
+                          const res = await fetch('/api/uploads/signed-url', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ fileName: file.name, contentType: file.type })
+                          });
+                          const json = await res.json();
+                          if (!res.ok) { setError('Failed to get upload url'); continue; }
+
+                          // Fix: Use uploadUrl instead of signedUrl
+                          const uploadRes = await fetch(json.uploadUrl, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': file.type },
+                            body: file
+                          });
+
+                          if (uploadRes.ok) {
+                            setImages((s) => [...s, json.publicUrl]);
+                          } else {
+                            setError(`Failed to upload ${file.name}`);
+                          }
+                        } catch (err) {
+                          setError('Upload failed');
+                        }
+                      }
                     }}
                   />
                   <div className="pointer-events-none">

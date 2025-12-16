@@ -97,7 +97,7 @@ export default function CreateRentPage() {
 
       const tenant = await tenantResponse.json();
       const tenantId = tenant.user?._id || tenant.data?.id || tenant._id;
-      
+
       if (!tenantId) {
         alert('Failed to get tenant ID');
         console.error('Tenant response:', tenant);
@@ -135,14 +135,14 @@ export default function CreateRentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="max-w-2xl mx-auto p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Create Rent Agreement</h1>
           <p className="text-gray-600 mt-2">Set up a new rental agreement for your property</p>
         </div>
 
-        <Card>
+        <Card className="border border-gray-200 shadow-sm">
           <CardHeader>
             <CardTitle>Rent Agreement Details</CardTitle>
             <CardDescription>
@@ -154,9 +154,9 @@ export default function CreateRentPage() {
               {/* Property Selection */}
               <div className="space-y-2">
                 <Label htmlFor="property">Property *</Label>
-                <Select 
-                  value={formData.propertyId} 
-                  onValueChange={(value) => setFormData({...formData, propertyId: value})}
+                <Select
+                  value={formData.propertyId}
+                  onValueChange={(value) => setFormData({ ...formData, propertyId: value })}
                   required
                   disabled={loadingProperties}
                 >
@@ -181,7 +181,7 @@ export default function CreateRentPage() {
               {/* Tenant Information */}
               <div className="border rounded-lg p-4 space-y-4">
                 <h3 className="text-lg font-semibold">Tenant Information</h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="tenantName">Full Name *</Label>
@@ -190,7 +190,7 @@ export default function CreateRentPage() {
                       type="text"
                       placeholder="Tenant's full name"
                       value={formData.tenantName}
-                      onChange={(e) => setFormData({...formData, tenantName: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, tenantName: e.target.value })}
                       required
                     />
                   </div>
@@ -201,12 +201,12 @@ export default function CreateRentPage() {
                       type="email"
                       placeholder="tenant@example.com"
                       value={formData.tenantEmail}
-                      onChange={(e) => setFormData({...formData, tenantEmail: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, tenantEmail: e.target.value })}
                       required
                     />
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="tenantPhone">Phone Number *</Label>
                   <Input
@@ -214,7 +214,7 @@ export default function CreateRentPage() {
                     type="tel"
                     placeholder="+94 77 123 4567"
                     value={formData.tenantPhone}
-                    onChange={(e) => setFormData({...formData, tenantPhone: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, tenantPhone: e.target.value })}
                     required
                   />
                 </div>
@@ -223,7 +223,7 @@ export default function CreateRentPage() {
               {/* Rent Details */}
               <div className="border rounded-lg p-4 space-y-4">
                 <h3 className="text-lg font-semibold">Rent Details</h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="amount">Rent Amount *</Label>
@@ -232,15 +232,15 @@ export default function CreateRentPage() {
                       type="number"
                       placeholder="85000"
                       value={formData.amount}
-                      onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                       required
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="currency">Currency</Label>
-                    <Select 
-                      value={formData.currency} 
-                      onValueChange={(value) => setFormData({...formData, currency: value})}
+                    <Select
+                      value={formData.currency}
+                      onValueChange={(value) => setFormData({ ...formData, currency: value })}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -257,9 +257,9 @@ export default function CreateRentPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="frequency">Payment Frequency *</Label>
-                    <Select 
-                      value={formData.frequency} 
-                      onValueChange={(value) => setFormData({...formData, frequency: value})}
+                    <Select
+                      value={formData.frequency}
+                      onValueChange={(value) => setFormData({ ...formData, frequency: value })}
                       required
                     >
                       <SelectTrigger>
@@ -278,7 +278,7 @@ export default function CreateRentPage() {
                       id="firstDueDate"
                       type="date"
                       value={formData.firstDueDate}
-                      onChange={(e) => setFormData({...formData, firstDueDate: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, firstDueDate: e.target.value })}
                       required
                     />
                   </div>
@@ -293,23 +293,23 @@ export default function CreateRentPage() {
                   placeholder="Any additional terms, conditions, or notes about the rental agreement..."
                   rows={4}
                   value={formData.notes}
-                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 />
               </div>
 
               {/* Submit Button */}
               <div className="flex justify-end space-x-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={() => router.back()}
                 >
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={loading}
-                  className="bg-teal-600 hover:bg-teal-700"
+                  className="bg-black text-white hover:bg-gray-800 transition-colors shadow-sm"
                 >
                   {loading ? 'Creating...' : 'Create Rent Agreement'}
                 </Button>

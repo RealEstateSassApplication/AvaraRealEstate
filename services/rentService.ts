@@ -50,13 +50,11 @@ export default class RentService {
 
     if (appId) {
       try {
-        await Application.findByIdAndUpdate(appId, {
-          status: 'accepted',
-          rentAgreement: rent._id
-        });
+        // Delete the application once rent agreement is created
+        await Application.findByIdAndDelete(appId);
       } catch (err) {
-        console.error('Failed to update application status:', err);
-        // We don't fail the rent creation if application update fails, but we log it
+        console.error('Failed to delete application:', err);
+        // We don't fail the rent creation if application deletion fails, but we log it
       }
     }
 
@@ -129,5 +127,54 @@ export default class RentService {
     }
 
     return results;
+  }
+
+  static async sendReminderForRent(rentId: string) {
+    await dbConnect();
+    const rent = await Rent.findById(rentId).populate('tenant property');
+    if (!rent) throw new Error('Rent not found');
+
+    const tenant = rent.tenant as any;
+    const property = rent.property as any;
+    const phone = tenant?.phone || tenant?.mobile || tenant?.phoneNumber;
+    const message = `Reminder: Rent of ${rent.amount} ${rent.currency} for property ${property?.title || property?.address?.city || 'your property'} is due on ${new Date(rent.nextDue).toLocaleDateString()}. Please pay on time.`;
+
+    let sent = false;
+    let error: string | undefined;
+
+    try {
+      // Try SMS first
+      if (phone && process.env.ENABLE_SMS !== 'false') {
+        await NotificationService.sendSMS(phone, message);
+        sent = true;
+      } else if (phone && process.env.ENABLE_WHATSAPP !== 'false') {
+        await NotificationService.sendWhatsApp(phone, message);
+        sent = true;
+      }
+    } catch (err: any) {
+      error = err.message;
+      console.error('Failed to send external reminder:', err);
+    }
+
+    // Create in-app notification for tenant
+    try {
+      const Notification = (await import('@/models/Notification')).default;
+      await Notification.create({
+        user: tenant._id,
+        type: 'rent_reminder',
+        message: `Rent reminder: ${rent.amount} ${rent.currency} due on ${new Date(rent.nextDue).toLocaleDateString()} for ${property?.title || 'your property'}`,
+        metadata: { rentId: rent._id, propertyId: property?._id }
+      });
+      sent = true; // At least in-app notification was sent
+    } catch (notifErr) {
+      console.error('Failed to create in-app notification:', notifErr);
+    }
+
+    // Update rent reminder tracking
+    rent.lastReminderAt = new Date();
+    rent.remindersSent = (rent.remindersSent || 0) + 1;
+    await rent.save();
+
+    return { rentId: rent._id.toString(), sent, error };
   }
 }
