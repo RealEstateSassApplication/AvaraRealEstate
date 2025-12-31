@@ -127,6 +127,39 @@ interface PropertyCardReady {
   owner: { name: string; profilePhoto?: string; verified: boolean };
 }
 
+interface RentalRequest {
+  _id: string;
+  user: {
+    name: string;
+    email: string;
+    phone?: string;
+  };
+  propertyTypes: string[];
+  purpose: string;
+  location: {
+    cities: string[];
+    districts: string[];
+    flexible: boolean;
+  };
+  budget: {
+    min: number;
+    max: number;
+    currency: string;
+    frequency: string;
+  };
+  requirements: {
+    bedrooms?: { min?: number; max?: number };
+    bathrooms?: { min?: number; max?: number };
+    areaSqft?: { min?: number; max?: number };
+  };
+  amenities: string[];
+  status: string;
+  createdAt: string;
+  relevanceScore?: number;
+  matchingPropertyCount?: number;
+  matchingProperties?: any[];
+}
+
 export default function HostDashboard() {
   const [properties, setProperties] = useState<PropertyCardReady[]>([]);
   const [rawProperties, setRawProperties] = useState<any[]>([]);
@@ -141,11 +174,12 @@ export default function HostDashboard() {
   const [rents, setRents] = useState<RentData[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
   const [bookings, setBookings] = useState<BookingData[]>([]);
+  const [rentalRequests, setRentalRequests] = useState<RentalRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [maintenanceRequests, setMaintenanceRequests] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'bookings' | 'rents' | 'applications' | 'notifications'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'bookings' | 'rents' | 'applications' | 'notifications' | 'rental-requests'>('overview');
   const [selectedRent, setSelectedRent] = useState<RentData | null>(null);
   const [showRentModal, setShowRentModal] = useState(false);
   const [showCreateRentModal, setShowCreateRentModal] = useState(false);
@@ -198,6 +232,18 @@ export default function HostDashboard() {
     }
   }, [currentUserId]);
 
+  const fetchRentalRequests = useCallback(async () => {
+    try {
+      const res = await fetch('/api/host/rental-requests');
+      if (res.ok) {
+        const json = await res.json();
+        setRentalRequests(json.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to load rental requests', err);
+    }
+  }, []);
+
   useEffect(() => {
     const fetchDashboardData = async (silent = false) => {
       if (!silent) setLoading(true);
@@ -221,6 +267,7 @@ export default function HostDashboard() {
           fetchProperties(),
           fetchBookings(),
           fetchApplications(),
+          fetchRentalRequests(),
           userId ? fetchRents(userId) : Promise.resolve(),
           userId ? fetchMaintenanceRequests(userId) : Promise.resolve(),
           fetchStats()
@@ -243,7 +290,7 @@ export default function HostDashboard() {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [fetchRents, fetchMaintenanceRequests]);
+  }, [fetchRents, fetchMaintenanceRequests, fetchRentalRequests]);
 
   const fetchApplications = async () => {
     try {
@@ -480,12 +527,13 @@ export default function HostDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="properties">Properties</TabsTrigger>
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
             <TabsTrigger value="rents">Rent Management</TabsTrigger>
             <TabsTrigger value="applications">Applications</TabsTrigger>
+            <TabsTrigger value="rental-requests">Rental Requests</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
           </TabsList>
 
@@ -1155,6 +1203,153 @@ export default function HostDashboard() {
                       ))}
                     </TableBody>
                   </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Rental Requests Tab */}
+          <TabsContent value="rental-requests">
+            <Card>
+              <CardHeader>
+                <CardTitle>Rental Requests Matching Your Properties</CardTitle>
+                <CardDescription>
+                  Users looking for properties that match your listings
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {rentalRequests.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 mb-2">No rental requests match your properties yet</p>
+                    <p className="text-sm text-gray-400">
+                      When users create rental requests that match your properties, they'll appear here
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {rentalRequests.map((request) => (
+                      <Card key={request._id} className="border-l-4 border-teal-500">
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <h3 className="font-semibold text-lg">
+                                  {request.user.name}
+                                </h3>
+                                <Badge className="bg-teal-100 text-teal-800">
+                                  {request.relevanceScore}% Match
+                                </Badge>
+                                {request.matchingPropertyCount && request.matchingPropertyCount > 1 && (
+                                  <Badge variant="outline">
+                                    {request.matchingPropertyCount} of your properties
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-500">
+                                Contact: {request.user.email} {request.user.phone && `• ${request.user.phone}`}
+                              </p>
+                            </div>
+                            <Badge variant={request.status === 'active' || request.status === 'matched' ? 'default' : 'outline'}>
+                              {request.status}
+                            </Badge>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1">Property Types</p>
+                              <p className="text-sm font-medium">
+                                {request.propertyTypes.length > 0
+                                  ? request.propertyTypes.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')
+                                  : 'Any'}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1">Location</p>
+                              <p className="text-sm font-medium">
+                                {request.location.flexible
+                                  ? 'Flexible'
+                                  : [...request.location.cities, ...request.location.districts].slice(0, 2).join(', ')}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1">Budget ({request.budget.frequency})</p>
+                              <p className="text-sm font-medium">
+                                {new Intl.NumberFormat('en-LK', {
+                                  style: 'currency',
+                                  currency: request.budget.currency === 'LKR' ? 'LKR' : 'USD',
+                                  minimumFractionDigits: 0
+                                }).format(request.budget.min)} - {new Intl.NumberFormat('en-LK', {
+                                  style: 'currency',
+                                  currency: request.budget.currency === 'LKR' ? 'LKR' : 'USD',
+                                  minimumFractionDigits: 0
+                                }).format(request.budget.max)}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1">Bedrooms</p>
+                              <p className="text-sm font-medium">
+                                {request.requirements.bedrooms?.min && request.requirements.bedrooms?.max
+                                  ? `${request.requirements.bedrooms.min}-${request.requirements.bedrooms.max}`
+                                  : request.requirements.bedrooms?.min
+                                  ? `${request.requirements.bedrooms.min}+`
+                                  : request.requirements.bedrooms?.max
+                                  ? `Up to ${request.requirements.bedrooms.max}`
+                                  : 'Any'}
+                              </p>
+                            </div>
+                          </div>
+
+                          {request.amenities.length > 0 && (
+                            <div className="mt-3">
+                              <p className="text-xs text-gray-500 mb-2">Required Amenities:</p>
+                              <div className="flex flex-wrap gap-2">
+                                {request.amenities.slice(0, 5).map((amenity) => (
+                                  <Badge key={amenity} variant="outline" className="text-xs">
+                                    {amenity}
+                                  </Badge>
+                                ))}
+                                {request.amenities.length > 5 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{request.amenities.length - 5} more
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {request.matchingProperties && request.matchingProperties.length > 0 && (
+                            <div className="mt-3 pt-3 border-t">
+                              <p className="text-sm font-medium text-gray-700 mb-2">Your Matching Properties:</p>
+                              <div className="flex flex-wrap gap-2">
+                                {request.matchingProperties.slice(0, 3).map((prop: any) => (
+                                  <Badge key={prop.propertyId} variant="secondary">
+                                    {prop.propertyTitle} ({prop.score}%)
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="mt-4 flex gap-2">
+                            <Button size="sm" variant="default" asChild>
+                              <a href={`mailto:${request.user.email}?subject=Property Inquiry`}>
+                                Contact User
+                              </a>
+                            </Button>
+                            <Button size="sm" variant="outline" asChild>
+                              <Link href="/host/listings">
+                                View Your Properties
+                              </Link>
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
                 )}
               </CardContent>
             </Card>
