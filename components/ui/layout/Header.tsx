@@ -140,6 +140,12 @@ export default function Header() {
             </Link>
             {user && (
               <>
+                <Link
+                  href="/request-property"
+                  className="text-teal-700 hover:text-teal-800 font-medium transition-colors"
+                >
+                  Request Property
+                </Link>
                 {/* User personal dashboard */}
                 <Link href="/user/dashboard" className="text-gray-700 hover:text-teal-600 font-medium transition-colors">Dashboard</Link>
                 {/* Host dashboard only if host role */}
@@ -198,6 +204,9 @@ export default function Header() {
 
                             <DropdownMenuItem asChild>
                               <Link href="/user/dashboard">My Dashboard</Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link href="/request-property">Request Property</Link>
                             </DropdownMenuItem>
                             {hasHostRole(user) && (
                               <DropdownMenuItem asChild>
@@ -279,7 +288,17 @@ export default function Header() {
 
               {user && (
                 <Link
-                  href="/dashboard"
+                  href="/request-property"
+                  className="text-teal-700 hover:text-teal-800 font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Request Property
+                </Link>
+              )}
+
+              {user && (
+                <Link
+                  href="/user/dashboard"
                   className="text-gray-700 hover:text-teal-600 font-medium"
                   onClick={() => setIsMenuOpen(false)}
                 >

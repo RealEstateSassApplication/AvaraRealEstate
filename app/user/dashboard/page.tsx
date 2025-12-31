@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import TenantCreateRequestModal from '@/components/maintenance/TenantCreateRequestModal';
 import RentDetailsModal from '@/components/rent/RentDetailsModal';
+import RentalRequestCard from '@/components/rental-request/RentalRequestCard';
+import RentalRequestModal from '@/components/rental-request/RentalRequestModal';
 import { 
   Calendar, 
   CheckSquare, 
@@ -27,7 +29,8 @@ import {
   MessageSquare,
   Eye,
   Download,
-  Send
+  Send,
+  Plus
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
@@ -88,17 +91,57 @@ interface MaintenanceRequest {
   createdAt: Date;
 }
 
+interface RentalRequest {
+  _id: string;
+  propertyTypes: string[];
+  purpose: string;
+  location: {
+    cities: string[];
+    districts: string[];
+    flexible: boolean;
+  };
+  budget: {
+    min: number;
+    max: number;
+    currency: string;
+    frequency: string;
+  };
+  requirements: {
+    bedrooms?: { min?: number; max?: number };
+    bathrooms?: { min?: number; max?: number };
+    areaSqft?: { min?: number; max?: number };
+  };
+  amenities: string[];
+  moveInDate?: string;
+  durationMonths?: number;
+  occupants?: number;
+  hasPets: boolean;
+  petDetails?: string;
+  additionalNotes?: string;
+  status: string;
+  matchedProperties: any[];
+  contactPreferences: {
+    email: boolean;
+    sms: boolean;
+    whatsapp: boolean;
+  };
+  createdAt: string;
+}
+
 export default function UserDashboardPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [rentals, setRentals] = useState<RentalAgreement[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [maintenanceRequests, setMaintenanceRequests] = useState<MaintenanceRequest[]>([]);
+  const [rentalRequests, setRentalRequests] = useState<RentalRequest[]>([]);
   const [favorites, setFavorites] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
   const [selectedRent, setSelectedRent] = useState<RentalAgreement | null>(null);
   const [showRentModal, setShowRentModal] = useState(false);
+  const [selectedRentalRequest, setSelectedRentalRequest] = useState<RentalRequest | null>(null);
+  const [showRentalRequestModal, setShowRentalRequestModal] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -106,12 +149,13 @@ export default function UserDashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
-      const [bookingsRes, rentalsRes, applicationsRes, maintenanceRes, favoritesRes] = await Promise.all([
+      const [bookingsRes, rentalsRes, applicationsRes, maintenanceRes, favoritesRes, rentalRequestsRes] = await Promise.all([
         fetch('/api/bookings'),
         fetch('/api/user/rents'),
         fetch('/api/applications'),
         fetch('/api/maintenance'),
-        fetch('/api/favorites')
+        fetch('/api/favorites'),
+        fetch('/api/rental-requests')
       ]);
       
       if (bookingsRes.ok) {
@@ -137,6 +181,11 @@ export default function UserDashboardPage() {
       if (favoritesRes.ok) {
         const favoritesJson = await favoritesRes.json();
         setFavorites(favoritesJson.data || favoritesJson.favorites || []);
+      }
+
+      if (rentalRequestsRes.ok) {
+        const rentalRequestsJson = await rentalRequestsRes.json();
+        setRentalRequests(rentalRequestsJson.data || []);
       }
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
@@ -184,6 +233,35 @@ export default function UserDashboardPage() {
   const activeRentals = rentals.filter(r => r.status === 'active');
   const pendingApplications = applications.filter(a => a.status === 'pending');
   const openMaintenanceRequests = maintenanceRequests.filter(m => m.status !== 'completed');
+  const activeRentalRequests = rentalRequests.filter(r => r.status === 'active' || r.status === 'matched');
+
+  const handleViewRentalRequest = (id: string) => {
+    const request = rentalRequests.find(r => r._id === id);
+    if (request) {
+      setSelectedRentalRequest(request);
+      setShowRentalRequestModal(true);
+    }
+  };
+
+  const handleCancelRentalRequest = async (id: string) => {
+    if (!confirm('Are you sure you want to cancel this rental request?')) return;
+
+    try {
+      const response = await fetch(`/api/rental-requests/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to cancel rental request');
+      }
+
+      toast.success('Rental request cancelled successfully');
+      fetchDashboardData();
+    } catch (error) {
+      console.error('Error cancelling rental request:', error);
+      toast.error('Failed to cancel rental request');
+    }
+  };
 
   if (loading) {
     return (
@@ -216,7 +294,7 @@ export default function UserDashboardPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -272,15 +350,30 @@ export default function UserDashboardPage() {
               </div>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Rental Requests</p>
+                  <p className="text-2xl font-bold text-gray-900">{activeRentalRequests.length}</p>
+                </div>
+                <div className="bg-gradient-to-br from-teal-500 to-cyan-600 text-white p-3 rounded-lg">
+                  <Send className="w-5 h-5" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="rentals">My Rentals</TabsTrigger>
             <TabsTrigger value="bookings">My Bookings</TabsTrigger>
             <TabsTrigger value="applications">Applications</TabsTrigger>
+            <TabsTrigger value="requests">Requests</TabsTrigger>
             <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
             <TabsTrigger value="favorites">Favorites</TabsTrigger>
           </TabsList>
@@ -736,6 +829,54 @@ export default function UserDashboardPage() {
             </Card>
           </TabsContent>
 
+          {/* Rental Requests Tab */}
+          <TabsContent value="requests">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>My Rental Requests</CardTitle>
+                    <CardDescription>Properties you're looking for</CardDescription>
+                  </div>
+                  <Button asChild>
+                    <Link href="/request-property">
+                      <Plus className="w-4 h-4 mr-2" />
+                      New Request
+                    </Link>
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {rentalRequests.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Home className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 mb-4">No rental requests yet</p>
+                    <p className="text-sm text-gray-400 mb-6">
+                      Create a rental request to find properties that match your criteria
+                    </p>
+                    <Button asChild>
+                      <Link href="/request-property">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Request
+                      </Link>
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {rentalRequests.map((request) => (
+                      <RentalRequestCard
+                        key={request._id}
+                        request={request}
+                        onView={handleViewRentalRequest}
+                        onCancel={handleCancelRentalRequest}
+                      />
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Favorites Tab */}
           <TabsContent value="favorites">
             <Card>
@@ -806,6 +947,17 @@ export default function UserDashboardPage() {
             userType="tenant"
           />
         )}
+
+        {/* Rental Request Modal */}
+        <RentalRequestModal
+          request={selectedRentalRequest}
+          isOpen={showRentalRequestModal}
+          onClose={() => {
+            setShowRentalRequestModal(false);
+            setSelectedRentalRequest(null);
+          }}
+          onCancel={handleCancelRentalRequest}
+        />
       </div>
     </div>
   );
