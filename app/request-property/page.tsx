@@ -23,7 +23,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { CalendarIcon, Loader2, Home, MapPin, DollarSign, Bed, Check, Mail, MessageSquare, Phone } from 'lucide-react';
 
-const PROPERTY_TYPES = ['apartment', 'house', 'villa', 'bungalow', 'room', 'commercial'];
+const PROPERTY_TYPES = ['apartment', 'house', 'villa', 'bungalow', 'room', 'commercial', 'land'];
 
 const SRI_LANKA_CITIES = [
   'Colombo', 'Kandy', 'Galle', 'Negombo', 'Jaffna', 'Trincomalee',
@@ -131,13 +131,16 @@ export default function RequestPropertyPage() {
     const newErrors: Record<string, string> = {};
 
     // Budget validation
-    if (!formData.budget.min || parseFloat(formData.budget.min) <= 0) {
-      newErrors.budgetMin = 'Minimum budget is required';
+    const minBudget = parseFloat(formData.budget.min);
+    const maxBudget = parseFloat(formData.budget.max);
+    
+    if (!formData.budget.min || isNaN(minBudget) || minBudget <= 0) {
+      newErrors.budgetMin = 'Minimum budget must be greater than 0';
     }
-    if (!formData.budget.max || parseFloat(formData.budget.max) <= 0) {
-      newErrors.budgetMax = 'Maximum budget is required';
+    if (!formData.budget.max || isNaN(maxBudget) || maxBudget <= 0) {
+      newErrors.budgetMax = 'Maximum budget must be greater than 0';
     }
-    if (parseFloat(formData.budget.min) > parseFloat(formData.budget.max)) {
+    if (!isNaN(minBudget) && !isNaN(maxBudget) && minBudget > maxBudget) {
       newErrors.budget = 'Minimum budget cannot exceed maximum budget';
     }
 

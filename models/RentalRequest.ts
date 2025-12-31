@@ -51,7 +51,7 @@ const RentalRequestSchema = new Schema<IRentalRequest>({
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   propertyTypes: {
     type: [String],
-    enum: ['apartment', 'house', 'villa', 'bungalow', 'room', 'commercial'],
+    enum: ['apartment', 'house', 'villa', 'bungalow', 'room', 'commercial', 'land'],
     default: []
   },
   purpose: {

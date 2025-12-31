@@ -102,11 +102,18 @@ export async function findMatchingProperties(
 
     // Location match (already filtered or flexible, 15 points)
     if (!request.location.flexible) {
-      const cityMatch = request.location.cities.length === 0 || 
-                       request.location.cities.includes(property.address?.city || '');
-      const districtMatch = request.location.districts.length === 0 || 
-                           request.location.districts.includes(property.address?.district || '');
-      if (cityMatch || districtMatch) {
+      const hasCityPreference = request.location.cities.length > 0;
+      const hasDistrictPreference = request.location.districts.length > 0;
+      
+      if (hasCityPreference || hasDistrictPreference) {
+        const cityMatch = !hasCityPreference || request.location.cities.includes(property.address?.city || '');
+        const districtMatch = !hasDistrictPreference || request.location.districts.includes(property.address?.district || '');
+        
+        if (cityMatch || districtMatch) {
+          score += 15;
+        }
+      } else {
+        // No location preference specified, give full points
         score += 15;
       }
     } else {

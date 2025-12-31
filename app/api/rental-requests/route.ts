@@ -29,6 +29,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (body.budget.min <= 0 || body.budget.max <= 0) {
+      return NextResponse.json(
+        { error: 'Budget values must be greater than 0' },
+        { status: 400 }
+      );
+    }
+
     if (body.budget.min > body.budget.max) {
       return NextResponse.json(
         { error: 'Minimum budget cannot exceed maximum budget' },
