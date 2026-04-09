@@ -25,7 +25,12 @@ export async function GET(
     }
 
     // Verify ownership
-    if (rentalRequest.user._id.toString() !== (user as any)._id.toString()) {
+    const rentalRequestData = rentalRequest as any;
+    const requestUserId =
+      rentalRequestData?.user?._id?.toString?.() ??
+      rentalRequestData?.user?.toString?.();
+
+    if (!requestUserId || requestUserId !== (user as any)._id.toString()) {
       return NextResponse.json(
         { error: 'Forbidden' },
         { status: 403 }
