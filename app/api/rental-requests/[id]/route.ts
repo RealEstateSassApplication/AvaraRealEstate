@@ -4,7 +4,7 @@ import dbConnect from '@/lib/db';
 import RentalRequest from '@/models/RentalRequest';
 import { findMatchingProperties } from '@/lib/matchRentalRequests';
 
-type LeanRentalRequestWithUser = {
+type RentalRequestUserField = {
   user?: string | { _id?: unknown } | { toString?: unknown };
 };
 
@@ -45,7 +45,7 @@ export async function GET(
     }
 
     // Verify ownership
-    const rentalRequestData = rentalRequest as LeanRentalRequestWithUser;
+    const rentalRequestData = rentalRequest as RentalRequestUserField;
     const rentalRequestUser = rentalRequestData.user;
     let requestUserId: string | undefined;
 
@@ -55,6 +55,12 @@ export async function GET(
       requestUserId = rentalRequestUser._id.toString();
     } else if (hasCallableToString(rentalRequestUser)) {
       requestUserId = rentalRequestUser.toString();
+    }
+
+    if (!requestUserId) {
+      console.warn('Rental request user format is not supported for ownership check', {
+        rentalRequestId: params.id
+      });
     }
 
     if (!requestUserId || requestUserId !== user._id.toString()) {
