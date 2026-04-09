@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, MapPin, Home, Building, Bed, TrendingUp } from 'lucide-react';
+import { MapPin, ShieldCheck, Sparkles, Headset } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import ListPropertyButton from '@/components/ui/ListPropertyButton';
@@ -49,23 +49,9 @@ export default function HomePage() {
   const [budget, setBudget] = useState('Flexible');
   const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
-  const [counters, setCounters] = useState({ props: 0, customers: 0, cities: 0 });
 
   useEffect(() => {
     fetchFeaturedProperties();
-    const target = { props: 2500, customers: 15000, cities: 25 };
-    const duration = 1200;
-    const start = Date.now();
-    const timer = setInterval(() => {
-      const progress = Math.min(1, (Date.now() - start) / duration);
-      setCounters({
-        props: Math.round(target.props * progress),
-        customers: Math.round(target.customers * progress),
-        cities: Math.round(target.cities * progress),
-      });
-      if (progress === 1) clearInterval(timer);
-    }, 30);
-    return () => clearInterval(timer);
   }, []);
 
   const fetchFeaturedProperties = async () => {
@@ -132,11 +118,22 @@ export default function HomePage() {
     window.location.href = queryString ? `/listings?${queryString}` : '/listings';
   };
 
-  const stats = [
-    { label: 'Active Properties', value: `${counters.props.toLocaleString()}+`, icon: Home },
-    { label: 'Happy Customers', value: `${counters.customers.toLocaleString()}+`, icon: Building },
-    { label: 'Cities Covered', value: `${counters.cities}+`, icon: MapPin },
-    { label: 'Average Rating', value: '4.8★', icon: TrendingUp },
+  const premiumHighlights = [
+    {
+      title: 'Verified Listings',
+      description: 'Every property is reviewed for quality, trust, and listing integrity.',
+      icon: ShieldCheck,
+    },
+    {
+      title: 'White-Glove Experience',
+      description: 'Enjoy a refined search journey built for modern buyers, renters, and hosts.',
+      icon: Sparkles,
+    },
+    {
+      title: 'Dedicated Expert Support',
+      description: 'Our team is available to guide you through every decision with confidence.',
+      icon: Headset,
+    },
   ];
 
   return (
@@ -191,15 +188,15 @@ export default function HomePage() {
                 >
                   Start Exploring
                 </Button>
-                <div className="flex -space-x-4 items-center">
-                  {[1, 2, 3].map(i => (
-                    <div key={i} className="w-10 h-10 rounded-full border-2 border-gray-900 bg-gray-700 overflow-hidden">
-                      <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="User" />
-                    </div>
+                <div className="flex flex-wrap gap-2 items-center">
+                  {['Verified listings', 'Secure transactions', 'Priority support'].map((item) => (
+                    <span
+                      key={item}
+                      className="inline-flex items-center rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-sm"
+                    >
+                      {item}
+                    </span>
                   ))}
-                  <div className="pl-6 text-sm text-gray-400">
-                    <span className="text-white font-bold">15k+</span> Happy Customers
-                  </div>
                 </div>
               </div>
             </motion.div>
@@ -319,19 +316,22 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* STAT CARDS */}
+      {/* PREMIUM TRUST */}
       <section className="py-12 bg-gradient-to-r from-white to-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {stats.map((stat, idx) => (
-              <div key={idx} className="bg-white rounded-2xl p-6 shadow hover:shadow-lg transition-shadow border border-slate-100">
-                <div className="flex items-center gap-4">
-                  <div className="bg-black w-14 h-14 rounded-lg flex items-center justify-center text-white">
-                    <stat.icon className="w-6 h-6 text-white" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {premiumHighlights.map((highlight) => (
+              <div
+                key={highlight.title}
+                className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg transition-shadow border border-slate-100"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="bg-black w-12 h-12 rounded-xl flex items-center justify-center text-white shrink-0">
+                    <highlight.icon className="w-5 h-5 text-white" />
                   </div>
-                  <div>
-                    <div className="text-2xl font-extrabold text-black">{stat.value}</div>
-                    <div className="text-sm text-slate-600">{stat.label}</div>
+                  <div className="space-y-1">
+                    <h3 className="text-base font-semibold text-slate-900">{highlight.title}</h3>
+                    <p className="text-sm text-slate-600 leading-relaxed">{highlight.description}</p>
                   </div>
                 </div>
               </div>
