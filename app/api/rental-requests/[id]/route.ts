@@ -4,6 +4,26 @@ import dbConnect from '@/lib/db';
 import RentalRequest from '@/models/RentalRequest';
 import { findMatchingProperties } from '@/lib/matchRentalRequests';
 
+type RentalRequestUserField = {
+  user?: string | { _id?: unknown } | { toString?: unknown };
+};
+
+function hasCallableToString(value: unknown): value is { toString: () => string } {
+  return typeof value === 'object' &&
+    value !== null &&
+    'toString' in value &&
+    typeof (value as { toString?: unknown }).toString === 'function';
+}
+
+function hasObjectIdField(value: unknown): value is { _id: { toString: () => string } } {
+  if (typeof value !== 'object' || value === null || !('_id' in value)) {
+    return false;
+  }
+
+  const objectId = (value as { _id?: unknown })._id;
+  return hasCallableToString(objectId);
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -25,7 +45,25 @@ export async function GET(
     }
 
     // Verify ownership
-    if (rentalRequest.user._id.toString() !== (user as any)._id.toString()) {
+    const rentalRequestData = rentalRequest as RentalRequestUserField;
+    const rentalRequestUser = rentalRequestData.user;
+    let requestUserId: string | undefined;
+
+    if (typeof rentalRequestUser === 'string') {
+      requestUserId = rentalRequestUser;
+    } else if (hasObjectIdField(rentalRequestUser)) {
+      requestUserId = rentalRequestUser._id.toString();
+    } else if (hasCallableToString(rentalRequestUser)) {
+      requestUserId = rentalRequestUser.toString();
+    }
+
+    if (!requestUserId) {
+      console.warn('Rental request user format is not supported for ownership check', {
+        rentalRequestId: params.id
+      });
+    }
+
+    if (!requestUserId || requestUserId !== user._id.toString()) {
       return NextResponse.json(
         { error: 'Forbidden' },
         { status: 403 }
