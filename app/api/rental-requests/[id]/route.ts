@@ -4,14 +4,17 @@ import dbConnect from '@/lib/db';
 import RentalRequest from '@/models/RentalRequest';
 import { findMatchingProperties } from '@/lib/matchRentalRequests';
 
-type RentalRequestUserRef =
-  | string
-  | { toString: () => string }
-  | { _id?: { toString: () => string } };
-
 type LeanRentalRequestWithUser = {
-  user?: RentalRequestUserRef;
+  user?: unknown;
 };
+
+function hasObjectIdField(value: unknown): value is { _id: { toString: () => string } } {
+  return typeof value === 'object' && value !== null && '_id' in value && !!(value as { _id?: unknown })._id;
+}
+
+function hasToString(value: unknown): value is { toString: () => string } {
+  return typeof value === 'object' && value !== null && 'toString' in value;
+}
 
 export async function GET(
   request: NextRequest,
@@ -36,11 +39,15 @@ export async function GET(
     // Verify ownership
     const rentalRequestData = rentalRequest as LeanRentalRequestWithUser;
     const rentalRequestUser = rentalRequestData.user;
-    const requestUserId = typeof rentalRequestUser === 'string'
-      ? rentalRequestUser
-      : typeof rentalRequestUser === 'object' && rentalRequestUser && '_id' in rentalRequestUser
-        ? rentalRequestUser._id?.toString()
-        : rentalRequestUser?.toString();
+    let requestUserId: string | undefined;
+
+    if (typeof rentalRequestUser === 'string') {
+      requestUserId = rentalRequestUser;
+    } else if (hasObjectIdField(rentalRequestUser)) {
+      requestUserId = rentalRequestUser._id.toString();
+    } else if (hasToString(rentalRequestUser)) {
+      requestUserId = rentalRequestUser.toString();
+    }
 
     if (!requestUserId || requestUserId !== user._id.toString()) {
       return NextResponse.json(
