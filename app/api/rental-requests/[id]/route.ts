@@ -4,6 +4,15 @@ import dbConnect from '@/lib/db';
 import RentalRequest from '@/models/RentalRequest';
 import { findMatchingProperties } from '@/lib/matchRentalRequests';
 
+type RentalRequestUserRef =
+  | string
+  | { toString: () => string }
+  | { _id?: { toString: () => string } };
+
+type LeanRentalRequestWithUser = {
+  user?: RentalRequestUserRef;
+};
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -25,12 +34,15 @@ export async function GET(
     }
 
     // Verify ownership
-    const rentalRequestData = rentalRequest as any;
-    const requestUserId =
-      rentalRequestData?.user?._id?.toString?.() ??
-      rentalRequestData?.user?.toString?.();
+    const rentalRequestData = rentalRequest as LeanRentalRequestWithUser;
+    const rentalRequestUser = rentalRequestData.user;
+    const requestUserId = typeof rentalRequestUser === 'string'
+      ? rentalRequestUser
+      : typeof rentalRequestUser === 'object' && rentalRequestUser && '_id' in rentalRequestUser
+        ? rentalRequestUser._id?.toString()
+        : rentalRequestUser?.toString();
 
-    if (!requestUserId || requestUserId !== (user as any)._id.toString()) {
+    if (!requestUserId || requestUserId !== user._id.toString()) {
       return NextResponse.json(
         { error: 'Forbidden' },
         { status: 403 }
