@@ -9,11 +9,22 @@ type LeanRentalRequestWithUser = {
 };
 
 function hasObjectIdField(value: unknown): value is { _id: { toString: () => string } } {
-  return typeof value === 'object' && value !== null && '_id' in value && !!(value as { _id?: unknown })._id;
+  if (typeof value !== 'object' || value === null || !('_id' in value)) {
+    return false;
+  }
+
+  const objectId = (value as { _id?: unknown })._id;
+  return typeof objectId === 'object' &&
+    objectId !== null &&
+    'toString' in objectId &&
+    typeof (objectId as { toString?: unknown }).toString === 'function';
 }
 
 function hasToString(value: unknown): value is { toString: () => string } {
-  return typeof value === 'object' && value !== null && 'toString' in value;
+  return typeof value === 'object' &&
+    value !== null &&
+    'toString' in value &&
+    typeof (value as { toString?: unknown }).toString === 'function';
 }
 
 export async function GET(
