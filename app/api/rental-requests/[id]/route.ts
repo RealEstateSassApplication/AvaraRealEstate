@@ -5,7 +5,7 @@ import RentalRequest from '@/models/RentalRequest';
 import { findMatchingProperties } from '@/lib/matchRentalRequests';
 
 type LeanRentalRequestWithUser = {
-  user?: unknown;
+  user?: string | { _id?: unknown } | { toString?: unknown };
 };
 
 function hasCallableToString(value: unknown): value is { toString: () => string } {
@@ -22,10 +22,6 @@ function hasObjectIdField(value: unknown): value is { _id: { toString: () => str
 
   const objectId = (value as { _id?: unknown })._id;
   return hasCallableToString(objectId);
-}
-
-function hasToString(value: unknown): value is { toString: () => string } {
-  return hasCallableToString(value);
 }
 
 export async function GET(
@@ -57,7 +53,7 @@ export async function GET(
       requestUserId = rentalRequestUser;
     } else if (hasObjectIdField(rentalRequestUser)) {
       requestUserId = rentalRequestUser._id.toString();
-    } else if (hasToString(rentalRequestUser)) {
+    } else if (hasCallableToString(rentalRequestUser)) {
       requestUserId = rentalRequestUser.toString();
     }
 
