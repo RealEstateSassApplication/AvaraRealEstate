@@ -6,12 +6,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import ApplicationForm from './ApplicationForm';
 import BookingModal from '@/components/booking/BookingModal';
 import { toast } from '@/hooks/use-toast';
-import { CalendarDays, MapPin, ShieldCheck, CheckCircle2, CircleDashed } from 'lucide-react';
+import { CalendarDays, MapPin, ShieldCheck, CheckCircle2, CircleDashed, Send } from 'lucide-react';
 
 interface HostContact {
   name?: string;
-  email?: string;
-  phone?: string;
   verified?: boolean;
 }
 
@@ -51,7 +49,7 @@ interface Props {
 export default function ListingActions({ propertyId, initialFavorite = false, hostContact, property }: Props) {
   const [favorite, setFavorite] = useState<boolean>(initialFavorite);
   const [loading, setLoading] = useState(false);
-  const [showContact, setShowContact] = useState(false);
+  const [contactLoading, setContactLoading] = useState(false);
   const [showRentModal, setShowRentModal] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [passport, setPassport] = useState<PropertyPassport | null>(null);
@@ -93,16 +91,6 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
     }
   };
 
-  const copyToClipboard = async (value?: string) => {
-    if (!value) return;
-    try {
-      await navigator.clipboard.writeText(value);
-      toast({ title: 'Copied', description: value });
-    } catch {
-      toast({ title: 'Copy failed', description: 'Select and copy manually.' });
-    }
-  };
-
   const handleApplicationSubmitted = () => {
     toast({ title: 'Application Submitted', description: 'Your application has been sent to the host.' });
     setShowRentModal(false);
@@ -127,6 +115,28 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
       toast({ title: 'Error', description: 'Could not verify login. Please sign in.' });
       const next = encodeURIComponent(window.location.pathname + window.location.search);
       window.location.href = `/auth/login?next=${next}`;
+    }
+  };
+
+  const sendEnquiry = async (message: string) => {
+    if (contactLoading) return;
+    setContactLoading(true);
+    try {
+      const res = await fetch(`/api/properties/${propertyId}/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast({ title: 'Could not send enquiry', description: data.error || 'Please try again.' });
+        return;
+      }
+      toast({ title: 'Enquiry sent', description: data.message || 'The property owner has been notified.' });
+    } catch {
+      toast({ title: 'Network error', description: 'Could not send your enquiry.' });
+    } finally {
+      setContactLoading(false);
     }
   };
 
@@ -241,41 +251,37 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
           )}
 
           {isPurchasable && (
-            <Button className="w-full bg-slate-900 hover:bg-black text-white text-lg py-3 font-semibold">
-              Contact for Purchase
+            <Button
+              className="w-full bg-slate-900 hover:bg-black text-white text-lg py-3 font-semibold"
+              disabled={contactLoading}
+              onClick={() => handleCheckAuth(() => void sendEnquiry(`I am interested in purchasing ${property?.title || 'this property'}. Please contact me with the next steps.`))}
+            >
+              <Send className="w-4 h-4 mr-2" />
+              {contactLoading ? 'Sending...' : 'Contact for Purchase'}
             </Button>
           )}
         </div>
 
         {hostContact && (
-          <>
-            <Button className="w-full" variant="outline" onClick={() => setShowContact((s) => !s)}>
-              {showContact ? 'Hide Contact' : 'Contact Host'}
-            </Button>
-
-            {showContact && (
-              <div className="w-full mb-2 p-3 rounded border bg-card text-sm space-y-1">
-                <div className="font-semibold">Host Contact</div>
-                <div>Name: {hostContact.name || 'N/A'}</div>
-                {hostContact.phone && (
-                  <div className="flex items-center justify-between">
-                    <span>Phone: {hostContact.phone}</span>
-                    <Button type="button" size="sm" variant="ghost" onClick={() => copyToClipboard(hostContact.phone)}>Copy</Button>
-                  </div>
-                )}
-                {hostContact.email && (
-                  <div className="flex items-center justify-between">
-                    <span>Email: {hostContact.email}</span>
-                    <Button type="button" size="sm" variant="ghost" onClick={() => copyToClipboard(hostContact.email)}>Copy</Button>
-                  </div>
-                )}
-                {!hostContact.phone && !hostContact.email && (
-                  <div className="text-muted-foreground">No direct contact details available.</div>
-                )}
-                {hostContact.verified && <div className="text-xs text-green-600">Verified Host</div>}
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold text-slate-900">{hostContact.name || 'Property owner'}</div>
+                <div className="text-xs text-slate-500 mt-0.5">
+                  {hostContact.verified ? 'Verified Avara member' : 'Property owner'}
+                </div>
               </div>
-            )}
-          </>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={contactLoading}
+                onClick={() => handleCheckAuth(() => void sendEnquiry(`I am interested in ${property?.title || 'this property'}. Please contact me with more information.`))}
+              >
+                <Send className="w-4 h-4 mr-2" />
+                Enquire
+              </Button>
+            </div>
+          </div>
         )}
 
         <Button className="w-full" variant="outline" onClick={toggleFavorite} disabled={loading}>
