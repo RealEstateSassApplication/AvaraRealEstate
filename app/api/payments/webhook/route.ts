@@ -57,16 +57,17 @@ export async function POST(req: Request) {
     }
 
     // PayHere status 2 means payment success. Other valid statuses must never
-    // confirm the booking, but we record the failed/cancelled transaction state.
+    // confirm the booking, but are still recorded for reconciliation.
     if (statusCode !== '2') {
+      const failureUpdate: Record<string, any> = {
+        status: 'failed',
+        provider: 'payhere',
+        'metadata.payhereStatusCode': statusCode,
+      };
+      if (paymentId) failureUpdate.providerTransactionId = paymentId;
       await Transaction.findOneAndUpdate(
         { booking: booking._id },
-        {
-          status: 'failed',
-          provider: 'payhere',
-          ...(paymentId ? { providerTransactionId: paymentId } : {}),
-          $set: { 'metadata.payhereStatusCode': statusCode },
-        }
+        { $set: failureUpdate }
       );
       return NextResponse.json({ received: true });
     }
@@ -93,14 +94,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ received: true, idempotent: true });
     }
 
-    await BookingService.confirmBooking(bookingId, paymentId);
+    await BookingService.confirmBooking(bookingId, {
+      markPaid: true,
+      providerTransactionId: paymentId,
+    });
     await Transaction.findOneAndUpdate(
       { booking: booking._id },
       {
-        status: 'completed',
-        provider: 'payhere',
-        providerTransactionId: paymentId,
-        $set: { 'metadata.payhereStatusCode': statusCode },
+        $set: {
+          status: 'completed',
+          provider: 'payhere',
+          providerTransactionId: paymentId,
+          'metadata.payhereStatusCode': statusCode,
+        },
       }
     );
 
