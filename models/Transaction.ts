@@ -9,7 +9,7 @@ export interface ITransaction extends Document {
   currency: string;
   type: 'booking' | 'refund' | 'payout' | 'fee';
   provider: 'payhere' | 'manual';
-  providerTransactionId: string;
+  providerTransactionId?: string;
   status: 'pending' | 'completed' | 'failed' | 'cancelled';
   description?: string;
   metadata?: Record<string, any>;
@@ -34,7 +34,10 @@ const TransactionSchema = new Schema<ITransaction>({
     enum: ['payhere', 'manual'],
     required: true
   },
-  providerTransactionId: { type: String, required: true },
+  // A provider transaction id does not exist until the payment provider has
+  // actually accepted/processed the payment. Pending transactions therefore
+  // need to be valid without one.
+  providerTransactionId: { type: String, default: '' },
   status: {
     type: String,
     enum: ['pending', 'completed', 'failed', 'cancelled'],
@@ -50,5 +53,6 @@ TransactionSchema.index({ from: 1, createdAt: -1 });
 TransactionSchema.index({ to: 1, createdAt: -1 });
 TransactionSchema.index({ booking: 1 });
 TransactionSchema.index({ status: 1 });
+TransactionSchema.index({ provider: 1, providerTransactionId: 1 });
 
 export default mongoose.models.Transaction || mongoose.model<ITransaction>('Transaction', TransactionSchema);
