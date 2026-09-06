@@ -22,6 +22,10 @@ export interface IProperty extends Document {
     postalCode?: string;
     country: string;
   };
+  location?: {
+    type: 'Point';
+    coordinates: [number, number]; // [longitude, latitude]
+  };
   amenities: string[];
   features: string[];
   utilities: {
@@ -34,7 +38,7 @@ export interface IProperty extends Document {
   availability: {
     immediate: boolean;
     availableFrom?: Date;
-    minimumStay?: number; // for booking rentals
+    minimumStay?: number;
     maximumStay?: number;
   };
   calendar: {
@@ -61,6 +65,18 @@ export interface IProperty extends Document {
   views: number;
   featured: boolean;
   verified: boolean;
+  verification: {
+    identityVerified: boolean;
+    ownershipVerified: boolean;
+    addressVerified: boolean;
+    inspectionVerified: boolean;
+    pricingReviewed: boolean;
+    reviewedAt?: Date;
+    reviewedBy?: mongoose.Types.ObjectId;
+    notes?: string;
+  };
+  trustScore: number;
+  trustLevel: 'unverified' | 'reviewed' | 'verified' | 'premier';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -101,8 +117,27 @@ const PropertySchema = new Schema<IProperty>({
     city: { type: String, required: true },
     district: { type: String, required: true },
     postalCode: String,
-    country: { type: String, default: 'Sri Lanka' },
-    // coordinates removed: we no longer store lat/lng for properties
+    country: { type: String, default: 'Sri Lanka' }
+  },
+  location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: false,
+    },
+    coordinates: {
+      type: [Number],
+      validate: {
+        validator(value: number[]) {
+          return !value?.length || (
+            value.length === 2 &&
+            value[0] >= -180 && value[0] <= 180 &&
+            value[1] >= -90 && value[1] <= 90
+          );
+        },
+        message: 'Invalid coordinates',
+      },
+    },
   },
   amenities: [String],
   features: [String],
@@ -142,22 +177,36 @@ const PropertySchema = new Schema<IProperty>({
   },
   views: { type: Number, default: 0 },
   featured: { type: Boolean, default: false },
-  verified: { type: Boolean, default: false }
+  verified: { type: Boolean, default: false },
+  verification: {
+    identityVerified: { type: Boolean, default: false },
+    ownershipVerified: { type: Boolean, default: false },
+    addressVerified: { type: Boolean, default: false },
+    inspectionVerified: { type: Boolean, default: false },
+    pricingReviewed: { type: Boolean, default: false },
+    reviewedAt: Date,
+    reviewedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    notes: { type: String, maxlength: 2000 },
+  },
+  trustScore: { type: Number, default: 0, min: 0, max: 100 },
+  trustLevel: {
+    type: String,
+    enum: ['unverified', 'reviewed', 'verified', 'premier'],
+    default: 'unverified',
+  },
 }, {
   timestamps: true
 });
 
-// Indexes for efficient querying
 PropertySchema.index({ purpose: 1, status: 1 });
 PropertySchema.index({ title: 'text', description: 'text' });
 PropertySchema.index({ price: 1 });
 PropertySchema.index({ type: 1 });
 PropertySchema.index({ owner: 1 });
 PropertySchema.index({ featured: 1, createdAt: -1 });
+PropertySchema.index({ trustScore: -1, createdAt: -1 });
+PropertySchema.index({ location: '2dsphere' }, { sparse: true });
 
-// In dev with HMR, an earlier compiled model may still have the old schema
-// (with required coordinates). Force delete so the new schema (no coordinates)
-// is applied.
 if (mongoose.models.Property) {
   delete mongoose.models.Property;
 }
