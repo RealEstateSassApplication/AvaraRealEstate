@@ -35,9 +35,11 @@ export async function GET(request: NextRequest) {
 
     const city = searchParams.get('city')?.trim();
     const district = searchParams.get('district')?.trim();
+    const province = searchParams.get('province')?.trim();
     const search = searchParams.get('search')?.trim();
     if (city) filters.city = city.slice(0, 120);
     if (district) filters.district = district.slice(0, 120);
+    if (province) filters.province = province.slice(0, 120);
     if (search) filters.search = search.slice(0, 200);
 
     const featured = parseBoolean(searchParams.get('featured'));
