@@ -6,9 +6,13 @@ import dbConnect from './db';
 import User, { IUser } from '@/models/User';
 
 function getJwtSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret || secret.length < 32 || secret === 'your-secret-key') {
-    throw new Error('JWT_SECRET must be configured with at least 32 characters');
+  const secret = process.env.JWT_SECRET?.trim();
+  const placeholder = !secret ||
+    secret === 'your-secret-key' ||
+    secret.includes('change-this-in-production') ||
+    secret.startsWith('your-');
+  if (placeholder || secret.length < 32) {
+    throw new Error('JWT_SECRET must be configured with a non-placeholder value of at least 32 characters');
   }
   return secret;
 }
@@ -74,7 +78,6 @@ export function generateOTP(): string {
   return crypto.randomInt(100000, 1000000).toString();
 }
 
-// Backwards-compatible helper for older handlers expecting a Request-like object.
 export default async function getUserFromReq(req: any) {
   try {
     const cookieHeader = req.headers?.get ? req.headers.get('cookie') : req.headers?.cookie;
