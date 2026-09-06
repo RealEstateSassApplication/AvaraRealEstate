@@ -18,7 +18,7 @@ export function calculatePropertyTrustScore(verification: PropertyVerification =
 
 export function trustLevelForScore(score: number) {
   if (score >= 90) return 'premier' as const;
-  if (score >= 70) return 'verified' as const;
+  if (score >= 60) return 'verified' as const;
   if (score >= 40) return 'reviewed' as const;
   return 'unverified' as const;
 }
