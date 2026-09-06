@@ -14,7 +14,7 @@ export interface CreateBookingInput {
 }
 
 function parseDate(value: string | Date) {
-  const date = value instanceof Date ? new Date(value) : new Date(value);
+  const date = new Date(value);
   if (Number.isNaN(date.getTime())) throw new Error('Invalid dates');
   return date;
 }
@@ -55,6 +55,10 @@ async function hasOverlap(propertyId: string, start: Date, end: Date) {
   }).select('_id');
 }
 
+function isAdminRole(roles: string[]) {
+  return roles.includes('admin') || roles.includes('super-admin');
+}
+
 export default class BookingService {
   static async checkAvailability(propertyId: string, startDate: Date | string, endDate: Date | string) {
     const start = parseDate(startDate);
@@ -81,14 +85,10 @@ export default class BookingService {
     if (!initialProperty) throw new Error('Property not found');
     if (initialProperty.status !== 'active') throw new Error('Property not available');
 
-    // Existing bookings remain the source of truth. This also protects against
-    // legacy records created before atomic calendar reservations were introduced.
     if (await hasOverlap(payload.propertyId, start, end)) {
       throw new Error('Property not available for selected dates');
     }
 
-    // Reserve all nights in a single atomic property update. Concurrent callers
-    // attempting to reserve any of the same normalized dates cannot both succeed.
     const property = await Property.findOneAndUpdate(
       {
         _id: payload.propertyId,
@@ -136,7 +136,6 @@ export default class BookingService {
         currency,
         type: 'booking',
         provider: 'payhere',
-        providerTransactionId: '',
         status: 'pending',
       });
 
@@ -158,6 +157,12 @@ export default class BookingService {
     options: { markPaid?: boolean; providerTransactionId?: string } = {}
   ) {
     await dbConnect();
+    const existing = await Booking.findById(bookingId).select('status');
+    if (!existing) return null;
+    if (existing.status === 'cancelled' || existing.status === 'completed') {
+      throw new Error(`Cannot confirm a ${existing.status} booking`);
+    }
+
     const update: any = { status: 'confirmed' };
     if (options.markPaid) update.paymentStatus = 'paid';
 
@@ -175,10 +180,26 @@ export default class BookingService {
     return booking;
   }
 
-  static async cancelBooking(bookingId: string, userId: string, reason?: string) {
+  static async cancelBookingByActor(
+    bookingId: string,
+    actorId: string,
+    actorRoles: string[],
+    reason?: string
+  ) {
     await dbConnect();
-    const booking = await Booking.findOne({ _id: bookingId, user: userId });
+    const query: any = { _id: bookingId };
+    if (!isAdminRole(actorRoles)) {
+      if (actorRoles.includes('host')) query.host = actorId;
+      else query.user = actorId;
+    }
+
+    const booking = await Booking.findOne(query);
     if (!booking) return null;
+    if (booking.status === 'cancelled') return booking;
+    if (booking.status === 'completed') throw new Error('Completed bookings cannot be cancelled');
+    if (booking.paymentStatus === 'paid') {
+      throw new Error('Paid bookings require a refund workflow before cancellation');
+    }
 
     const nightDates = getNightDates(new Date(booking.startDate), new Date(booking.endDate));
     await Property.findByIdAndUpdate(booking.property, {
@@ -190,9 +211,19 @@ export default class BookingService {
 
     return Booking.findByIdAndUpdate(
       bookingId,
-      { status: 'cancelled', cancellationReason: reason },
+      {
+        status: 'cancelled',
+        cancellationReason: reason,
+        cancelledAt: new Date(),
+        cancelledBy: actorId,
+      },
       { new: true }
     );
+  }
+
+  // Backwards-compatible user cancellation helper.
+  static async cancelBooking(bookingId: string, userId: string, reason?: string) {
+    return this.cancelBookingByActor(bookingId, userId, ['user'], reason);
   }
 
   static async getBookingsByUser(userId: string, page = 1, limit = 10) {
