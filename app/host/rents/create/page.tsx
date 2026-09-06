@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { CalendarIcon } from 'lucide-react';
 
 interface Property {
   _id: string;
@@ -35,7 +34,6 @@ export default function CreateRentPage() {
     notes: ''
   });
 
-  // Fetch host properties
   useEffect(() => {
     const fetchProperties = async () => {
       try {
@@ -53,7 +51,6 @@ export default function CreateRentPage() {
     fetchProperties();
   }, []);
 
-  // Prefill from query params
   useEffect(() => {
     if (!searchParams) return;
     const propertyId = searchParams.get('propertyId');
@@ -75,43 +72,37 @@ export default function CreateRentPage() {
     setLoading(true);
 
     try {
-      // First, create or find the tenant user
-      const tenantResponse = await fetch('/api/auth/register', {
+      // Tenant provisioning is restricted to authenticated hosts/admins.
+      const tenantResponse = await fetch('/api/host/tenants', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.tenantName,
           email: formData.tenantEmail,
           phone: formData.tenantPhone,
-          role: 'tenant',
-          skipPassword: true
         })
       });
 
-      if (!tenantResponse.ok && tenantResponse.status !== 200) {
+      if (!tenantResponse.ok) {
         const errJson = await tenantResponse.json().catch(() => ({}));
         alert(`Failed to create/find tenant: ${errJson.error || 'Unknown error'}`);
-        setLoading(false);
         return;
       }
 
       const tenant = await tenantResponse.json();
-      const tenantId = tenant.user?._id || tenant.data?.id || tenant._id;
-
+      const tenantId = tenant.user?._id;
       if (!tenantId) {
         alert('Failed to get tenant ID');
         console.error('Tenant response:', tenant);
-        setLoading(false);
         return;
       }
 
-      // Create the rent agreement
       const rentResponse = await fetch('/api/rents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           propertyId: formData.propertyId,
-          tenantId: tenantId,
+          tenantId,
           amount: Number(formData.amount),
           currency: formData.currency,
           frequency: formData.frequency,
@@ -145,13 +136,10 @@ export default function CreateRentPage() {
         <Card className="border border-gray-200 shadow-sm">
           <CardHeader>
             <CardTitle>Rent Agreement Details</CardTitle>
-            <CardDescription>
-              Fill in the details to create a new rent agreement
-            </CardDescription>
+            <CardDescription>Fill in the details to create a new rent agreement</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Property Selection */}
               <div className="space-y-2">
                 <Label htmlFor="property">Property *</Label>
                 <Select
@@ -165,9 +153,7 @@ export default function CreateRentPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {properties.length === 0 && !loadingProperties && (
-                      <SelectItem value="none" disabled>
-                        No properties available
-                      </SelectItem>
+                      <SelectItem value="none" disabled>No properties available</SelectItem>
                     )}
                     {properties.map((property) => (
                       <SelectItem key={property._id} value={property._id}>
@@ -178,10 +164,8 @@ export default function CreateRentPage() {
                 </Select>
               </div>
 
-              {/* Tenant Information */}
               <div className="border rounded-lg p-4 space-y-4">
                 <h3 className="text-lg font-semibold">Tenant Information</h3>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="tenantName">Full Name *</Label>
@@ -206,7 +190,6 @@ export default function CreateRentPage() {
                     />
                   </div>
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="tenantPhone">Phone Number *</Label>
                   <Input
@@ -220,16 +203,15 @@ export default function CreateRentPage() {
                 </div>
               </div>
 
-              {/* Rent Details */}
               <div className="border rounded-lg p-4 space-y-4">
                 <h3 className="text-lg font-semibold">Rent Details</h3>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="amount">Rent Amount *</Label>
                     <Input
                       id="amount"
                       type="number"
+                      min="1"
                       placeholder="85000"
                       value={formData.amount}
                       onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
@@ -238,13 +220,8 @@ export default function CreateRentPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="currency">Currency</Label>
-                    <Select
-                      value={formData.currency}
-                      onValueChange={(value) => setFormData({ ...formData, currency: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
+                    <Select value={formData.currency} onValueChange={(value) => setFormData({ ...formData, currency: value })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="LKR">LKR (Sri Lankan Rupees)</SelectItem>
                         <SelectItem value="USD">USD (US Dollars)</SelectItem>
@@ -257,14 +234,8 @@ export default function CreateRentPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="frequency">Payment Frequency *</Label>
-                    <Select
-                      value={formData.frequency}
-                      onValueChange={(value) => setFormData({ ...formData, frequency: value })}
-                      required
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
+                    <Select value={formData.frequency} onValueChange={(value) => setFormData({ ...formData, frequency: value })} required>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="monthly">Monthly</SelectItem>
                         <SelectItem value="weekly">Weekly</SelectItem>
@@ -285,7 +256,6 @@ export default function CreateRentPage() {
                 </div>
               </div>
 
-              {/* Additional Notes */}
               <div className="space-y-2">
                 <Label htmlFor="notes">Additional Notes</Label>
                 <Textarea
@@ -297,20 +267,9 @@ export default function CreateRentPage() {
                 />
               </div>
 
-              {/* Submit Button */}
               <div className="flex justify-end space-x-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.back()}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-black text-white hover:bg-gray-800 transition-colors shadow-sm"
-                >
+                <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
+                <Button type="submit" disabled={loading} className="bg-black text-white hover:bg-gray-800 transition-colors shadow-sm">
                   {loading ? 'Creating...' : 'Create Rent Agreement'}
                 </Button>
               </div>
