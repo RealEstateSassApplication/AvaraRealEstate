@@ -91,6 +91,25 @@ const PROPERTY_TYPES = [
   'studio', 'penthouse', 'duplex', 'office', 'warehouse', 'shop', 'serviced-apartment'
 ] as const;
 
+const GeoPointSchema = new Schema({
+  type: { type: String, enum: ['Point'], required: true },
+  coordinates: {
+    type: [Number],
+    required: true,
+    validate: {
+      validator(value: number[]) {
+        return (
+          Array.isArray(value) &&
+          value.length === 2 &&
+          value[0] >= -180 && value[0] <= 180 &&
+          value[1] >= -90 && value[1] <= 90
+        );
+      },
+      message: 'Invalid coordinates',
+    },
+  },
+}, { _id: false });
+
 const PropertySchema = new Schema<IProperty>({
   title: { type: String, required: true, trim: true },
   description: { type: String, required: true, trim: true },
@@ -122,26 +141,9 @@ const PropertySchema = new Schema<IProperty>({
     postalCode: String,
     country: { type: String, default: 'Sri Lanka' }
   },
-  location: {
-    type: {
-      type: String,
-      enum: ['Point'],
-      required: false,
-    },
-    coordinates: {
-      type: [Number],
-      validate: {
-        validator(value: number[]) {
-          return !value?.length || (
-            value.length === 2 &&
-            value[0] >= -180 && value[0] <= 180 &&
-            value[1] >= -90 && value[1] <= 90
-          );
-        },
-        message: 'Invalid coordinates',
-      },
-    },
-  },
+  // Keep location truly absent until coordinates are provided; this avoids
+  // malformed empty GeoJSON objects entering the sparse 2dsphere index.
+  location: { type: GeoPointSchema, required: false, default: undefined },
   amenities: [String],
   features: [String],
   utilities: {
