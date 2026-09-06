@@ -10,6 +10,10 @@ import { CalendarDays, MapPin, ShieldCheck, CheckCircle2, CircleDashed, Send } f
 
 interface HostContact {
   name?: string;
+  // Kept for compatibility with the existing server component shape. These are
+  // intentionally not rendered; public property queries no longer populate them.
+  email?: string;
+  phone?: string;
   verified?: boolean;
 }
 
