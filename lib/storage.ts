@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
+import { assertSafeUploadKey, sanitizeFileName } from '@/lib/security';
 
-const PUBLIC_UPLOADS_DIR = path.join(process.cwd(), 'public', 'uploads');
+const PUBLIC_UPLOADS_DIR = path.resolve(process.cwd(), 'public', 'uploads');
 
 function ensureUploadsDir() {
   if (!fs.existsSync(PUBLIC_UPLOADS_DIR)) {
@@ -10,28 +11,37 @@ function ensureUploadsDir() {
 }
 
 export function generateUploadKey(fileName: string) {
-  const key = `properties/${Date.now()}-${fileName}`;
-  return key;
+  const safeName = sanitizeFileName(fileName);
+  return `properties/${Date.now()}-${safeName}`;
 }
 
 export function getPublicUrl(key: string) {
-  // key like properties/123-file.jpg -> public/uploads/properties/123-file.jpg
-  return `/uploads/${key}`;
+  const safeKey = assertSafeUploadKey(key);
+  return `/uploads/${safeKey}`;
+}
+
+function resolveSafeFilePath(key: string) {
+  const safeKey = assertSafeUploadKey(key);
+  const filePath = path.resolve(PUBLIC_UPLOADS_DIR, safeKey);
+  const relative = path.relative(PUBLIC_UPLOADS_DIR, filePath);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw new Error('Invalid upload path');
+  }
+  return { safeKey, filePath };
 }
 
 export async function saveFile(key: string, buffer: Buffer) {
   ensureUploadsDir();
-  const filePath = path.join(PUBLIC_UPLOADS_DIR, key);
+  const { safeKey, filePath } = resolveSafeFilePath(key);
   const dir = path.dirname(filePath);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  // convert Buffer to Uint8Array for compatibility with fs.promises.writeFile typing
   const data = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
-  await fs.promises.writeFile(filePath, data as any);
-  return getPublicUrl(key);
+  await fs.promises.writeFile(filePath, data as any, { flag: 'wx' });
+  return getPublicUrl(safeKey);
 }
 
 export async function deleteFile(key: string) {
-  const filePath = path.join(PUBLIC_UPLOADS_DIR, key);
+  const { filePath } = resolveSafeFilePath(key);
   if (fs.existsSync(filePath)) await fs.promises.unlink(filePath);
 }
 
