@@ -21,11 +21,21 @@ export async function POST(request: NextRequest) {
 
     await dbConnect();
     const email = parsed.data.email.toLowerCase();
+    const phone = parsed.data.phone;
     const existing = await User.findOne({
-      $or: [{ email }, { phone: parsed.data.phone }],
+      $or: [{ email }, { phone }],
     }).select('_id name email phone role roles');
 
     if (existing) {
+      // Do not reveal a different phone/email merely because one identifier
+      // matched. The host must provide the exact existing identity pair.
+      if (String(existing.email).toLowerCase() !== email || String(existing.phone) !== phone) {
+        return NextResponse.json(
+          { error: 'A user already exists with one of these contact details' },
+          { status: 409 }
+        );
+      }
+
       return NextResponse.json({
         user: {
           _id: existing._id,
@@ -44,7 +54,7 @@ export async function POST(request: NextRequest) {
     const tenant = await User.create({
       name: parsed.data.name,
       email,
-      phone: parsed.data.phone,
+      phone,
       passwordHash,
       role: 'tenant',
       roles: ['user', 'tenant'],
