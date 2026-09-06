@@ -21,6 +21,7 @@ export interface PropertyFilters {
   radius?: number;
   city?: string;
   district?: string;
+  province?: string;
   search?: string;
   featured?: boolean;
   verified?: boolean;
@@ -44,7 +45,6 @@ function escapeRegExp(value: string) {
 }
 
 function buildQuery(filters: PropertyFilters) {
-  // The public search surface must never expose pending/rejected inventory.
   const query: any = { status: 'active' };
   if (filters.purpose) query.purpose = filters.purpose;
 
@@ -64,6 +64,7 @@ function buildQuery(filters: PropertyFilters) {
 
   if (filters.city) query['address.city'] = new RegExp(escapeRegExp(filters.city), 'i');
   if (filters.district) query['address.district'] = new RegExp(escapeRegExp(filters.district), 'i');
+  if (filters.province) query['address.province'] = new RegExp(escapeRegExp(filters.province), 'i');
   if (filters.search) query.$text = { $search: filters.search };
   if (filters.featured === true) query.featured = true;
   if (filters.verified === true) query.verified = true;
@@ -111,7 +112,8 @@ class PropertyService {
     const filter: any = { _id: id };
     if (!includeNonPublic) filter.status = 'active';
     const q = Property.findOne(filter);
-    if (includeOwner) q.populate('owner', 'name profilePhoto verified phone email');
+    // Public property pages should not embed owner phone/email in page HTML.
+    if (includeOwner) q.populate('owner', 'name profilePhoto verified');
     const prop = await q.exec();
     if (prop) await Property.findByIdAndUpdate(id, { $inc: { views: 1 } });
     return prop as IProperty | null;
@@ -159,16 +161,29 @@ class PropertyService {
 
     Object.assign(property, updates);
 
-    // Material owner edits invalidate only the trust checks affected by the edit.
-    if (ownerId && updates.address) {
-      property.verification.addressVerified = false;
-      property.verification.inspectionVerified = false;
-    }
-    if (ownerId && updates.price !== undefined) {
-      property.verification.pricingReviewed = false;
-    }
-    if (ownerId && updates.images) {
-      property.verification.inspectionVerified = false;
+    if (ownerId) {
+      const verification: any = property.verification || {
+        identityVerified: false,
+        ownershipVerified: false,
+        addressVerified: false,
+        inspectionVerified: false,
+        pricingReviewed: false,
+      };
+      property.verification = verification;
+
+      if (updates.address) {
+        verification.addressVerified = false;
+        verification.inspectionVerified = false;
+      }
+      if (updates.price !== undefined) verification.pricingReviewed = false;
+      if (updates.images) verification.inspectionVerified = false;
+
+      const materialFields = ['title', 'description', 'type', 'purpose', 'price', 'images', 'address', 'location'];
+      const materialUpdate = materialFields.some((field) => (updates as any)[field] !== undefined);
+      if (materialUpdate && property.status === 'active') {
+        property.status = 'pending';
+        property.featured = false;
+      }
     }
 
     const score = calculatePropertyTrustScore(property.verification || {});
@@ -229,11 +244,11 @@ class PropertyService {
   static async getFeaturedProperties(limit = 8) {
     await dbConnect();
     const safeLimit = Math.min(50, Math.max(1, Math.floor(limit)));
-    return Property.find({ status: 'active', featured: true })
+    return (await Property.find({ status: 'active', featured: true })
       .sort({ trustScore: -1, createdAt: -1 })
       .limit(safeLimit)
       .populate('owner', 'name profilePhoto verified')
-      .lean() as unknown as IProperty[];
+      .lean()) as unknown as IProperty[];
   }
 }
 
