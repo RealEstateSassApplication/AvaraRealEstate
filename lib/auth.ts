@@ -7,11 +7,14 @@ import User, { IUser } from '@/models/User';
 
 function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET?.trim();
-  const placeholder = !secret ||
+  if (
+    !secret ||
+    secret.length < 32 ||
     secret === 'your-secret-key' ||
     secret.includes('change-this-in-production') ||
-    secret.startsWith('your-');
-  if (placeholder || secret.length < 32) {
+    secret.startsWith('your-') ||
+    secret.startsWith('replace-with-')
+  ) {
     throw new Error('JWT_SECRET must be configured with a non-placeholder value of at least 32 characters');
   }
   return secret;
