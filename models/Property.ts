@@ -1,10 +1,14 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
+export type PropertyType =
+  | 'apartment' | 'house' | 'villa' | 'bungalow' | 'land' | 'commercial' | 'room'
+  | 'studio' | 'penthouse' | 'duplex' | 'office' | 'warehouse' | 'shop' | 'serviced-apartment';
+
 export interface IProperty extends Document {
   title: string;
   description: string;
   owner: mongoose.Types.ObjectId;
-  type: 'apartment' | 'house' | 'villa' | 'bungalow' | 'land' | 'commercial' | 'room';
+  type: PropertyType;
   purpose: 'rent' | 'sale' | 'booking';
   status: 'active' | 'inactive' | 'pending' | 'rejected' | 'sold' | 'rented';
   price: number;
@@ -19,12 +23,13 @@ export interface IProperty extends Document {
     street: string;
     city: string;
     district: string;
+    province?: string;
     postalCode?: string;
     country: string;
   };
   location?: {
     type: 'Point';
-    coordinates: [number, number]; // [longitude, latitude]
+    coordinates: [number, number];
   };
   amenities: string[];
   features: string[];
@@ -81,20 +86,17 @@ export interface IProperty extends Document {
   updatedAt: Date;
 }
 
+const PROPERTY_TYPES = [
+  'apartment', 'house', 'villa', 'bungalow', 'land', 'commercial', 'room',
+  'studio', 'penthouse', 'duplex', 'office', 'warehouse', 'shop', 'serviced-apartment'
+] as const;
+
 const PropertySchema = new Schema<IProperty>({
   title: { type: String, required: true, trim: true },
   description: { type: String, required: true, trim: true },
   owner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  type: {
-    type: String,
-    enum: ['apartment', 'house', 'villa', 'bungalow', 'land', 'commercial', 'room'],
-    required: true
-  },
-  purpose: {
-    type: String,
-    enum: ['rent', 'sale', 'booking'],
-    required: true
-  },
+  type: { type: String, enum: PROPERTY_TYPES, required: true },
+  purpose: { type: String, enum: ['rent', 'sale', 'booking'], required: true },
   status: {
     type: String,
     enum: ['active', 'inactive', 'pending', 'rejected', 'sold', 'rented'],
@@ -116,6 +118,7 @@ const PropertySchema = new Schema<IProperty>({
     street: { type: String, required: true },
     city: { type: String, required: true },
     district: { type: String, required: true },
+    province: String,
     postalCode: String,
     country: { type: String, default: 'Sri Lanka' }
   },
@@ -194,9 +197,7 @@ const PropertySchema = new Schema<IProperty>({
     enum: ['unverified', 'reviewed', 'verified', 'premier'],
     default: 'unverified',
   },
-}, {
-  timestamps: true
-});
+}, { timestamps: true });
 
 PropertySchema.index({ purpose: 1, status: 1 });
 PropertySchema.index({ title: 'text', description: 'text' });
@@ -205,9 +206,8 @@ PropertySchema.index({ type: 1 });
 PropertySchema.index({ owner: 1 });
 PropertySchema.index({ featured: 1, createdAt: -1 });
 PropertySchema.index({ trustScore: -1, createdAt: -1 });
+PropertySchema.index({ 'address.province': 1, status: 1 });
 PropertySchema.index({ location: '2dsphere' }, { sparse: true });
 
-if (mongoose.models.Property) {
-  delete mongoose.models.Property;
-}
+if (mongoose.models.Property) delete mongoose.models.Property;
 export default mongoose.model<IProperty>('Property', PropertySchema);
