@@ -6,7 +6,7 @@ import Header from '@/components/ui/layout/Header';
 import SearchFilters from '@/components/search/SearchFilters';
 import PropertyCard from '@/components/property/PropertyCard';
 import { Button } from '@/components/ui/button';
-import { Grid3X3, List, MapPin, SlidersHorizontal } from 'lucide-react';
+import { Grid3X3, List, MapPin } from 'lucide-react';
 
 interface Property {
   _id: string;
@@ -24,6 +24,7 @@ interface Property {
   address: {
     city: string;
     district: string;
+    province?: string;
   };
   amenities: string[];
   ratings: {
@@ -32,6 +33,8 @@ interface Property {
   };
   featured: boolean;
   verified: boolean;
+  trustScore?: number;
+  trustLevel?: 'unverified' | 'reviewed' | 'verified' | 'premier';
   owner: {
     name: string;
     profilePhoto?: string;
@@ -39,7 +42,7 @@ interface Property {
   };
 }
 
-interface SearchFilters {
+interface SearchFiltersState {
   search?: string;
   purpose?: 'rent' | 'sale' | 'booking';
   type?: string[];
@@ -50,6 +53,7 @@ interface SearchFilters {
   amenities?: string[];
   city?: string;
   district?: string;
+  province?: string;
 }
 
 function ListingsContent() {
@@ -61,19 +65,20 @@ function ListingsContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
 
-  // Initialize filters from URL params
-  const [filters, setFilters] = useState<SearchFilters>(() => {
+  const [filters, setFilters] = useState<SearchFiltersState>(() => {
     if (!searchParams) return {};
     return {
       search: searchParams.get('search') ?? undefined,
-      purpose: (searchParams.get('purpose') as any) ?? undefined,
+      purpose: (searchParams.get('purpose') as SearchFiltersState['purpose']) ?? undefined,
       type: searchParams.getAll('type') ?? [],
       city: searchParams.get('city') ?? undefined,
       district: searchParams.get('district') ?? undefined,
+      province: searchParams.get('province') ?? undefined,
       minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
       maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
       bedrooms: searchParams.get('bedrooms') ? Number(searchParams.get('bedrooms')) : undefined,
       bathrooms: searchParams.get('bathrooms') ? Number(searchParams.get('bathrooms')) : undefined,
+      amenities: searchParams.getAll('amenities') ?? [],
     };
   });
 
@@ -81,11 +86,11 @@ function ListingsContent() {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      
+
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
           if (Array.isArray(value)) {
-            value.forEach(v => params.append(key, v));
+            value.forEach((item) => params.append(key, item));
           } else {
             params.append(key, value.toString());
           }
@@ -103,7 +108,6 @@ function ListingsContent() {
         setTotal(data.total || 0);
         setCurrentPage(page);
 
-        // Update URL without triggering a page reload
         const url = new URL(window.location.href);
         url.search = params.toString();
         window.history.replaceState({}, '', url.toString());
@@ -121,7 +125,7 @@ function ListingsContent() {
     searchProperties(1);
   }, [filters, searchProperties]);
 
-  const handleFiltersChange = (newFilters: SearchFilters) => {
+  const handleFiltersChange = (newFilters: SearchFiltersState) => {
     setFilters(newFilters);
   };
 
@@ -129,17 +133,14 @@ function ListingsContent() {
     try {
       const res = await fetch(`/api/properties/${propertyId}/favorite`, { method: 'POST' });
       if (res.ok) {
-        // For now we don't track per-item favorite state here; could refresh list or update a map
-        const data = await res.json();
-        console.log('Favorite toggled', data);
-        // Optionally trigger a full refresh
+        await res.json();
         searchProperties(currentPage);
       } else {
         const err = await res.json();
         console.error('Favorite toggle error', err);
       }
-    } catch (e) {
-      console.error('Network error toggling favorite', e);
+    } catch (error) {
+      console.error('Network error toggling favorite', error);
     }
   };
 
@@ -161,7 +162,6 @@ function ListingsContent() {
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Search Filters */}
         <SearchFilters
           filters={filters}
           onFiltersChange={handleFiltersChange}
@@ -169,7 +169,6 @@ function ListingsContent() {
           loading={loading}
         />
 
-        {/* Results Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
@@ -179,18 +178,19 @@ function ListingsContent() {
                 'Properties for Sale'
               ) : 'All Properties'}
               {filters.city && ` in ${filters.city}`}
+              {!filters.city && filters.province && ` in ${filters.province}`}
             </h1>
             <p className="text-gray-600 mt-1">
               {loading ? 'Searching...' : `${total.toLocaleString()} properties found`}
             </p>
           </div>
 
-          {/* View Toggle */}
           <div className="flex items-center space-x-2">
             <Button
               variant={viewMode === 'grid' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setViewMode('grid')}
+              aria-label="Grid view"
             >
               <Grid3X3 className="w-4 h-4" />
             </Button>
@@ -198,38 +198,27 @@ function ListingsContent() {
               variant={viewMode === 'list' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setViewMode('list')}
+              aria-label="List view"
             >
               <List className="w-4 h-4" />
             </Button>
           </div>
         </div>
 
-        {/* Results */}
         {loading ? (
           <LoadingSkeleton />
         ) : properties.length === 0 ? (
           <div className="text-center py-16">
             <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">
-              No Properties Found
-            </h3>
-            <p className="text-gray-500 mb-6">
-              Try adjusting your search filters or browse all properties
-            </p>
-            <Button onClick={() => {
-              setFilters({});
-              searchProperties(1);
-            }}>
-              Clear All Filters
-            </Button>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">No Properties Found</h3>
+            <p className="text-gray-500 mb-6">Try adjusting your search filters or browse all properties</p>
+            <Button onClick={() => setFilters({})}>Clear All Filters</Button>
           </div>
         ) : (
           <>
-            <div className={`${
-              viewMode === 'grid' 
-                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
-                : 'space-y-6'
-            }`}>
+            <div className={viewMode === 'grid'
+              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+              : 'space-y-6'}>
               {properties.map((property) => (
                 <PropertyCard
                   key={property._id}
@@ -240,7 +229,6 @@ function ListingsContent() {
               ))}
             </div>
 
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex justify-center items-center space-x-2 mt-12">
                 <Button
@@ -250,12 +238,11 @@ function ListingsContent() {
                 >
                   Previous
                 </Button>
-                
+
                 <div className="flex space-x-1">
                   {[...Array(Math.min(5, totalPages))].map((_, i) => {
                     const page = Math.max(1, currentPage - 2) + i;
                     if (page > totalPages) return null;
-                    
                     return (
                       <Button
                         key={page}

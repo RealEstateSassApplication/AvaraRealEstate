@@ -1,35 +1,56 @@
 import { NextRequest, NextResponse } from 'next/server';
-import PropertyService from '@/services/propertyService';
+import PropertyService, { PropertyFilters } from '@/services/propertyService';
 import getUserFromReq from '@/lib/auth';
+import { createPropertySchema } from '@/lib/propertyInput';
+import { parsePositiveInt } from '@/lib/security';
+
+function parseBoolean(value: string | null) {
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+  return undefined;
+}
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    // normalize params: support repeated keys as arrays and convert numeric params
-    const keys = Array.from(new Set(Array.from(searchParams.keys())));
-    const q: any = {};
-    for (const key of keys) {
-      if (key === 'page' || key === 'limit') continue;
-      const vals = searchParams.getAll(key);
-      if (!vals || vals.length === 0) continue;
+    const filters: PropertyFilters = {};
 
-      // numeric parameters
-      if (['minPrice', 'maxPrice', 'bedrooms', 'bathrooms', 'lat', 'lng', 'radius'].includes(key)) {
-        const nums = vals.map(v => Number(v)).filter(n => !Number.isNaN(n));
-        q[key] = nums.length === 1 ? nums[0] : nums;
-        continue;
-      }
-
-      // multiple values -> array
-      if (vals.length > 1) q[key] = vals;
-      else q[key] = vals[0];
+    const purpose = searchParams.get('purpose');
+    if (purpose && ['rent', 'sale', 'booking'].includes(purpose)) {
+      filters.purpose = purpose as PropertyFilters['purpose'];
     }
 
-    const page = Number(searchParams.get('page')) || 1;
-    const limit = Number(searchParams.get('limit')) || 20;
-    const skip = (page - 1) * limit;
-    const results = await PropertyService.search(q, { limit, skip });
-    // normalize response shape for client: properties, total, totalPages, page
+    const types = searchParams.getAll('type').filter(Boolean);
+    if (types.length) filters.type = types;
+    const amenities = searchParams.getAll('amenities').filter(Boolean);
+    if (amenities.length) filters.amenities = amenities;
+
+    const numericKeys = ['minPrice', 'maxPrice', 'bedrooms', 'bathrooms', 'lat', 'lng', 'radius'] as const;
+    for (const key of numericKeys) {
+      const raw = searchParams.get(key);
+      if (raw === null || raw === '') continue;
+      const value = Number(raw);
+      if (Number.isFinite(value)) (filters as any)[key] = value;
+    }
+
+    const city = searchParams.get('city')?.trim();
+    const district = searchParams.get('district')?.trim();
+    const province = searchParams.get('province')?.trim();
+    const search = searchParams.get('search')?.trim();
+    if (city) filters.city = city.slice(0, 120);
+    if (district) filters.district = district.slice(0, 120);
+    if (province) filters.province = province.slice(0, 120);
+    if (search) filters.search = search.slice(0, 200);
+
+    const featured = parseBoolean(searchParams.get('featured'));
+    const verified = parseBoolean(searchParams.get('verified'));
+    if (featured !== undefined) filters.featured = featured;
+    if (verified !== undefined) filters.verified = verified;
+
+    const page = parsePositiveInt(searchParams.get('page'), 1, 100000);
+    const limit = parsePositiveInt(searchParams.get('limit'), 20, 100);
+    const results = await PropertyService.searchProperties(filters, page, limit);
+
     return NextResponse.json({
       properties: results.properties || [],
       total: results.total || 0,
@@ -38,7 +59,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (err: any) {
     console.error('Property GET error:', err);
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -46,15 +67,19 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getUserFromReq(request as any);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const body = await request.json();
-    const requiredFields = ['title', 'description', 'type', 'purpose', 'price', 'images', 'address'];
-    const missing = requiredFields.filter(f => !body[f]);
-    if (missing.length) return NextResponse.json({ error: `Missing fields: ${missing.join(', ')}` }, { status: 400 });
-    body.owner = user._id;
-    const prop = await PropertyService.create(body);
-    return NextResponse.json({ data: prop, message: 'Property created' }, { status: 201 });
+
+    const parsed = createPropertySchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid property data', details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
+
+    const property = await PropertyService.create(parsed.data as any, user._id.toString());
+    return NextResponse.json({ data: property, message: 'Property submitted for review' }, { status: 201 });
   } catch (err: any) {
     console.error('Property POST error:', err);
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

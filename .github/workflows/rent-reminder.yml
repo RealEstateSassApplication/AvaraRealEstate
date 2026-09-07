@@ -14,6 +14,5 @@ jobs:
         with:
           url: ${{ secrets.SITE_URL }}/api/rents
           method: PATCH
-          headers: '{"Content-Type":"application/json"}'
+          headers: '{"Content-Type":"application/json","x-cron-secret":"${{ secrets.RENT_REMINDER_SECRET }}"}'
           body: '{"action":"triggerReminders","daysBefore":3}'
-          # Note: ensure SITE_URL secret points to your deployed site (https://example.com)

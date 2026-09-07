@@ -1,10 +1,14 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
+export type PropertyType =
+  | 'apartment' | 'house' | 'villa' | 'bungalow' | 'land' | 'commercial' | 'room'
+  | 'studio' | 'penthouse' | 'duplex' | 'office' | 'warehouse' | 'shop' | 'serviced-apartment';
+
 export interface IProperty extends Document {
   title: string;
   description: string;
   owner: mongoose.Types.ObjectId;
-  type: 'apartment' | 'house' | 'villa' | 'bungalow' | 'land' | 'commercial' | 'room';
+  type: PropertyType;
   purpose: 'rent' | 'sale' | 'booking';
   status: 'active' | 'inactive' | 'pending' | 'rejected' | 'sold' | 'rented';
   price: number;
@@ -19,8 +23,13 @@ export interface IProperty extends Document {
     street: string;
     city: string;
     district: string;
+    province?: string;
     postalCode?: string;
     country: string;
+  };
+  location?: {
+    type: 'Point';
+    coordinates: [number, number];
   };
   amenities: string[];
   features: string[];
@@ -34,7 +43,7 @@ export interface IProperty extends Document {
   availability: {
     immediate: boolean;
     availableFrom?: Date;
-    minimumStay?: number; // for booking rentals
+    minimumStay?: number;
     maximumStay?: number;
   };
   calendar: {
@@ -61,24 +70,52 @@ export interface IProperty extends Document {
   views: number;
   featured: boolean;
   verified: boolean;
+  verification: {
+    identityVerified: boolean;
+    ownershipVerified: boolean;
+    addressVerified: boolean;
+    inspectionVerified: boolean;
+    pricingReviewed: boolean;
+    reviewedAt?: Date;
+    reviewedBy?: mongoose.Types.ObjectId;
+    notes?: string;
+  };
+  trustScore: number;
+  trustLevel: 'unverified' | 'reviewed' | 'verified' | 'premier';
   createdAt: Date;
   updatedAt: Date;
 }
+
+const PROPERTY_TYPES = [
+  'apartment', 'house', 'villa', 'bungalow', 'land', 'commercial', 'room',
+  'studio', 'penthouse', 'duplex', 'office', 'warehouse', 'shop', 'serviced-apartment'
+] as const;
+
+const GeoPointSchema = new Schema({
+  type: { type: String, enum: ['Point'], required: true },
+  coordinates: {
+    type: [Number],
+    required: true,
+    validate: {
+      validator(value: number[]) {
+        return (
+          Array.isArray(value) &&
+          value.length === 2 &&
+          value[0] >= -180 && value[0] <= 180 &&
+          value[1] >= -90 && value[1] <= 90
+        );
+      },
+      message: 'Invalid coordinates',
+    },
+  },
+}, { _id: false });
 
 const PropertySchema = new Schema<IProperty>({
   title: { type: String, required: true, trim: true },
   description: { type: String, required: true, trim: true },
   owner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  type: {
-    type: String,
-    enum: ['apartment', 'house', 'villa', 'bungalow', 'land', 'commercial', 'room'],
-    required: true
-  },
-  purpose: {
-    type: String,
-    enum: ['rent', 'sale', 'booking'],
-    required: true
-  },
+  type: { type: String, enum: PROPERTY_TYPES, required: true },
+  purpose: { type: String, enum: ['rent', 'sale', 'booking'], required: true },
   status: {
     type: String,
     enum: ['active', 'inactive', 'pending', 'rejected', 'sold', 'rented'],
@@ -100,10 +137,13 @@ const PropertySchema = new Schema<IProperty>({
     street: { type: String, required: true },
     city: { type: String, required: true },
     district: { type: String, required: true },
+    province: String,
     postalCode: String,
-    country: { type: String, default: 'Sri Lanka' },
-    // coordinates removed: we no longer store lat/lng for properties
+    country: { type: String, default: 'Sri Lanka' }
   },
+  // Keep location truly absent until coordinates are provided; this avoids
+  // malformed empty GeoJSON objects entering the sparse 2dsphere index.
+  location: { type: GeoPointSchema, required: false, default: undefined },
   amenities: [String],
   features: [String],
   utilities: {
@@ -142,23 +182,34 @@ const PropertySchema = new Schema<IProperty>({
   },
   views: { type: Number, default: 0 },
   featured: { type: Boolean, default: false },
-  verified: { type: Boolean, default: false }
-}, {
-  timestamps: true
-});
+  verified: { type: Boolean, default: false },
+  verification: {
+    identityVerified: { type: Boolean, default: false },
+    ownershipVerified: { type: Boolean, default: false },
+    addressVerified: { type: Boolean, default: false },
+    inspectionVerified: { type: Boolean, default: false },
+    pricingReviewed: { type: Boolean, default: false },
+    reviewedAt: Date,
+    reviewedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    notes: { type: String, maxlength: 2000 },
+  },
+  trustScore: { type: Number, default: 0, min: 0, max: 100 },
+  trustLevel: {
+    type: String,
+    enum: ['unverified', 'reviewed', 'verified', 'premier'],
+    default: 'unverified',
+  },
+}, { timestamps: true });
 
-// Indexes for efficient querying
 PropertySchema.index({ purpose: 1, status: 1 });
 PropertySchema.index({ title: 'text', description: 'text' });
 PropertySchema.index({ price: 1 });
 PropertySchema.index({ type: 1 });
 PropertySchema.index({ owner: 1 });
 PropertySchema.index({ featured: 1, createdAt: -1 });
+PropertySchema.index({ trustScore: -1, createdAt: -1 });
+PropertySchema.index({ 'address.province': 1, status: 1 });
+PropertySchema.index({ location: '2dsphere' }, { sparse: true });
 
-// In dev with HMR, an earlier compiled model may still have the old schema
-// (with required coordinates). Force delete so the new schema (no coordinates)
-// is applied.
-if (mongoose.models.Property) {
-  delete mongoose.models.Property;
-}
+if (mongoose.models.Property) delete mongoose.models.Property;
 export default mongoose.model<IProperty>('Property', PropertySchema);

@@ -2,8 +2,6 @@ import dbConnect from '@/lib/db';
 import Booking from '@/models/Booking';
 import Property from '@/models/Property';
 import Transaction from '@/models/Transaction';
-import mongoose from 'mongoose';
-import { eachDayOfInterval } from 'date-fns';
 
 export interface CreateBookingInput {
   propertyId: string;
@@ -11,28 +9,61 @@ export interface CreateBookingInput {
   startDate: string | Date;
   endDate: string | Date;
   guestCount?: number;
-  totalAmount?: number;
   guestDetails?: { adults: number; children: number };
   specialRequests?: string;
-  currency?: string;
-  provider?: string;
-  providerTransactionId?: string;
+}
+
+function parseDate(value: string | Date) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) throw new Error('Invalid dates');
+  return date;
+}
+
+function getNightDates(start: Date, end: Date) {
+  const dates: Date[] = [];
+  const cursor = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate()));
+  const endDay = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate()));
+  while (cursor < endDay) {
+    dates.push(new Date(cursor));
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return dates;
+}
+
+function calculateTotal(property: any, nights: number) {
+  const baseAmount = Number(property.price) * nights;
+  let discount = 0;
+
+  if (nights >= 30 && Number(property.pricing?.monthlyDiscount) > 0) {
+    discount = Number(property.pricing.monthlyDiscount);
+  } else if (nights >= 7 && Number(property.pricing?.weeklyDiscount) > 0) {
+    discount = Number(property.pricing.weeklyDiscount);
+  }
+
+  const discounted = baseAmount * (1 - discount / 100);
+  const cleaningFee = Math.max(0, Number(property.pricing?.cleaningFee) || 0);
+  return Math.round((discounted + cleaningFee) * 100) / 100;
 }
 
 async function hasOverlap(propertyId: string, start: Date, end: Date) {
   await dbConnect();
-  return await Booking.findOne({
+  return Booking.findOne({
     property: propertyId,
     status: { $in: ['pending', 'confirmed'] },
-    $or: [{ startDate: { $lt: end }, endDate: { $gt: start } }]
+    startDate: { $lt: end },
+    endDate: { $gt: start },
   }).select('_id');
+}
+
+function isAdminRole(roles: string[]) {
+  return roles.includes('admin') || roles.includes('super-admin');
 }
 
 export default class BookingService {
   static async checkAvailability(propertyId: string, startDate: Date | string, endDate: Date | string) {
-    const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
-    const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
-    if (!(start instanceof Date) || !(end instanceof Date) || start >= end) throw new Error('Invalid dates');
+    const start = parseDate(startDate);
+    const end = parseDate(endDate);
+    if (start >= end) throw new Error('Invalid dates');
     const conflict = await hasOverlap(propertyId, start, end);
     return !conflict;
   }
@@ -40,21 +71,48 @@ export default class BookingService {
   static async createBooking(payload: CreateBookingInput) {
     await dbConnect();
 
+    const start = parseDate(payload.startDate);
+    const end = parseDate(payload.endDate);
+    if (start >= end) throw new Error('Invalid dates');
+
+    const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    if (!Number.isFinite(nights) || nights < 1) throw new Error('Invalid dates');
+
+    const nightDates = getNightDates(start, end);
+    if (!nightDates.length) throw new Error('Invalid dates');
+
+    const initialProperty = await Property.findById(payload.propertyId).select('status');
+    if (!initialProperty) throw new Error('Property not found');
+    if (initialProperty.status !== 'active') throw new Error('Property not available');
+
+    if (await hasOverlap(payload.propertyId, start, end)) {
+      throw new Error('Property not available for selected dates');
+    }
+
+    const property = await Property.findOneAndUpdate(
+      {
+        _id: payload.propertyId,
+        status: 'active',
+        'calendar.blockedDates': { $nin: nightDates },
+        'calendar.bookedDates': { $nin: nightDates },
+      },
+      { $addToSet: { 'calendar.blockedDates': { $each: nightDates } } },
+      { new: true }
+    ).populate('owner');
+
+    if (!property) throw new Error('Property not available for selected dates');
+
+    let booking: any = null;
     try {
-      const property = await Property.findById(payload.propertyId).populate('owner');
-      if (!property) throw new Error('Property not found');
-      // Status check: allow active properties
-      if (property.status !== 'active') throw new Error('Property not available');
+      const totalAmount = calculateTotal(property, nights);
+      const currency = String(property.currency || 'LKR').toUpperCase();
+      const guestCount = Math.max(1, Math.floor(Number(payload.guestCount) || 1));
+      const guestDetails = {
+        adults: Math.max(1, Math.floor(Number(payload.guestDetails?.adults) || guestCount)),
+        children: Math.max(0, Math.floor(Number(payload.guestDetails?.children) || 0)),
+      };
 
-      const available = await this.checkAvailability((property._id as any).toString(), payload.startDate, payload.endDate);
-      if (!available) throw new Error('Property not available for selected dates');
-
-      const start = new Date(payload.startDate);
-      const end = new Date(payload.endDate);
-      const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-      const totalAmount = typeof payload.totalAmount === 'number' ? payload.totalAmount : property.price * nights;
-
-      const bookingDoc = {
+      booking = await Booking.create({
         property: payload.propertyId,
         user: payload.userId,
         host: (property.owner as any)._id,
@@ -62,65 +120,145 @@ export default class BookingService {
         endDate: end,
         nights,
         totalAmount,
-        currency: payload.currency || property.currency || 'LKR',
-        guestCount: payload.guestCount || 1,
-        guestDetails: payload.guestDetails || { adults: 1, children: 0 },
+        currency,
+        guestCount,
+        guestDetails,
         specialRequests: payload.specialRequests,
         status: 'pending',
-        paymentStatus: 'pending'
-      } as any;
+        paymentStatus: 'pending',
+      });
 
-      const booking = await Booking.create(bookingDoc);
-      const tx = await Transaction.create({ booking: booking._id, from: payload.userId, to: (property.owner as any)._id, amount: totalAmount, currency: payload.currency || 'LKR', type: 'booking', provider: payload.provider || 'manual', providerTransactionId: payload.providerTransactionId || '', status: 'pending' });
+      const transaction = await Transaction.create({
+        booking: booking._id,
+        from: payload.userId,
+        to: (property.owner as any)._id,
+        amount: totalAmount,
+        currency,
+        type: 'booking',
+        provider: 'payhere',
+        status: 'pending',
+      });
 
-      // Block dates temporarily
-      const datesToBlock = eachDayOfInterval({ start, end });
-      await Property.findByIdAndUpdate(property._id, { $addToSet: { 'calendar.blockedDates': { $each: datesToBlock } } });
-
-      return { booking, transaction: tx };
+      return { booking, transaction };
     } catch (err) {
-      console.error("Booking creation failed:", err);
+      if (booking?._id) {
+        await Booking.findByIdAndDelete(booking._id).catch(() => undefined);
+      }
+      await Property.findByIdAndUpdate(payload.propertyId, {
+        $pullAll: { 'calendar.blockedDates': nightDates },
+      }).catch(() => undefined);
+      console.error('Booking creation failed:', err);
       throw err;
     }
   }
 
-  static async confirmBooking(bookingId: string, transactionId?: string) {
+  static async confirmBooking(
+    bookingId: string,
+    options: { markPaid?: boolean; providerTransactionId?: string } = {}
+  ) {
     await dbConnect();
-    const booking = await Booking.findByIdAndUpdate(bookingId, { status: 'confirmed', paymentStatus: 'paid' }, { new: true }).populate('property user host');
+    const existing = await Booking.findById(bookingId).select('status');
+    if (!existing) return null;
+    if (existing.status === 'cancelled' || existing.status === 'completed') {
+      throw new Error(`Cannot confirm a ${existing.status} booking`);
+    }
+
+    const update: any = { status: 'confirmed' };
+    if (options.markPaid) update.paymentStatus = 'paid';
+
+    const booking = await Booking.findByIdAndUpdate(bookingId, update, { new: true })
+      .populate('property user host');
+
     if (booking) {
-      const datesToBook = eachDayOfInterval({ start: booking.startDate, end: booking.endDate });
-      await Property.findByIdAndUpdate((booking.property as any)._id || booking.property, { $addToSet: { 'calendar.bookedDates': { $each: datesToBook } }, $pullAll: { 'calendar.blockedDates': datesToBook } });
+      const nightDates = getNightDates(new Date(booking.startDate), new Date(booking.endDate));
+      const propertyId = (booking.property as any)._id || booking.property;
+      await Property.findByIdAndUpdate(propertyId, {
+        $addToSet: { 'calendar.bookedDates': { $each: nightDates } },
+        $pullAll: { 'calendar.blockedDates': nightDates },
+      });
     }
     return booking;
   }
 
-  static async cancelBooking(bookingId: string, userId: string, reason?: string) {
+  static async cancelBookingByActor(
+    bookingId: string,
+    actorId: string,
+    actorRoles: string[],
+    reason?: string
+  ) {
     await dbConnect();
-    const booking = await Booking.findOne({ _id: bookingId, user: userId });
+    const query: any = { _id: bookingId };
+    if (!isAdminRole(actorRoles)) {
+      if (actorRoles.includes('host')) query.host = actorId;
+      else query.user = actorId;
+    }
+
+    const booking = await Booking.findOne(query);
     if (!booking) return null;
-    const datesToUnblock = eachDayOfInterval({ start: booking.startDate, end: booking.endDate });
-    await Property.findByIdAndUpdate(booking.property, { $pullAll: { 'calendar.blockedDates': datesToUnblock, 'calendar.bookedDates': datesToUnblock } });
-    const updatedBooking = await Booking.findByIdAndUpdate(bookingId, { status: 'cancelled', cancellationReason: reason }, { new: true });
-    return updatedBooking;
+    if (booking.status === 'cancelled') return booking;
+    if (booking.status === 'completed') throw new Error('Completed bookings cannot be cancelled');
+    if (booking.paymentStatus === 'paid') {
+      throw new Error('Paid bookings require a refund workflow before cancellation');
+    }
+
+    const nightDates = getNightDates(new Date(booking.startDate), new Date(booking.endDate));
+    await Property.findByIdAndUpdate(booking.property, {
+      $pullAll: {
+        'calendar.blockedDates': nightDates,
+        'calendar.bookedDates': nightDates,
+      },
+    });
+
+    return Booking.findByIdAndUpdate(
+      bookingId,
+      {
+        status: 'cancelled',
+        cancellationReason: reason,
+        cancelledAt: new Date(),
+        cancelledBy: actorId,
+      },
+      { new: true }
+    );
+  }
+
+  // Backwards-compatible user cancellation helper.
+  static async cancelBooking(bookingId: string, userId: string, reason?: string) {
+    return this.cancelBookingByActor(bookingId, userId, ['user'], reason);
   }
 
   static async getBookingsByUser(userId: string, page = 1, limit = 10) {
     await dbConnect();
-    const skip = (page - 1) * limit;
+    const safePage = Math.max(1, Math.floor(page));
+    const safeLimit = Math.min(100, Math.max(1, Math.floor(limit)));
+    const skip = (safePage - 1) * safeLimit;
     const [bookings, total] = await Promise.all([
-      Booking.find({ user: userId }).sort({ createdAt: -1 }).skip(skip).limit(limit).populate('property', 'title images address price currency').populate('host', 'name profilePhoto').lean(),
-      Booking.countDocuments({ user: userId })
+      Booking.find({ user: userId })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(safeLimit)
+        .populate('property', 'title images address price currency')
+        .populate('host', 'name profilePhoto')
+        .lean(),
+      Booking.countDocuments({ user: userId }),
     ]);
-    return { bookings, total, totalPages: Math.ceil(total / limit) };
+    return { bookings, total, totalPages: Math.ceil(total / safeLimit) };
   }
 
   static async getBookingsByHost(hostId: string, page = 1, limit = 10) {
     await dbConnect();
-    const skip = (page - 1) * limit;
+    const safePage = Math.max(1, Math.floor(page));
+    const safeLimit = Math.min(100, Math.max(1, Math.floor(limit)));
+    const skip = (safePage - 1) * safeLimit;
     const [bookings, total] = await Promise.all([
-      Booking.find({ host: hostId }).sort({ createdAt: -1 }).skip(skip).limit(limit).populate('property', 'title images address price currency').populate('user', 'name profilePhoto').lean(),
-      Booking.countDocuments({ host: hostId })
+      Booking.find({ host: hostId })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(safeLimit)
+        .populate('property', 'title images address price currency')
+        .populate('user', 'name profilePhoto')
+        .lean(),
+      Booking.countDocuments({ host: hostId }),
     ]);
-    return { bookings, total, totalPages: Math.ceil(total / limit) };
+    return { bookings, total, totalPages: Math.ceil(total / safeLimit) };
   }
 }

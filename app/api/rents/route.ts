@@ -1,74 +1,141 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import RentService from '@/services/rentService';
+import { requireAuth } from '@/lib/auth';
+import dbConnect from '@/lib/db';
+import Property from '@/models/Property';
+import Rent from '@/models/Rent';
+import User from '@/models/User';
 
-export async function POST(request: Request) {
+const createRentSchema = z.object({
+  propertyId: z.string().min(1),
+  tenantId: z.string().min(1),
+  amount: z.number().positive(),
+  currency: z.string().trim().min(3).max(3).default('LKR'),
+  frequency: z.enum(['monthly', 'weekly', 'yearly']).default('monthly'),
+  firstDueDate: z.union([z.string(), z.date()]),
+  notes: z.string().max(2000).optional(),
+  applicationId: z.string().optional(),
+}).strict();
+
+function rolesFor(user: any): string[] {
+  return Array.isArray(user?.roles) ? user.roles : (user?.role ? [user.role] : []);
+}
+
+function isAdmin(user: any) {
+  const roles = rolesFor(user);
+  return roles.includes('admin') || roles.includes('super-admin');
+}
+
+async function hostOwnsProperty(userId: string, propertyId: string) {
+  const property = await Property.findOne({ _id: propertyId, owner: userId }).select('_id');
+  return Boolean(property);
+}
+
+export async function POST(request: NextRequest) {
   try {
+    const user = await requireAuth(request);
     const body = await request.json();
+
     if (body.action === 'markPaid' || body.action === 'markAsPaid') {
-      const rent = await RentService.markAsPaid(body.rentId);
-      return NextResponse.json({ ok: true, data: rent });
+      if (!body.rentId) return NextResponse.json({ ok: false, error: 'Missing rentId' }, { status: 400 });
+      await dbConnect();
+      const rent = await Rent.findById(body.rentId).select('property');
+      if (!rent) return NextResponse.json({ ok: false, error: 'Rent not found' }, { status: 404 });
+      if (!isAdmin(user) && !(await hostOwnsProperty(user._id.toString(), rent.property.toString()))) {
+        return NextResponse.json({ ok: false, error: 'Forbidden' }, { status: 403 });
+      }
+      const updated = await RentService.markAsPaid(body.rentId);
+      return NextResponse.json({ ok: true, data: updated });
     }
-    const rent = await RentService.createRent(body);
-    return NextResponse.json({ ok: true, data: rent });
+
+    const parsed = createRentSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ ok: false, error: 'Invalid rent agreement data' }, { status: 400 });
+    }
+
+    await dbConnect();
+    if (!isAdmin(user) && !(await hostOwnsProperty(user._id.toString(), parsed.data.propertyId))) {
+      return NextResponse.json({ ok: false, error: 'Forbidden' }, { status: 403 });
+    }
+
+    const tenant = await User.findById(parsed.data.tenantId).select('_id');
+    if (!tenant) return NextResponse.json({ ok: false, error: 'Tenant not found' }, { status: 404 });
+
+    const rent = await RentService.createRent(parsed.data);
+    return NextResponse.json({ ok: true, data: rent }, { status: 201 });
   } catch (err: any) {
-    return NextResponse.json({ ok: false, error: err.message }, { status: 400 });
+    if (err?.message?.includes('Authentication')) {
+      return NextResponse.json({ ok: false, error: 'Authentication required' }, { status: 401 });
+    }
+    console.error('Rent POST error:', err);
+    return NextResponse.json({ ok: false, error: 'Internal server error' }, { status: 500 });
   }
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
+    const user = await requireAuth(request);
     const url = new URL(request.url);
-    const userId = url.searchParams.get('userId');
-    const hostId = url.searchParams.get('hostId');
-    const type = url.searchParams.get('type'); // 'host' or 'tenant'
-    
-    // If type is specified but no specific ID, try to get from session/headers
-    if (type && !userId && !hostId) {
-        // In a real app, get from session (we should not use a literal placeholder)
-        const currentUserId = request.headers.get('user-id');
+    const type = url.searchParams.get('type');
+    const requestedUserId = url.searchParams.get('userId');
+    const requestedHostId = url.searchParams.get('hostId');
 
-        // If we don't have a real current user id, return an empty set (don't pass placeholder into Mongoose)
-        if (!currentUserId) {
-          return NextResponse.json({ ok: true, rents: [] });
-        }
+    if (isAdmin(user)) {
+      if (requestedUserId) {
+        return NextResponse.json({ ok: true, rents: await RentService.listRentsForUser(requestedUserId) });
+      }
+      if (requestedHostId) {
+        return NextResponse.json({ ok: true, rents: await RentService.listRentsForHost(requestedHostId) });
+      }
+    }
 
-        try {
-          if (type === 'host') {
-            const rents = await RentService.listRentsForHost(currentUserId);
-            return NextResponse.json({ ok: true, rents: rents });
-          } else if (type === 'tenant') {
-            const rents = await RentService.listRentsForUser(currentUserId);
-            return NextResponse.json({ ok: true, rents: rents });
-          }
-        } catch (err: any) {
-          // If RentService throws (e.g. invalid ObjectId), return empty result instead of bubbling Mongoose cast error
-          return NextResponse.json({ ok: true, rents: [] });
-        }
+    const userId = user._id.toString();
+    const roles = rolesFor(user);
+    if (type === 'host') {
+      if (!roles.includes('host') && !isAdmin(user)) {
+        return NextResponse.json({ ok: false, error: 'Forbidden' }, { status: 403 });
+      }
+      return NextResponse.json({ ok: true, rents: await RentService.listRentsForHost(userId) });
     }
-    
-    if (userId) {
-      const rents = await RentService.listRentsForUser(userId);
-      return NextResponse.json({ ok: true, rents: rents });
-    }
-    if (hostId) {
-      const rents = await RentService.listRentsForHost(hostId);
-      return NextResponse.json({ ok: true, rents: rents });
-    }
-    return NextResponse.json({ ok: true, rents: [] });
+
+    return NextResponse.json({ ok: true, rents: await RentService.listRentsForUser(userId) });
   } catch (err: any) {
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+    if (err?.message?.includes('Authentication')) {
+      return NextResponse.json({ ok: false, error: 'Authentication required' }, { status: 401 });
+    }
+    console.error('Rent GET error:', err);
+    return NextResponse.json({ ok: false, error: 'Internal server error' }, { status: 500 });
   }
 }
 
-export async function PATCH(request: Request) {
+export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    if (body.action === 'triggerReminders') {
-      const results = await RentService.triggerReminders({ daysBefore: body.daysBefore || 3 });
-      return NextResponse.json({ ok: true, data: results });
+    if (body.action !== 'triggerReminders') {
+      return NextResponse.json({ ok: false, error: 'Unknown action' }, { status: 400 });
     }
-    return NextResponse.json({ ok: false, error: 'Unknown action' }, { status: 400 });
+
+    const configuredSecret = process.env.RENT_REMINDER_SECRET;
+    const suppliedSecret = request.headers.get('x-cron-secret');
+    let authorized = Boolean(configuredSecret && suppliedSecret && suppliedSecret === configuredSecret);
+
+    if (!authorized) {
+      const user = await requireAuth(request);
+      authorized = isAdmin(user);
+    }
+    if (!authorized) return NextResponse.json({ ok: false, error: 'Forbidden' }, { status: 403 });
+
+    const daysBefore = Number.isFinite(Number(body.daysBefore))
+      ? Math.min(Math.max(Number(body.daysBefore), 0), 30)
+      : 3;
+    const results = await RentService.triggerReminders({ daysBefore });
+    return NextResponse.json({ ok: true, data: results });
   } catch (err: any) {
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+    if (err?.message?.includes('Authentication')) {
+      return NextResponse.json({ ok: false, error: 'Authentication required' }, { status: 401 });
+    }
+    console.error('Rent PATCH error:', err);
+    return NextResponse.json({ ok: false, error: 'Internal server error' }, { status: 500 });
   }
 }

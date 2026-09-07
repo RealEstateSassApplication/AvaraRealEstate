@@ -1,29 +1,118 @@
 import { NextResponse } from 'next/server';
+import { Types } from 'mongoose';
 import dbConnect from '@/lib/db';
 import Booking from '@/models/Booking';
 import Transaction from '@/models/Transaction';
+import BookingService from '@/services/bookingService';
+import { verifyPayHereSignature } from '@/lib/security';
+
+function readField(form: FormData, name: string) {
+  const value = form.get(name);
+  return typeof value === 'string' ? value.trim() : '';
+}
 
 export async function POST(req: Request) {
-  // Note: In production verify webhook signatures for your payment provider
   try {
-    const payload = await req.text();
-    // Minimal scaffold: parse JSON if possible
-    let data: any = {};
-    try { data = JSON.parse(payload); } catch (e) { data = { raw: payload }; }
+    const form = await req.formData();
+    const merchantId = readField(form, 'merchant_id');
+    const bookingId = readField(form, 'order_id');
+    const paymentId = readField(form, 'payment_id');
+    const amount = readField(form, 'payhere_amount');
+    const currency = readField(form, 'payhere_currency').toUpperCase();
+    const statusCode = readField(form, 'status_code');
+    const signature = readField(form, 'md5sig');
 
-  // Example: handle booking payment success from a payment provider
-    if (data.type === 'payment_intent.succeeded' || data.event === 'payment.success') {
-      const bookingId = data?.data?.object?.metadata?.bookingId || data?.bookingId;
-      const providerId = data?.data?.object?.id || data?.transactionId;
-      if (bookingId) {
-        await dbConnect();
-        await Booking.findByIdAndUpdate(bookingId, { status: 'confirmed', paymentStatus: 'paid' });
-        await Transaction.findOneAndUpdate({ booking: bookingId }, { status: 'completed', providerTransactionId: providerId });
-      }
+    if (!merchantId || !bookingId || !amount || !currency || !statusCode || !signature) {
+      return NextResponse.json({ error: 'Invalid payment notification' }, { status: 400 });
     }
+
+    if (!verifyPayHereSignature({
+      merchantId,
+      orderId: bookingId,
+      amount,
+      currency,
+      statusCode,
+      signature,
+    })) {
+      return NextResponse.json({ error: 'Invalid payment signature' }, { status: 401 });
+    }
+
+    if (!Types.ObjectId.isValid(bookingId)) {
+      return NextResponse.json({ error: 'Invalid booking reference' }, { status: 400 });
+    }
+
+    await dbConnect();
+    const booking = await Booking.findById(bookingId).select('totalAmount currency status paymentStatus');
+    if (!booking) {
+      return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+    }
+
+    const notifiedAmount = Number(amount);
+    const expectedAmount = Number(booking.totalAmount);
+    if (!Number.isFinite(notifiedAmount) || Math.abs(notifiedAmount - expectedAmount) > 0.01) {
+      return NextResponse.json({ error: 'Payment amount mismatch' }, { status: 400 });
+    }
+    if (String(booking.currency || 'LKR').toUpperCase() !== currency) {
+      return NextResponse.json({ error: 'Payment currency mismatch' }, { status: 400 });
+    }
+
+    // PayHere status 2 means payment success. Other valid statuses must never
+    // confirm the booking, but are still recorded for reconciliation.
+    if (statusCode !== '2') {
+      const failureUpdate: Record<string, any> = {
+        status: 'failed',
+        provider: 'payhere',
+        'metadata.payhereStatusCode': statusCode,
+      };
+      if (paymentId) failureUpdate.providerTransactionId = paymentId;
+      await Transaction.findOneAndUpdate(
+        { booking: booking._id },
+        { $set: failureUpdate }
+      );
+      return NextResponse.json({ received: true });
+    }
+
+    if (!paymentId) {
+      return NextResponse.json({ error: 'Missing PayHere payment id' }, { status: 400 });
+    }
+
+    const duplicatePayment = await Transaction.findOne({
+      provider: 'payhere',
+      providerTransactionId: paymentId,
+      booking: { $ne: booking._id },
+    }).select('_id');
+    if (duplicatePayment) {
+      return NextResponse.json({ error: 'Payment id already used' }, { status: 409 });
+    }
+
+    const transaction = await Transaction.findOne({ booking: booking._id });
+    if (
+      transaction?.status === 'completed' &&
+      transaction.providerTransactionId === paymentId &&
+      booking.paymentStatus === 'paid'
+    ) {
+      return NextResponse.json({ received: true, idempotent: true });
+    }
+
+    await BookingService.confirmBooking(bookingId, {
+      markPaid: true,
+      providerTransactionId: paymentId,
+    });
+    await Transaction.findOneAndUpdate(
+      { booking: booking._id },
+      {
+        $set: {
+          status: 'completed',
+          provider: 'payhere',
+          providerTransactionId: paymentId,
+          'metadata.payhereStatusCode': statusCode,
+        },
+      }
+    );
 
     return NextResponse.json({ received: true });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error('Payment webhook error:', err);
+    return NextResponse.json({ error: 'Payment notification failed' }, { status: 500 });
   }
 }
