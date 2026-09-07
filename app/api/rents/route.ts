@@ -14,8 +14,21 @@ const createRentSchema = z.object({
   currency: z.string().trim().min(3).max(3).default('LKR'),
   frequency: z.enum(['monthly', 'weekly', 'yearly']).default('monthly'),
   firstDueDate: z.union([z.string(), z.date()]),
-  notes: z.string().max(2000).optional(),
+  leaseStartDate: z.union([z.string(), z.date()]).optional(),
+  leaseEndDate: z.union([z.string(), z.date()]).optional(),
+  securityDeposit: z.number().min(0).optional(),
+  gracePeriodDays: z.number().int().min(0).max(60).optional(),
+  notes: z.string().max(5000).optional(),
   applicationId: z.string().optional(),
+}).strict();
+
+const manualPaymentSchema = z.object({
+  action: z.enum(['markPaid', 'markAsPaid']),
+  rentId: z.string().min(1),
+  method: z.enum(['manual', 'cash', 'bank-transfer', 'payhere', 'other']).optional(),
+  providerReference: z.string().trim().max(200).optional(),
+  notes: z.string().trim().max(2000).optional(),
+  paidAt: z.union([z.string(), z.date()]).optional(),
 }).strict();
 
 function rolesFor(user: any): string[] {
@@ -38,15 +51,25 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     if (body.action === 'markPaid' || body.action === 'markAsPaid') {
-      if (!body.rentId) return NextResponse.json({ ok: false, error: 'Missing rentId' }, { status: 400 });
+      const payment = manualPaymentSchema.safeParse(body);
+      if (!payment.success) {
+        return NextResponse.json({ ok: false, error: 'Invalid rent payment data' }, { status: 400 });
+      }
+
       await dbConnect();
-      const rent = await Rent.findById(body.rentId).select('property');
+      const rent = await Rent.findById(payment.data.rentId).select('property');
       if (!rent) return NextResponse.json({ ok: false, error: 'Rent not found' }, { status: 404 });
       if (!isAdmin(user) && !(await hostOwnsProperty(user._id.toString(), rent.property.toString()))) {
         return NextResponse.json({ ok: false, error: 'Forbidden' }, { status: 403 });
       }
-      const updated = await RentService.markAsPaid(body.rentId);
-      return NextResponse.json({ ok: true, data: updated });
+
+      const result = await RentService.markAsPaid(payment.data.rentId, user._id.toString(), {
+        method: payment.data.method,
+        providerReference: payment.data.providerReference,
+        notes: payment.data.notes,
+        paidAt: payment.data.paidAt,
+      });
+      return NextResponse.json({ ok: true, data: result });
     }
 
     const parsed = createRentSchema.safeParse(body);
@@ -69,7 +92,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: false, error: 'Authentication required' }, { status: 401 });
     }
     console.error('Rent POST error:', err);
-    return NextResponse.json({ ok: false, error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ ok: false, error: err?.message || 'Internal server error' }, { status: 500 });
   }
 }
 

@@ -81,12 +81,10 @@ const BlogPostSchema = new mongoose.Schema(
   }
 );
 
-// Index for search
+// `unique: true` on slug already creates the unique slug index.
 BlogPostSchema.index({ title: 'text', content: 'text', excerpt: 'text' });
-BlogPostSchema.index({ slug: 1 });
 BlogPostSchema.index({ status: 1, publishedAt: -1 });
 
-// Generate slug from title before saving
 BlogPostSchema.pre('save', function(next) {
   if (this.isModified('title')) {
     this.slug = this.title
@@ -94,12 +92,11 @@ BlogPostSchema.pre('save', function(next) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
   }
-  
-  // Set publishedAt when status changes to published
+
   if (this.isModified('status') && this.status === 'published' && !this.publishedAt) {
     this.publishedAt = new Date();
   }
-  
+
   next();
 });
 

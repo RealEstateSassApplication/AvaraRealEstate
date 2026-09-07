@@ -2,7 +2,6 @@ const BUCKET_NAME = process.env.S3_BUCKET || 'avara-sl';
 
 function getS3() {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const AWS = require('aws-sdk');
     return new AWS.S3({
       accessKeyId: process.env.S3_ACCESS_KEY_ID,

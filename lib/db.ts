@@ -1,15 +1,5 @@
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI || '';
-
-if (!MONGODB_URI) {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('Please define the MONGODB_URI environment variable');
-  } else {
-    console.warn('MONGODB_URI not set in environment');
-  }
-}
-
 interface MongooseConnection {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;
@@ -28,23 +18,25 @@ if (!cached) {
 }
 
 async function dbConnect(): Promise<typeof mongoose> {
-  if (cached!.conn) {
-    return cached!.conn;
+  if (cached!.conn) return cached!.conn;
+
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    // Validate only when a request actually needs MongoDB. Next.js imports route
+    // modules during production builds, so throwing at module scope makes deploy
+    // previews impossible when secrets are intentionally unavailable at build time.
+    throw new Error('Please define the MONGODB_URI environment variable');
   }
 
   if (!cached!.promise) {
-    const opts = {
-      bufferCommands: false,
-    };
-
-    cached!.promise = mongoose.connect(MONGODB_URI, opts).then((m) => m);
+    cached!.promise = mongoose.connect(uri, { bufferCommands: false }).then((m) => m);
   }
 
   try {
     cached!.conn = await cached!.promise;
-  } catch (e) {
+  } catch (error) {
     cached!.promise = null;
-    throw e;
+    throw error;
   }
 
   return cached!.conn!;
