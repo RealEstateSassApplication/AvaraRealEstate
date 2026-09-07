@@ -40,6 +40,16 @@ export default class RentService {
   static async createRent(payload: CreateRentInput) {
     await dbConnect();
 
+    const property = await Property.findById(payload.propertyId).select('_id purpose status owner');
+    if (!property) throw new Error('Property not found');
+    if (property.purpose !== 'rent') throw new Error('Only rental properties can have lease agreements');
+
+    const existingLease = await Rent.findOne({
+      property: property._id,
+      status: { $in: ['active', 'paused'] },
+    }).select('_id');
+    if (existingLease) throw new Error('Property already has an active lease');
+
     const firstDueDate = new Date(payload.firstDueDate);
     if (Number.isNaN(firstDueDate.getTime())) throw new Error('Invalid first due date');
 
@@ -64,6 +74,8 @@ export default class RentService {
       notes: payload.notes || ''
     });
 
+    await Property.findByIdAndUpdate(property._id, { status: 'rented' });
+
     let appId = payload.applicationId;
     if (!appId) {
       const matchingApp = await Application.findOne({
@@ -74,8 +86,6 @@ export default class RentService {
       if (matchingApp) appId = matchingApp._id.toString();
     }
 
-    // Preserve application history for the owner/tenant audit trail instead of
-    // deleting the application after converting it into a lease.
     if (appId) {
       await Application.findByIdAndUpdate(appId, {
         status: 'accepted',
@@ -117,9 +127,7 @@ export default class RentService {
     if (Number.isNaN(paidAt.getTime())) throw new Error('Invalid payment date');
 
     const existing = await RentPayment.findOne({ rent: rent._id, dueDate, status: 'paid' });
-    if (existing) {
-      return { rent, payment: existing, duplicate: true };
-    }
+    if (existing) return { rent, payment: existing, duplicate: true };
 
     let payment: any;
     try {
@@ -154,6 +162,46 @@ export default class RentService {
     await rent.save();
 
     return { rent, payment, duplicate: false };
+  }
+
+  static async endLease(rentId: string, ownerId: string, reason?: string) {
+    await dbConnect();
+    const rent = await Rent.findById(rentId).populate('property');
+    if (!rent) throw new Error('Rent not found');
+
+    const property = rent.property as any;
+    if (String(property.owner) !== String(ownerId)) throw new Error('Forbidden');
+    if (!['active', 'paused'].includes(rent.status)) throw new Error('Lease is already closed');
+
+    const endedAt = new Date();
+    rent.status = 'ended';
+    rent.endedAt = endedAt;
+    rent.endReason = reason?.trim() || 'Lease ended by owner';
+    await rent.save();
+
+    await Property.findOneAndUpdate(
+      { _id: property._id || property, owner: ownerId, status: 'rented' },
+      { status: 'active' }
+    );
+
+    return rent;
+  }
+
+  static async setDepositStatus(
+    rentId: string,
+    ownerId: string,
+    status: 'pending' | 'held' | 'partially-refunded' | 'refunded' | 'forfeited'
+  ) {
+    await dbConnect();
+    const rent = await Rent.findById(rentId).populate('property');
+    if (!rent) throw new Error('Rent not found');
+    const property = rent.property as any;
+    if (String(property.owner) !== String(ownerId)) throw new Error('Forbidden');
+    if (Number(rent.securityDeposit || 0) <= 0) throw new Error('This lease has no security deposit');
+
+    rent.depositStatus = status;
+    await rent.save();
+    return rent;
   }
 
   static async triggerReminders({ daysBefore = 3 } = {}) {
