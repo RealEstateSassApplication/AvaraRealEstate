@@ -25,14 +25,16 @@ export async function POST(
     const userId = user._id.toString();
     const roles = Array.isArray((user as any).roles) ? (user as any).roles : [(user as any).role];
     const isAdmin = roles.includes('admin') || roles.includes('super-admin');
-    if (!isAdmin && (rent.property as any).owner.toString() !== userId) {
+    const propertyOwnerId = (rent.property as any).owner.toString();
+    if (!isAdmin && propertyOwnerId !== userId) {
       return NextResponse.json({ error: 'You can only manage rents for your own properties' }, { status: 403 });
     }
 
+    const body = await request.json().catch(() => ({}));
     let result;
+
     switch (action) {
-      case 'mark_paid': {
-        const body = await request.json().catch(() => ({}));
+      case 'mark_paid':
         result = await RentService.markAsPaid(rentId, userId, {
           method: body.method,
           providerReference: body.providerReference,
@@ -40,26 +42,38 @@ export async function POST(
           paidAt: body.paidAt,
         });
         break;
-      }
       case 'send_reminder':
         result = await RentService.sendReminderForRent(rentId);
         break;
+      case 'end_lease':
+        result = await RentService.endLease(rentId, propertyOwnerId, body.reason);
+        break;
+      case 'deposit_held':
+        result = await RentService.setDepositStatus(rentId, propertyOwnerId, 'held');
+        break;
+      case 'deposit_refunded':
+        result = await RentService.setDepositStatus(rentId, propertyOwnerId, 'refunded');
+        break;
+      case 'deposit_forfeited':
+        result = await RentService.setDepositStatus(rentId, propertyOwnerId, 'forfeited');
+        break;
       default:
         return NextResponse.json({
-          error: 'Invalid action. Supported actions: mark_paid, send_reminder'
+          error: 'Invalid action. Supported actions: mark_paid, send_reminder, end_lease, deposit_held, deposit_refunded, deposit_forfeited'
         }, { status: 400 });
     }
 
     return NextResponse.json({
       success: true,
       data: result,
-      message: `Rent ${action.replace('_', ' ')} successfully`
+      message: `Rent ${action.replace(/_/g, ' ')} successfully`
     });
   } catch (error: any) {
     console.error(`Error performing rent action ${params.action}:`, error);
+    const status = error?.message === 'Forbidden' ? 403 : 500;
     return NextResponse.json(
-      { error: error?.message || `Failed to ${params.action.replace('_', ' ')} rent` },
-      { status: 500 }
+      { error: error?.message || `Failed to ${params.action.replace(/_/g, ' ')} rent` },
+      { status }
     );
   }
 }
