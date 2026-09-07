@@ -1,13 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
-import { useState, useEffect } from 'react';
-import { Menu, X, User, Heart, Plus, MapPin } from 'lucide-react';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { useEffect, useState } from 'react';
+import { Heart, MapPin, Menu, X } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import ListPropertyButton from '@/components/ui/ListPropertyButton';
-import { useRouter } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,342 +23,170 @@ interface User {
   listingsCount?: number;
 }
 
+function hasHostRole(user: User | null) {
+  if (!user) return false;
+  if (Array.isArray(user.roles) && user.roles.includes('host')) return true;
+  if (user.role === 'host') return true;
+  return typeof user.listingsCount === 'number' && user.listingsCount > 0;
+}
+
+function isAdmin(user: User | null) {
+  if (!user) return false;
+  if (Array.isArray(user.roles) && (user.roles.includes('admin') || user.roles.includes('super-admin'))) return true;
+  return user.role === 'admin' || user.role === 'super-admin';
+}
+
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
-
-  const hasHostRole = (u: User | null) => {
-    if (!u) return false;
-    if (u.roles && Array.isArray(u.roles)) return u.roles.includes('host');
-    if (u.role === 'host') return true;
-    // fallback: if user has listings, treat them as a host
-    if (typeof u.listingsCount === 'number' && u.listingsCount > 0) return true;
-    return false;
-  };
-
-  const isAdmin = (u: User | null) => {
-    if (!u) return false;
-
-    // Check roles array first
-    if (u.roles && Array.isArray(u.roles)) {
-      if (u.roles.includes('admin') || u.roles.includes('super-admin')) {
-        return true;
-      }
-    }
-
-    // Check single role field
-    if (u.role === 'admin' || u.role === 'super-admin') {
-      return true;
-    }
-
-    return false;
-  };
 
   useEffect(() => {
-    checkAuth();
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/me', { cache: 'no-store' });
+        if (!response.ok) return;
+        const json = await response.json();
+        const data = json.data || json.user;
+        if (!data) return;
+        setUser({
+          _id: data.id || data._id,
+          name: data.name,
+          email: data.email,
+          role: data.role,
+          roles: data.roles,
+          profilePhoto: data.profilePhoto,
+          listingsCount: data.listingsCount,
+        });
+      } catch (error) {
+        console.error('Auth check failed:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    void checkAuth();
   }, []);
 
-  const checkAuth = async () => {
-    try {
-      const response = await fetch('/api/auth/me', { cache: 'no-store' });
-      if (response.ok) {
-        const json = await response.json();
-        const u = json.data || json.user;
-        if (u) {
-          setUser({
-            _id: u.id || u._id,
-            name: u.name,
-            email: u.email,
-            role: u.role,
-            roles: u.roles,
-            profilePhoto: u.profilePhoto,
-            listingsCount: u.listingsCount
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogout = async () => {
+  const logout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
+    } finally {
       setUser(null);
       window.location.href = '/';
-    } catch (error) {
-      console.error('Logout failed:', error);
     }
   };
 
+  const closeMenu = () => setIsMenuOpen(false);
+
   return (
-    <header className="bg-card sticky top-0 z-50 shadow-sm border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="bg-black text-white p-2 rounded-lg">
-              <MapPin className="w-6 h-6" />
+    <header className="sticky top-0 z-50 border-b bg-white/95 shadow-sm backdrop-blur">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="rounded-lg bg-slate-950 p-2 text-white">
+              <MapPin className="h-6 w-6" />
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-xl font-bold text-on-surface">Avara</h1>
-              <p className="text-xs muted">Sri Lanka</p>
+              <div className="text-xl font-bold tracking-tight text-slate-950">Avara</div>
+              <div className="text-xs text-slate-500">Sri Lanka</div>
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link
-              href="/listings?purpose=rent"
-              className="text-gray-700 hover:text-teal-600 font-medium transition-colors"
-            >
-              Rent
-            </Link>
-            <Link
-              href="/listings?purpose=sale"
-              className="text-gray-700 hover:text-teal-600 font-medium transition-colors"
-            >
-              Buy
-            </Link>
-            <Link
-              href="/listings?purpose=booking"
-              className="text-gray-700 hover:text-teal-600 font-medium transition-colors"
-            >
-              Booking
-            </Link>
-            <Link
-              href="/blog"
-              className="text-gray-700 hover:text-teal-600 font-medium transition-colors"
-            >
-              Blog
-            </Link>
+          <nav className="hidden items-center gap-6 md:flex">
+            <Link href="/listings?purpose=rent" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Rent</Link>
+            <Link href="/listings?purpose=sale" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Buy</Link>
+            <Link href="/listings?purpose=booking" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Stays</Link>
+            <Link href="/blog" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Insights</Link>
             {user && (
               <>
-                <Link
-                  href="/request-property"
-                  className="text-teal-700 hover:text-teal-800 font-medium transition-colors"
-                >
-                  Request Property
-                </Link>
-                {/* User personal dashboard */}
-                <Link href="/user/dashboard" className="text-gray-700 hover:text-teal-600 font-medium transition-colors">Dashboard</Link>
-                {/* Host dashboard only if host role */}
+                <Link href="/request-property" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Request property</Link>
+                <Link href="/user/dashboard" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Dashboard</Link>
                 {hasHostRole(user) && (
-                  <Link href="/host/dashboard" className="text-gray-700 hover:text-teal-600 font-medium transition-colors">Host</Link>
+                  <Link href="/owner" className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800">
+                    Owner OS
+                  </Link>
                 )}
-                {/* Admin dashboard - prominently displayed */}
                 {isAdmin(user) && (
-                  <Link href="/admin/dashboard" className="text-blue-700 hover:text-blue-800 font-semibold transition-colors bg-blue-50 px-3 py-1.5 rounded-md border border-blue-300">
+                  <Link href="/admin/dashboard" className="rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-700">
                     Admin
                   </Link>
                 )}
-                {/* 'Become a Host' link removed - hosts detected by listings or role */}
               </>
             )}
           </nav>
 
-          {/* Right Side */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-2">
             {!loading && (
-              <>
-                {user ? (
-                  <div className="flex items-center space-x-3">
-                    {hasHostRole(user) && <ListPropertyButton />}
+              user ? (
+                <>
+                  {hasHostRole(user) && <ListPropertyButton className="hidden lg:inline-flex" size="sm" variant="outline" />}
+                  <Button asChild variant="ghost" size="sm">
+                    <Link href="/favorites" aria-label="Favorites"><Heart className="h-4 w-4" /></Link>
+                  </Button>
 
-                    <Link href="/favorites">
-                      <Button variant="ghost" size="sm">
-                        <Heart className="w-4 h-4" />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-10 w-10 rounded-full p-0" aria-label="Account menu">
+                        <Avatar className="h-9 w-9">
+                          {user.profilePhoto && <AvatarImage src={user.profilePhoto} alt={user.name} />}
+                          <AvatarFallback>{user.name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                        </Avatar>
                       </Button>
-                    </Link>
-
-                    <div className="flex items-center gap-2">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Link href="/user/profile" className="hidden sm:inline-block">
-                            <Avatar>
-                              {user.profilePhoto ? (
-                                <AvatarImage src={user.profilePhoto} alt={user.name} />
-                              ) : (
-                                <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
-                              )}
-                            </Avatar>
-                          </Link>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-56" align="end" forceMount>
-                          <div className="flex items-center justify-start gap-2 p-2">
-                            <div className="flex flex-col space-y-1 leading-none">
-                              <p className="font-medium">{user.name}</p>
-                              <p className="w-[200px] truncate text-sm text-muted-foreground">{user.email}</p>
-                            </div>
-                          </div>
-                          <div className="border-t">
-                            <DropdownMenuItem asChild>
-                              <Link href="/user/profile">Profile</Link>
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem asChild>
-                              <Link href="/user/dashboard">My Dashboard</Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link href="/request-property">Request Property</Link>
-                            </DropdownMenuItem>
-                            {hasHostRole(user) && (
-                              <DropdownMenuItem asChild>
-                                <Link href="/host/dashboard">Host Dashboard</Link>
-                              </DropdownMenuItem>
-                            )}
-                            {isAdmin(user) && (
-                              <DropdownMenuItem asChild className="bg-blue-50 text-blue-700 font-semibold">
-                                <Link href="/admin/dashboard">Admin Panel</Link>
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
-                          </div>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                      {/* Visible logout button next to avatar for quick access */}
-                      <Button variant="ghost" size="sm" onClick={handleLogout} className="hidden sm:inline-flex">
-                        Logout
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <Link href="/auth/login">
-                      <Button variant="ghost" size="sm">Login</Button>
-                    </Link>
-                    <Link href="/auth/register">
-                      <Button size="sm">Sign Up</Button>
-                    </Link>
-                  </div>
-                )}
-              </>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-60" align="end">
+                      <div className="border-b p-3">
+                        <p className="font-medium text-slate-950">{user.name}</p>
+                        <p className="truncate text-xs text-slate-500">{user.email}</p>
+                      </div>
+                      <DropdownMenuItem asChild><Link href="/user/profile">Profile</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild><Link href="/user/dashboard">My dashboard</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild><Link href="/request-property">Request property</Link></DropdownMenuItem>
+                      {hasHostRole(user) && (
+                        <>
+                          <DropdownMenuItem asChild><Link href="/owner">Owner OS</Link></DropdownMenuItem>
+                          <DropdownMenuItem asChild><Link href="/host/dashboard">Legacy host operations</Link></DropdownMenuItem>
+                        </>
+                      )}
+                      {isAdmin(user) && <DropdownMenuItem asChild><Link href="/admin/dashboard">Admin panel</Link></DropdownMenuItem>}
+                      <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              ) : (
+                <>
+                  <Button asChild variant="ghost" size="sm"><Link href="/auth/login">Login</Link></Button>
+                  <Button asChild size="sm"><Link href="/auth/register">Sign up</Link></Button>
+                </>
+              )
             )}
 
-            {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="md:hidden"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            <Button variant="ghost" size="sm" className="md:hidden" onClick={() => setIsMenuOpen((open) => !open)} aria-label="Toggle menu">
+              {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </Button>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 py-4">
-            <nav className="flex flex-col space-y-4">
-              <Link
-                href="/listings?purpose=rent"
-                className="text-gray-700 hover:text-teal-600 font-medium"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Rent
-              </Link>
-              <Link
-                href="/listings?purpose=sale"
-                className="text-gray-700 hover:text-teal-600 font-medium"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Buy
-              </Link>
-              <Link
-                href="/listings?purpose=booking"
-                className="text-gray-700 hover:text-teal-600 font-medium"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Booking
-              </Link>
-              <Link
-                href="/blog"
-                className="text-gray-700 hover:text-teal-600 font-medium"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Blog
-              </Link>
-
-              {user && (
-                <Link
-                  href="/request-property"
-                  className="text-teal-700 hover:text-teal-800 font-medium"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Request Property
-                </Link>
-              )}
-
-              {user && (
-                <Link
-                  href="/user/dashboard"
-                  className="text-gray-700 hover:text-teal-600 font-medium"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Dashboard
-                </Link>
-              )}
-
-              {user && (
-                <>
-                  <Link
-                    href="/user/profile"
-                    className="text-gray-700 hover:text-teal-600 font-medium"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Profile
-                  </Link>
-                  {hasHostRole(user) && (
-                    <Link
-                      href="/host/listings/create"
-                      className="text-gray-700 hover:text-teal-600 font-medium"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      List Property
-                    </Link>
-                  )}
-                  {hasHostRole(user) && (
-                    <Link
-                      href="/host/dashboard"
-                      className="text-gray-700 hover:text-teal-600 font-medium"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Host Dashboard
-                    </Link>
-                  )}
-                  {isAdmin(user) && (
-                    <Link
-                      href="/admin/dashboard"
-                      className="text-blue-700 hover:text-blue-800 font-semibold bg-blue-50 px-3 py-2 rounded-md"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Admin Panel
-                    </Link>
-                  )}
-                  <a
-                    className="text-gray-700 hover:text-teal-600 font-medium"
-                    onClick={async (e) => {
-                      e.preventDefault();
-                      setIsMenuOpen(false);
-                      try {
-                        await fetch('/api/auth/logout', { method: 'POST' });
-                        window.location.href = '/';
-                      } catch (err) {
-                        console.error('Logout failed', err);
-                      }
-                    }}
-                  >
-                    Logout
-                  </a>
-                </>
-              )}
-            </nav>
-          </div>
+          <nav className="space-y-1 border-t py-4 md:hidden">
+            <Link href="/listings?purpose=rent" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Rent</Link>
+            <Link href="/listings?purpose=sale" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Buy</Link>
+            <Link href="/listings?purpose=booking" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Stays</Link>
+            <Link href="/blog" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Insights</Link>
+            {user && (
+              <>
+                <Link href="/request-property" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Request property</Link>
+                <Link href="/user/dashboard" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Dashboard</Link>
+                {hasHostRole(user) && (
+                  <>
+                    <Link href="/owner" className="block rounded-lg bg-slate-950 px-3 py-2 text-sm font-semibold text-white" onClick={closeMenu}>Owner OS</Link>
+                    <Link href="/host/listings/create" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>List property</Link>
+                  </>
+                )}
+                {isAdmin(user) && <Link href="/admin/dashboard" className="block rounded-lg px-3 py-2 text-sm font-semibold text-blue-700" onClick={closeMenu}>Admin panel</Link>}
+                <button className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700" onClick={logout}>Logout</button>
+              </>
+            )}
+          </nav>
         )}
       </div>
     </header>
