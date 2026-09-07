@@ -47,7 +47,7 @@ RentPaymentSchema.index(
 );
 RentPaymentSchema.index(
   { providerReference: 1 },
-  { unique: true, sparse: true, partialFilterExpression: { providerReference: { $type: 'string' } } }
+  { unique: true, partialFilterExpression: { providerReference: { $type: 'string' } } }
 );
 
 export default mongoose.models.RentPayment || mongoose.model<IRentPayment>('RentPayment', RentPaymentSchema);
