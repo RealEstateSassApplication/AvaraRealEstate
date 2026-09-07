@@ -41,7 +41,10 @@ const RentPaymentSchema = new Schema<IRentPayment>({
 RentPaymentSchema.index({ host: 1, paidAt: -1 });
 RentPaymentSchema.index({ property: 1, paidAt: -1 });
 RentPaymentSchema.index({ tenant: 1, paidAt: -1 });
-RentPaymentSchema.index({ rent: 1, dueDate: 1, status: 1 });
+RentPaymentSchema.index(
+  { rent: 1, dueDate: 1 },
+  { unique: true, partialFilterExpression: { status: 'paid' } }
+);
 RentPaymentSchema.index(
   { providerReference: 1 },
   { unique: true, sparse: true, partialFilterExpression: { providerReference: { $type: 'string' } } }
