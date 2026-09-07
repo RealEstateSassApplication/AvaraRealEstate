@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx update-browserslist-db@latest --yes && next build",
+    "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "browserslist:update": "npx update-browserslist-db@latest --yes"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
