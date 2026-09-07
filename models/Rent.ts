@@ -9,6 +9,8 @@ const RentSchema = new mongoose.Schema({
   nextDue: { type: Date, required: true },
   leaseStartDate: { type: Date },
   leaseEndDate: { type: Date },
+  endedAt: { type: Date },
+  endReason: { type: String, trim: true, maxlength: 2000 },
   securityDeposit: { type: Number, min: 0, default: 0 },
   depositStatus: {
     type: String,
