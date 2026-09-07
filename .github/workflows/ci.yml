@@ -45,3 +45,26 @@ jobs:
 
       - name: Typecheck
         run: npx tsc --noEmit
+
+  build:
+    runs-on: ubuntu-latest
+    env:
+      JWT_SECRET: ci-only-jwt-secret-with-at-least-32-characters
+      NEXTAUTH_SECRET: ci-only-nextauth-secret-with-at-least-32-characters
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
