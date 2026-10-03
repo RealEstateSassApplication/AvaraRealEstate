@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bell, Check, X } from 'lucide-react';
+import { Bell, Check } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Notification {
@@ -28,7 +28,7 @@ export default function NotificationPanel({ userId }: Props) {
 
   const fetchNotifications = useCallback(async () => {
     try {
-      const url = `/api/notifications?userId=${userId}${showUnreadOnly ? '&unreadOnly=true' : ''}`;
+      const url = `/api/notifications?${showUnreadOnly ? 'unreadOnly=true' : ''}`;
       const res = await fetch(url);
       if (res.ok) {
         const json = await res.json();
@@ -40,7 +40,7 @@ export default function NotificationPanel({ userId }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [userId, showUnreadOnly]);
+  }, [showUnreadOnly]);
 
   useEffect(() => {
     if (userId) fetchNotifications();
@@ -51,9 +51,7 @@ export default function NotificationPanel({ userId }: Props) {
       const res = await fetch(`/api/notifications/${notificationId}`, {
         method: 'PATCH'
       });
-      if (res.ok) {
-        fetchNotifications();
-      }
+      if (res.ok) fetchNotifications();
     } catch (err) {
       console.error('Failed to mark as read', err);
     }
@@ -64,9 +62,7 @@ export default function NotificationPanel({ userId }: Props) {
       const res = await fetch('/api/notifications/mark-all-read', {
         method: 'PUT'
       });
-      if (res.ok) {
-        fetchNotifications();
-      }
+      if (res.ok) fetchNotifications();
     } catch (err) {
       console.error('Failed to mark all as read', err);
     }
@@ -169,7 +165,6 @@ export default function NotificationPanel({ userId }: Props) {
                             variant="link"
                             className="p-0 h-auto mt-1"
                             onClick={() => {
-                              // Navigate to applications tab
                               window.location.hash = 'applications';
                             }}
                           >

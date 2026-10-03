@@ -1,38 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import BlogPost from '@/models/BlogPost';
-import User from '@/models/User';
-import { getUserFromRequest } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
+
+function authErrorResponse(error: unknown) {
+  const message = error instanceof Error ? error.message : '';
+  if (message.includes('Authentication')) {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  }
+  if (message.includes('Insufficient permissions')) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+  return null;
+}
 
 // GET /api/admin/blog - Get all blog posts (admin only)
 export async function GET(request: NextRequest) {
   try {
+    const user = await requireRole(request, ['admin', 'super-admin']);
     await dbConnect();
-
-    const user = await getUserFromRequest(request);
-    if (!user || user.role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const category = searchParams.get('category');
     const search = searchParams.get('search');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const page = Math.max(1, Number.parseInt(searchParams.get('page') || '1', 10) || 1);
+    const limit = Math.min(100, Math.max(1, Number.parseInt(searchParams.get('limit') || '10', 10) || 10));
 
     const filter: any = {};
     if (status) filter.status = status;
     if (category) filter.category = category;
-    if (search) {
-      filter.$text = { $search: search };
-    }
+    if (search) filter.$text = { $search: search };
 
     const skip = (page - 1) * limit;
 
     const [posts, total] = await Promise.all([
       BlogPost.find(filter)
-        .populate('author', 'firstName lastName email')
+        .populate('author', 'name email')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -50,24 +54,20 @@ export async function GET(request: NextRequest) {
         limit
       }
     });
-  } catch (error: any) {
+  } catch (error) {
+    const authResponse = authErrorResponse(error);
+    if (authResponse) return authResponse;
+
     console.error('Error fetching blog posts:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch blog posts', details: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch blog posts' }, { status: 500 });
   }
 }
 
 // POST /api/admin/blog - Create new blog post (admin only)
 export async function POST(request: NextRequest) {
   try {
+    const user = await requireRole(request, ['admin', 'super-admin']);
     await dbConnect();
-
-    const user = await getUserFromRequest(request);
-    if (!user || user.role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const body = await request.json();
     const {
@@ -84,7 +84,6 @@ export async function POST(request: NextRequest) {
       metaKeywords
     } = body;
 
-    // Validation
     if (!title || !excerpt || !content) {
       return NextResponse.json(
         { error: 'Title, excerpt, and content are required' },
@@ -92,17 +91,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check for duplicate slug
-    const slug = title
+    const slug = String(title)
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
 
-    const existingPost = await BlogPost.findOne({ slug });
+    if (!slug) {
+      return NextResponse.json({ error: 'Title cannot produce an empty slug' }, { status: 400 });
+    }
+
+    const existingPost = await BlogPost.findOne({ slug }).select('_id');
     if (existingPost) {
       return NextResponse.json(
-        { error: 'A post with similar title already exists' },
-        { status: 400 }
+        { error: 'A post with a similar title already exists' },
+        { status: 409 }
       );
     }
 
@@ -113,29 +115,32 @@ export async function POST(request: NextRequest) {
       content,
       author: user._id,
       featuredImage: featuredImage || '',
-      images: images || [],
+      images: Array.isArray(images) ? images : [],
       category: category || 'other',
-      tags: tags || [],
+      tags: Array.isArray(tags) ? tags : [],
       status: status || 'draft',
       metaTitle,
       metaDescription,
-      metaKeywords: metaKeywords || []
+      metaKeywords: Array.isArray(metaKeywords) ? metaKeywords : []
     });
 
     const populatedPost = await BlogPost.findById(post._id)
-      .populate('author', 'firstName lastName email')
+      .populate('author', 'name email')
       .lean();
 
-    return NextResponse.json({
-      success: true,
-      post: populatedPost,
-      message: 'Blog post created successfully'
-    }, { status: 201 });
-  } catch (error: any) {
-    console.error('Error creating blog post:', error);
     return NextResponse.json(
-      { error: 'Failed to create blog post', details: error.message },
-      { status: 500 }
+      {
+        success: true,
+        post: populatedPost,
+        message: 'Blog post created successfully'
+      },
+      { status: 201 }
     );
+  } catch (error) {
+    const authResponse = authErrorResponse(error);
+    if (authResponse) return authResponse;
+
+    console.error('Error creating blog post:', error);
+    return NextResponse.json({ error: 'Failed to create blog post' }, { status: 500 });
   }
 }
