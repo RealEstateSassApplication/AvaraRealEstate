@@ -2,6 +2,12 @@
 
 A comprehensive fullstack Next.js application for property rentals, sales, and short-term bookings in Sri Lanka. Built with MongoDB, featuring advanced search, booking management, payment integration, and WhatsApp communications.
 
+## Avara + Property OS direction
+
+Avara remains the property marketplace, while the separate [Property Management OS](https://github.com/RealEstateSassApplication/property-management-OS) owns auditable leasing, accounting and operations for professional property managers. The products integrate through authorized APIs/events rather than sharing a database. Read [the ecosystem strategy, planned differentiators, release blockers and roadmap](docs/AVARA_PROPERTY_OS_STRATEGY.md).
+
+**Project status:** The Property OS integration and future hospitality module are proposed capabilities, not deployed integrations. Avoid representing Avara as a proven insured or fully synchronized booking service until that functionality has been built, tested and operationally supported.
+
 ## 🌟 Features
 
 ### Core Functionality
