@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import PropertyService, { PropertyFilters } from '@/services/propertyService';
-import getUserFromReq from '@/lib/auth';
+import getUserFromReq from '@/lib/auth';import {rolesFor} from '@/lib/workspace-roles';
 import { createPropertySchema } from '@/lib/propertyInput';
 import { parsePositiveInt } from '@/lib/security';
 
@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
     const user = await getUserFromReq(request as any);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+    if(!rolesFor(user).includes('host'))return NextResponse.json({error:'Approved property manager access required'},{status:403});
     const parsed = createPropertySchema.safeParse(await request.json());
     if (!parsed.success) {
       return NextResponse.json(

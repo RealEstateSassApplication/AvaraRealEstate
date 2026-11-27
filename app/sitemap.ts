@@ -4,6 +4,8 @@ import Property from '@/models/Property';
 import BlogPost from '@/models/BlogPost';
 import Development from '@/models/Development';
 import { neighbourhoods } from '@/lib/discovery/content';
+import {collections as searchCollections} from '@/lib/discovery/collections';
+import {collectionCatalog} from '@/lib/discovery/public-catalog';
 import {guides,guideReviewed} from '@/lib/discovery/guides';
 export const revalidate=3600;
 
@@ -35,6 +37,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   for(const guide of guides) staticPages.push({url:new URL('/guides/'+guide.slug,BASE_URL).toString(),lastModified:guideReviewed});
 
+  staticPages.push({url:new URL('/agent-access',BASE_URL).toString()});
+  const populated=await Promise.all(searchCollections.map(async c=>({c,data:await collectionCatalog(c)})));
+  for(const {c,data} of populated)if(data?.items.length)staticPages.push({url:new URL('/properties/'+c.slug,BASE_URL).toString()});
   let propertyPages: MetadataRoute.Sitemap = [];
   let blogPages: MetadataRoute.Sitemap = [];
 

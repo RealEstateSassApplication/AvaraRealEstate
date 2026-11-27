@@ -32,7 +32,7 @@ export default async function HomePage(){
     </div>
    </div>
    <div className="avara-search-wrap"><DiscoverySearch/></div>
-   <div className="avara-quick-links"><span className="avara-kicker">Begin with</span><Link href="/listings?purpose=rent">Rent a home</Link><Link href="/listings?purpose=sale">Homes &amp; land</Link><Link href="/listings?purpose=booking">Short stays</Link><Link href="/map">Explore by map</Link></div>
+   <div className="avara-quick-links"><span className="avara-kicker">Begin with</span><Link href="/properties/rent">Rent a home</Link><Link href="/properties/buy">Homes &amp; land</Link><Link href="/properties/stays">Short stays</Link><Link href="/map">Explore by map</Link></div>
   </section>
   {sections.collections.enabled&&<section className="avara-shell avara-section"><SectionHeading eyebrow={sections.collections.eyebrow} title={sections.collections.title} href="/listings" linkLabel="All properties"/><CollectionCards items={collections}/></section>}
   {sections.listings.enabled&&<section className="avara-shell avara-section avara-top-rule"><SectionHeading eyebrow={sections.listings.eyebrow} title={sections.listings.title} href="/listings" linkLabel="Browse properties"/><div className="mt-9"><DiscoveryListings/></div></section>}

@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!property) {
     return {
       title: 'Property Not Found',
-      description: 'The property you are looking for does not exist.',
+      description: 'The property you are looking for does not exist.',robots:{index:false,follow:false},
     };
   }
 
@@ -60,7 +60,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: 'website',
       locale: 'en_LK',
       url: `${BASE_URL}/listings/${params.id}`,
-      siteName: 'Avara Real Estate',
+      siteName: 'Avara',
       images,
     },
     twitter: {
