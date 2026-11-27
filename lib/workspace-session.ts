@@ -1,0 +1,3 @@
+import 'server-only';import {cookies} from 'next/headers';import {redirect} from 'next/navigation';import {getUserFromRequest} from '@/lib/auth';import {NextRequest} from 'next/server';import {workspaces,type WorkspaceRole} from '@/lib/workspace-roles';
+export async function workspaceUser(){const cookie=cookies().getAll().map(c=>c.name+'='+c.value).join('; ');return getUserFromRequest(new NextRequest('https://avara.invalid/',{headers:{cookie}}));}
+export async function requireWorkspace(role:WorkspaceRole,next:string){const user=await workspaceUser();if(!user)redirect('/auth/login?next='+encodeURIComponent(next));if(!workspaces(user).includes(role))redirect('/workspace');return user;}

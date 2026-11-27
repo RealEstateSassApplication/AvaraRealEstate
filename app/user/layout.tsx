@@ -1,3 +1,1 @@
-import type {Metadata} from 'next';
-export const metadata:Metadata={robots:{index:false,follow:false}};
-export default function Layout({children}:{children:React.ReactNode}){return children;}
+import type {Metadata} from 'next';import {requireWorkspace} from '@/lib/workspace-session';export const metadata:Metadata={robots:{index:false,follow:false}};export const dynamic='force-dynamic';export default async function Layout({children}:{children:React.ReactNode}){await requireWorkspace('customer','/user/dashboard');return children;}

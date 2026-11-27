@@ -47,7 +47,7 @@ export default function LoginPage() {
       if (response.ok) {
         // Successful login; redirect based on role if provided
         const role = data.data?.role;
-        const fallback = role === 'admin' || role === 'super-admin' ? '/admin/dashboard' : role === 'host' ? '/host/dashboard' : '/';
+        const fallback = '/workspace';
         const requested = new URLSearchParams(window.location.search).get('next');
         let target = fallback;
         if (requested?.startsWith('/') && !requested.startsWith('//')) {
