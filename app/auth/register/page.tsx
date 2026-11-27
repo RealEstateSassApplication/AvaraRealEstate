@@ -146,7 +146,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
+    <div className="avara-editorial min-h-screen grid lg:grid-cols-2">
       {/* Left: Decorative Image */}
       <div className="hidden lg:block relative bg-gray-900">
         <div
@@ -322,7 +322,7 @@ export default function RegisterPage() {
 
             <Button
               type="submit"
-              className="w-full h-11 bg-gray-900 hover:bg-gray-800 text-white font-medium mt-2"
+              className="w-full h-11 avara-primary font-medium mt-2"
               disabled={loading}
             >
               {loading ? 'Creating Account...' : 'Create Account'}
@@ -331,7 +331,7 @@ export default function RegisterPage() {
 
           <div className="text-center text-sm">
             <span className="text-gray-500">Already have an account? </span>
-            <Link href="/auth/login" className="font-semibold text-teal-600 hover:text-teal-500">
+            <Link href="/auth/login" className="font-semibold text-[#416746] hover:underline">
               Sign in
             </Link>
           </div>

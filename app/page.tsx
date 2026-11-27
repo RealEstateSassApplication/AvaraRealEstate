@@ -20,9 +20,9 @@ export default async function HomePage(){
     <div className="avara-hero-copy">
       <div className="avara-kicker avara-kicker-light"><span className="avara-rule"/> {hero.eyebrow}</div>
       <h1 className="avara-display mt-7 text-[clamp(3.1rem,6.35vw,6.4rem)] leading-[.98] tracking-[-.045em]">{hero.title}</h1>
-      <p className="mt-6 max-w-md text-[15px] leading-[1.85] text-[#e1e5dc] sm:text-base">{hero.description}</p>
+      <p className="mt-6 max-w-md text-[15px] leading-[1.85] text-[#43594a] sm:text-base">{hero.description}</p>
       <Link href="/explore" className="avara-hero-link mt-8">{hero.cta}<ArrowUpRight size={18}/></Link>
-      <div className="mt-12 flex items-center gap-3 text-[10px] uppercase tracking-[.2em] text-[#bfc7bb]"><span className="h-px w-10 bg-[#a99d79]"/> Sri Lanka / Property &amp; places</div>
+      <div className="mt-12 flex items-center gap-3 text-[10px] uppercase tracking-[.2em] text-[#53645a]"><span className="h-px w-10 bg-[#8da889]"/> Sri Lanka / Property &amp; places</div>
     </div>
     <div className="avara-hero-image">
       <ArchitectureArt kind="house" className="absolute inset-0 h-full w-full"/>
@@ -37,7 +37,7 @@ export default async function HomePage(){
   {sections.collections.enabled&&<section className="avara-shell avara-section"><SectionHeading eyebrow={sections.collections.eyebrow} title={sections.collections.title} href="/listings" linkLabel="All properties"/><CollectionCards items={collections}/></section>}
   {sections.listings.enabled&&<section className="avara-shell avara-section avara-top-rule"><SectionHeading eyebrow={sections.listings.eyebrow} title={sections.listings.title} href="/listings" linkLabel="Browse properties"/><div className="mt-9"><DiscoveryListings/></div></section>}
   {sections.neighbourhoods.enabled&&<section className="avara-area-band"><div className="avara-shell avara-section"><SectionHeading eyebrow={sections.neighbourhoods.eyebrow} title={sections.neighbourhoods.title} href="/explore" linkLabel="All neighbourhoods"/><p className="mt-4 max-w-xl text-sm leading-relaxed text-[#5f685e]">Get to know the questions worth asking, the routines worth considering and the places to explore before your next move.</p><AreaCards items={neighbourhoods} compact/><p className="mt-5 text-xs text-[#5f685e]">Architectural illustrations are conceptual, not photographs or maps of the neighbourhoods.</p></div></section>}
-  {website.showOwnerCallout&&<section className="avara-shell pb-16"><div className="rounded-xl bg-[#243b31] p-6 text-white sm:p-10"><p className="avara-kicker avara-kicker-light">For property seekers and owners</p><h2 className="avara-display mt-3 text-4xl">{website.ownerTitle}</h2><p className="mt-3 max-w-xl text-sm text-white/90">{website.ownerDescription}</p><div className="mt-5 flex flex-wrap gap-4"><Link href="/listings" className="avara-hero-link">Browse properties <ArrowUpRight size={16}/></Link><Link href="/host/apply" className="avara-hero-link">List a property <ArrowUpRight size={16}/></Link></div></div></section>}
+  {website.showOwnerCallout&&<section className="avara-shell pb-16"><div className="rounded-xl avara-soft-panel p-6 sm:p-10"><p className="avara-kicker avara-kicker-light">For property seekers and owners</p><h2 className="avara-display mt-3 text-4xl">{website.ownerTitle}</h2><p className="mt-3 max-w-xl text-sm text-[#43594a]">{website.ownerDescription}</p><div className="mt-5 flex flex-wrap gap-4"><Link href="/listings" className="avara-hero-link">Browse properties <ArrowUpRight size={16}/></Link><Link href="/host/apply" className="avara-hero-link">List a property <ArrowUpRight size={16}/></Link></div></div></section>}
   <section className="avara-shell pb-16"><div className="avara-owner-note"><div><p className="avara-kicker">For property managers</p><p className="mt-2 text-sm text-[#5f685e]">Property Management OS, a separate software project.</p></div><a href={propertyOSRepository} className="avara-text-link">View on GitHub <ArrowUpRight size={16}/></a></div></section>
  </main><DiscoveryFooter/></div>;
 }

@@ -1,3 +1,4 @@
-import 'server-only';import {cookies} from 'next/headers';import {redirect} from 'next/navigation';import {getUserFromRequest} from '@/lib/auth';import {NextRequest} from 'next/server';import {workspaces,type WorkspaceRole} from '@/lib/workspace-roles';
-export async function workspaceUser(){const cookie=cookies().getAll().map(c=>c.name+'='+c.value).join('; ');return getUserFromRequest(new NextRequest('https://avara.invalid/',{headers:{cookie}}));}
-export async function requireWorkspace(role:WorkspaceRole,next:string){const user=await workspaceUser();if(!user)redirect('/auth/login?next='+encodeURIComponent(next));if(!workspaces(user).includes(role))redirect('/workspace');return user;}
+import 'server-only';import {cookies} from 'next/headers';import {redirect} from 'next/navigation';import {getUserFromRequest} from '@/lib/auth';import {NextRequest} from 'next/server';import {workspaces,rolesFor,type WorkspaceRole} from '@/lib/workspace-roles';
+type WorkspaceIdentity={name:string;role?:string;roles:string[]};
+export async function workspaceUser():Promise<WorkspaceIdentity|null>{const cookie=cookies().getAll().map(c=>c.name+'='+c.value).join('; ');const user=await getUserFromRequest(new NextRequest('https://avara.invalid/',{headers:{cookie}}));return user?{name:user.name,role:user.role,roles:rolesFor(user)}:null;}
+export async function requireWorkspace(role:WorkspaceRole,next:string):Promise<void>{const user=await workspaceUser();if(!user)redirect('/auth/login?next='+encodeURIComponent(next));if(!workspaces(user).includes(role))redirect('/workspace');}
