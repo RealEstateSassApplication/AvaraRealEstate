@@ -100,17 +100,17 @@
 
 
 /* Avara editorial system — scoped to discovery surfaces. */
-.avara-editorial{--av-ink:#243b31;--av-paper:#f7f5ef;--av-line:#dedbd0;--av-muted:#5f685e;background:var(--av-paper);color:var(--av-ink)}
+.avara-editorial{--av-ink:#20352b;--av-paper:#f8faf6;--av-line:#dce5d8;--av-muted:#53645a;background:var(--av-paper);color:var(--av-ink)}
 .avara-display,.avara-editorial .font-serif,.avara-header .avara-wordmark{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-weight:400;letter-spacing:-.035em;overflow-wrap:anywhere}
 .avara-shell{max-width:1440px;margin-inline:auto;padding-inline:clamp(1.25rem,4vw,4.5rem)}
 .avara-section{padding-block:clamp(3.5rem,6.8vw,6.75rem)}
 .avara-kicker{font-size:.68rem;line-height:1.6;font-weight:600;letter-spacing:.19em;text-transform:uppercase;color:#606b5e}
-.avara-kicker.avara-kicker-light{color:#e3cda5}
+.avara-kicker.avara-kicker-light{color:#53645a}
 .avara-rule{display:inline-block;vertical-align:middle;width:24px;height:1px;margin-right:6px;background:#c5a97b}
-.avara-hero{display:grid;grid-template-columns:1fr;background:#243b31;color:#fff;border-radius:1.35rem;overflow:hidden}
+.avara-hero{display:grid;grid-template-columns:1fr;background:#dcebd8;color:#20352b;border-radius:1.35rem;overflow:hidden}
 .avara-hero-copy{padding:clamp(2rem,4.7vw,5.5rem);align-self:center}
 .avara-hero-image{position:relative;min-height:265px;overflow:hidden;background:#bfb59d}
-.avara-hero-link{display:inline-flex;align-items:center;justify-content:space-between;gap:1.5rem;border:1px solid #d4c7ab;border-radius:999px;padding:.8rem 1.2rem;color:#fff;font-size:.84rem;font-weight:600;transition:background .2s,color .2s}
+.avara-hero-link{display:inline-flex;align-items:center;justify-content:space-between;gap:1.5rem;border:1px solid #9bb599;border-radius:999px;padding:.8rem 1.2rem;color:#20352b;background:#f8faf6;font-size:.84rem;font-weight:600;transition:background .2s,color .2s}
 .avara-hero-link:hover{background:#f5f1e7;color:#243b31}
 .avara-search-wrap{position:relative;z-index:1;margin:1rem auto 0;max-width:1240px}
 .avara-quick-links{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.9rem 1.7rem;margin-top:1.45rem;font-size:.78rem;color:#5f685e}
@@ -125,12 +125,12 @@
 .avara-art-index{position:absolute;top:1rem;left:1rem;border-radius:999px;padding:.4rem .7rem;background:#f7f5ef;color:#243b31;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase}
 .avara-round-arrow{position:absolute;bottom:1rem;right:1rem;width:2.75rem;height:2.75rem;border-radius:50%;display:grid;place-items:center;background:#f7f5ef;color:#243b31;transition:transform .2s,background .2s}
 .avara-editorial-card:hover .avara-round-arrow{transform:translate(2px,-2px);background:#fff}
-.avara-area-band{background:#eaece2}
+.avara-area-band{background:#e8f0e4}
 .avara-area-frame{position:relative;aspect-ratio:5/4;border-radius:.95rem;overflow:hidden;background:#647d6a}
 .avara-area-wide{aspect-ratio:1.65}
 .avara-area-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,34,28,.52),transparent 40%,rgba(20,34,28,.87))}
 .avara-area-copy{position:absolute;inset:1.25rem 4.4rem 1.25rem 1.25rem;display:flex;flex-direction:column;justify-content:space-between;color:#fff}
-.avara-tool-card{display:block;background:#fff;border:1px solid #dedbd0;border-radius:1rem;padding:1.55rem;transition:border-color .2s,transform .2s}
+.avara-tool-card{display:block;background:#fff;border:1px solid #dce5d8;border-radius:1rem;padding:1.55rem;transition:border-color .2s,transform .2s}
 .avara-tool-card:hover{border-color:#7d8a76;transform:translateY(-3px)}
 .avara-icon-tile{display:grid;place-items:center;width:3.1rem;height:3.1rem;background:#e9ede4;border-radius:50%;color:#243b31}
 .avara-inline-card{display:flex;align-items:center;gap:1rem;padding:1.2rem 1.3rem;border:1px solid #dedbd0;border-radius:.75rem}
@@ -139,8 +139,8 @@
 .avara-inline-card strong{display:block;font-size:.87rem}
 .avara-inline-card small{display:block;color:#5f685e;font-size:.75rem;margin-top:.25rem}
 .avara-owner-note{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;border-top:1px solid #dedbd0;padding-top:1.5rem}
-.avara-editorial :is(a,button,input,select,textarea):focus-visible,.avara-header :is(a,button):focus-visible{outline:2px solid #96703d;outline-offset:4px}
-.avara-header{background:#f7f5ef;box-shadow:0 1px 0 rgba(36,59,49,.06)}
+.avara-editorial :is(a,button,input,select,textarea):focus-visible,.avara-header :is(a,button):focus-visible{outline:2px solid #527b53;outline-offset:4px}
+.avara-header{background:#f8faf6;box-shadow:0 1px 0 rgba(36,59,49,.06)}
 @media(min-width:1024px){.avara-hero{grid-template-columns:1fr 1.03fr;min-height:555px}.avara-hero-image{min-height:100%}.avara-search-wrap{margin-top:-2rem;width:calc(100% - 5rem)}}
 @media(prefers-reduced-motion:reduce){.avara-art,.avara-round-arrow,.avara-tool-card,.avara-hero-link{transition:none!important}.avara-editorial-card:hover .avara-art,.avara-editorial-card:hover .avara-round-arrow,.avara-tool-card:hover{transform:none}}
 
@@ -152,3 +152,10 @@
 .avara-header nav a{white-space:nowrap}
 @media(min-width:640px){.avara-editorial .avara-list-card .avara-card-body{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr)}.avara-list-card .avara-card-photo{height:100%;min-height:240px}.avara-list-card .avara-card-content{align-self:center}}
 @media(max-width:639px){.avara-hero-copy{padding:1.65rem}.avara-hero-copy h1{font-size:clamp(2.8rem,12vw,4rem)}.avara-hero-image{min-height:220px}.avara-area-copy h3{font-size:clamp(1.85rem,9vw,2.7rem)}.avara-shell{padding-inline:1rem}.avara-editorial input,.avara-editorial select{font-size:16px}}
+
+/* Light botanical identity; retain dark text for accessible contrast. */
+.avara-primary{background:#c6dfbd!important;color:#20352b!important;border:1px solid #9fbe96!important;min-height:44px;transition:background .2s}
+.avara-primary:hover{background:#b5d3a9!important;color:#20352b!important}
+.avara-soft-panel{background:#e3efdf;color:#20352b;border:1px solid #cbdcc6}
+.avara-editorial :is(a,button)[aria-current="page"]{background:#dcebd8;color:#20352b}
+.avara-header .avara-wordmark{color:#20352b}

@@ -1,0 +1,1 @@
+import type {Metadata} from 'next';import RecoveryForm from '@/components/auth/RecoveryForm';export const metadata:Metadata={robots:{index:false,follow:false},referrer:'no-referrer'};export default function Page(){return <RecoveryForm mode="confirm"/>;}

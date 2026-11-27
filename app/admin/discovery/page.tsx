@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { contentSchema, type DiscoveryContent, type SectionKey } from '@/lib/discovery/schema';
 import type { CMSState } from '@/lib/discovery/repository';
 
-type Tab = 'home'|'collections'|'neighbourhoods'|'history';
-const tabs: {id:Tab;label:string}[] = [{id:'home',label:'Homepage'},{id:'collections',label:'Collections'},{id:'neighbourhoods',label:'Neighbourhoods'},{id:'history',label:'Revision history'}];
-const sections: SectionKey[] = ['collections','listings','neighbourhoods','tools'];
+type Tab = 'home'|'website'|'collections'|'neighbourhoods'|'history';
+const tabs: {id:Tab;label:string}[] = [{id:'home',label:'Homepage'},{id:'website',label:'Website & SEO'},{id:'collections',label:'Collections'},{id:'neighbourhoods',label:'Neighbourhoods'},{id:'history',label:'Revision history'}];
+const sections: SectionKey[] = ['collections','listings','neighbourhoods'];
 function Field({label,value,onChange,multiline=false,maxLength=300}:{label:string;value:string;onChange:(value:string)=>void;multiline?:boolean;maxLength?:number}){
   const cls='mt-2 block w-full rounded-lg border border-[#d8d8cc] bg-white p-3 text-sm text-slate-900';
   return <label className="block text-sm font-medium">{label}{multiline?<textarea className={cls} rows={3} maxLength={maxLength} value={value} onChange={e=>onChange(e.target.value)}/>:<input className={cls} maxLength={maxLength} value={value} onChange={e=>onChange(e.target.value)}/>}</label>;
@@ -51,7 +51,7 @@ export default function DiscoveryCMS(){
     finally{setBusy(false);}
   }
   function hero(key:keyof DiscoveryContent['hero'],v:string){edit(old=>({...old,hero:{...old.hero,[key]:v}}));}
-  return <div className="min-h-screen bg-[#f4f1ea] text-[#20372e]"><main className="mx-auto max-w-7xl px-5 py-10">
+  return <div className="min-h-screen bg-[#f8faf6] text-[#20372e]"><main className="mx-auto max-w-7xl px-5 py-10">
     <Link href="/admin/dashboard" className="text-sm underline">Back to admin dashboard</Link>
     <div className="mt-5 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs uppercase tracking-widest">Avara editorial studio</p><h1 className="mt-2 font-serif text-4xl">Discovery CMS</h1><p className="mt-2 text-sm text-slate-600">Manage the public website without changing code.</p></div><Link href="/" className="rounded-lg border border-[#20372e] px-4 py-2 text-sm">View public site</Link></div>
     {error&&<p role="alert" className="mt-5 rounded-lg border border-red-200 bg-white p-4 text-sm text-red-800">{error}</p>}
@@ -59,13 +59,14 @@ export default function DiscoveryCMS(){
     {(!state||!draft)?<div className="mt-6 rounded-xl border bg-white p-6">{busy?'Loading editor…':status===401?<Link href="/auth/login" className="underline">Sign in</Link>:<button type="button" onClick={()=>void load()} className="underline">Retry</button>}</div>:<>
       <div className="mt-6 flex flex-wrap items-center gap-3 rounded-xl border bg-white p-4 text-sm"><span>Draft revision: {state.revision}</span><span>Published: {state.publishedRevision??'bundled baseline'}</span><span className="flex-1">{dirty?'Unsaved edits':state.revision!==state.publishedRevision?'Saved draft differs from public content':'Published'}</span>
         <button type="button" disabled={busy||!dirty||conflict} onClick={()=>void mutate('save')} className="rounded-lg border border-[#20372e] px-4 py-2 font-semibold disabled:opacity-40">Save draft</button>
-        <button type="button" disabled={busy||dirty||!state.revision||state.revision===state.publishedRevision||conflict} onClick={()=>void mutate('publish')} className="rounded-lg bg-[#20372e] px-4 py-2 font-semibold text-white disabled:opacity-40">Publish saved draft</button>
+        <button type="button" disabled={busy||dirty||!state.revision||state.revision===state.publishedRevision||conflict} onClick={()=>void mutate('publish')} className="rounded-lg avara-primary px-4 py-2 font-semibold disabled:opacity-40">Publish saved draft</button>
         <button type="button" disabled={busy} onClick={()=>{if(!dirty||window.confirm('Discard unsaved local edits?'))void load();}} className="underline">Reload</button>
       </div>
-      <nav className="mt-6 flex flex-wrap gap-2" aria-label="Editor sections">{tabs.map(t=><button key={t.id} type="button" aria-pressed={tab===t.id} onClick={()=>setTab(t.id)} className={'rounded-full px-4 py-2 text-sm '+(tab===t.id?'bg-[#20372e] text-white':'border bg-white')}>{t.label}</button>)}</nav>
+      <nav className="mt-6 flex flex-wrap gap-2" aria-label="Editor sections">{tabs.map(t=><button key={t.id} type="button" aria-pressed={tab===t.id} onClick={()=>setTab(t.id)} className={'rounded-full px-4 py-2 text-sm '+(tab===t.id?'bg-[#dcebd8] text-[#20352b]':'border bg-white')}>{t.label}</button>)}</nav>
       <div className="mt-5 grid gap-6 lg:grid-cols-[1.3fr_1fr]">
       <fieldset disabled={busy||conflict} className="min-w-0 space-y-5 rounded-xl border bg-white p-5 sm:p-7 disabled:opacity-70">
-        {tab==='home'&&<><h2 className="font-serif text-2xl">Homepage hero</h2>
+        {tab==='website'&&<section className="mt-6 space-y-5 rounded-xl border bg-white p-5"><h2 className="font-serif text-3xl">Website &amp; search appearance</h2><p className="text-sm text-[#5f685e]">Changes are applied only after publishing. Use an HTTPS image you own or have permission to use.</p>{(['seoTitle','seoDescription','heroImage','ownerTitle','ownerDescription'] as const).map(k=><Field key={k} label={{seoTitle:'Homepage search title',seoDescription:'Homepage meta description',heroImage:'Homepage hero image URL (optional)',ownerTitle:'Owner callout title',ownerDescription:'Owner callout description'}[k]} value={draft.website[k]} maxLength={k==='heroImage'?500:k==='seoDescription'||k==='ownerDescription'?300:100} onChange={v=>edit(old=>({...old,website:{...old.website,[k]:v}}))}/>)}<label className="flex items-center gap-3 text-sm"><input type="checkbox" checked={draft.website.showOwnerCallout} onChange={e=>edit(old=>({...old,website:{...old.website,showOwnerCallout:e.target.checked}}))}/> Show property owner callout</label></section>}
+      {tab==='home'&&<><h2 className="font-serif text-2xl">Homepage hero</h2>
           <Field label="Eyebrow" value={draft.hero.eyebrow} maxLength={100} onChange={v=>hero('eyebrow',v)}/>
           <Field label="Headline" value={draft.hero.title} maxLength={100} onChange={v=>hero('title',v)}/>
           <Field label="Description" value={draft.hero.description} multiline onChange={v=>hero('description',v)}/>

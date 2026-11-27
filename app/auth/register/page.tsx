@@ -32,6 +32,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [needsVerification,setNeedsVerification]=useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -62,8 +63,8 @@ export default function RegisterPage() {
       setError('Phone number is required');
       return false;
     }
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters');
       return false;
     }
     if (formData.password !== formData.confirmPassword) {
@@ -106,9 +107,10 @@ export default function RegisterPage() {
 
       if (response.ok) {
         setSuccess(true);
+        if(data.verificationRequired){setNeedsVerification(true);return;}
         // Redirect to home after successful registration
         setTimeout(() => {
-          window.location.href = '/';
+          window.location.href = '/workspace';
         }, 2000);
       } else {
         setError(data.error || 'Registration failed');
@@ -122,7 +124,7 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-[#f7f5ef] via-[#f7f5ef] to-[#eaece2] flex items-center justify-center p-4">
         <Card className="max-w-md w-full shadow-xl">
           <CardContent className="text-center p-8">
             <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -132,10 +134,10 @@ export default function RegisterPage() {
               Welcome to Avara!
             </h2>
             <p className="text-gray-600 mb-4">
-              Your account has been created successfully. You are now signed in.
+              {needsVerification?'Check your email and verify your address before signing in.':'Your account has been created successfully. You are now signed in.'}
             </p>
             <p className="text-sm text-gray-500">
-              Redirecting to home page...
+              {needsVerification?<Link href="/auth/login" className="underline">Return to sign in</Link>:'Redirecting to home page...'}
             </p>
           </CardContent>
         </Card>
@@ -144,7 +146,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
+    <div className="avara-editorial min-h-screen grid lg:grid-cols-2">
       {/* Left: Decorative Image */}
       <div className="hidden lg:block relative bg-gray-900">
         <div
@@ -237,7 +239,7 @@ export default function RegisterPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="user">Find a property</SelectItem>
-                  <SelectItem value="host">List my property</SelectItem>
+                  <SelectItem value="host">Request property manager access</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -320,7 +322,7 @@ export default function RegisterPage() {
 
             <Button
               type="submit"
-              className="w-full h-11 bg-gray-900 hover:bg-gray-800 text-white font-medium mt-2"
+              className="w-full h-11 avara-primary font-medium mt-2"
               disabled={loading}
             >
               {loading ? 'Creating Account...' : 'Create Account'}
@@ -329,7 +331,7 @@ export default function RegisterPage() {
 
           <div className="text-center text-sm">
             <span className="text-gray-500">Already have an account? </span>
-            <Link href="/auth/login" className="font-semibold text-teal-600 hover:text-teal-500">
+            <Link href="/auth/login" className="font-semibold text-[#416746] hover:underline">
               Sign in
             </Link>
           </div>

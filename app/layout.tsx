@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     default: 'Avara | Discover Property & Places in Sri Lanka',
     template: '%s | Avara',
   },
-  description: 'Discover Sri Lankan property, neighbourhood guides, land and mortgage calculators, and practical advice for your next move.',
+  description: 'Discover homes, rooms, apartments, land and short stays in Sri Lanka. Browse listings and connect with property owners.',
   authors: [{ name: 'Avara', url: BASE_URL }],
   creator: 'Avara',
   publisher: 'Avara',
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     url: BASE_URL,
     siteName: 'Avara',
     title: 'Avara | Discover Property & Places in Sri Lanka',
-    description: 'Explore Sri Lankan properties, places, practical guides and planning tools.',
+    description: 'Find property for rent or sale in Sri Lanka and connect with owners.',
     images: [
       {
         url: `${BASE_URL}/opengraph-image`,
@@ -66,7 +66,7 @@ export default function RootLayout({
   return (
     <html lang="en-LK">
 
-      <body className={inter.className}><OrganizationSchema name="Avara" url={BASE_URL} description="Property discovery, neighbourhood guides and planning tools for Sri Lanka."/>{children}</body>
+      <body className={inter.className}><OrganizationSchema name="Avara" url={BASE_URL} description="A Sri Lankan property discovery marketplace for homes, rooms, apartments, land and short stays."/>{children}</body>
     </html>
   );
 }
