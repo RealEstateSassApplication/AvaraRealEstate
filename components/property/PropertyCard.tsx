@@ -244,7 +244,7 @@ export default function PropertyCard({
                 </span>
               </div>
             )}
-          <Link href={"/compare?ids="+property._id} className="mt-3 inline-flex min-h-[44px] items-center text-sm font-medium underline underline-offset-4">Compare property</Link></CardContent>
+          </CardContent>
         </div>
       </Card>
   );

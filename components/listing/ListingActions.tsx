@@ -185,7 +185,7 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
         <div className="flex flex-col gap-2">
           {isBooking && (
             <Button
-              className="w-full min-h-[48px] bg-[#243b31] hover:bg-[#385345] text-white text-base font-medium transition-all shadow-lg hover:shadow-xl"
+              className="w-full min-h-[48px] avara-primary text-base font-medium transition-all shadow-lg hover:shadow-xl"
               onClick={() => handleCheckAuth(() => setShowBookingModal(true))}
             >
               <CalendarDays className="w-5 h-5 mr-2" />
@@ -196,7 +196,7 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
           {isRentable && (
             <Dialog open={showRentModal} onOpenChange={setShowRentModal}>
                 <Button
-                  className="w-full min-h-[48px] bg-[#243b31] hover:bg-[#385345] text-white text-base font-medium transition-all shadow-lg hover:shadow-xl"
+                  className="w-full min-h-[48px] avara-primary text-base font-medium transition-all shadow-lg hover:shadow-xl"
                   onClick={() => handleCheckAuth(() => setShowRentModal(true))}
                 >
                   Apply to Rent
@@ -240,7 +240,7 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
 
           {isPurchasable && (
             <Button
-              className="w-full bg-[#243b31] hover:bg-[#385345] text-white text-base py-3 font-semibold"
+              className="w-full avara-primary text-base py-3 font-semibold"
               disabled={contactLoading}
               onClick={() => handleCheckAuth(openContact)}
             >
@@ -278,7 +278,7 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
         {saved.error&&<p role="alert" className="text-sm text-red-700">{saved.error}</p>}
       </div>
 
-      <Dialog open={showContact} onOpenChange={open=>{if(!contactLoading)setShowContact(open);}}><DialogContent className="w-[calc(100%_-_2rem)] max-w-md rounded-xl"><DialogHeader><DialogTitle>Message the property owner</DialogTitle></DialogHeader><form onSubmit={e=>{e.preventDefault();void sendEnquiry(draft.trim());}} className="space-y-4"><p className="text-sm text-[#5f685e]">Start a private conversation about {property?.title||'this property'}. Your email and phone are not automatically shared. If a conversation already exists, we will open it instead.</p><label htmlFor="enquiry-message" className="text-sm font-semibold">Your message</label><textarea id="enquiry-message" required minLength={5} maxLength={2000} className="min-h-32 w-full rounded-lg border p-3 text-base" value={draft} onChange={e=>setDraft(e.target.value)} placeholder="Is this property still available?"/>{contactError&&<p role="alert" className="text-sm text-red-700">{contactError}</p>}<Button className="w-full min-h-[48px] bg-[#243b31] text-white" disabled={contactLoading||draft.trim().length<5}>{contactLoading?'Opening…':'Start conversation'}</Button></form></DialogContent></Dialog>
+      <Dialog open={showContact} onOpenChange={open=>{if(!contactLoading)setShowContact(open);}}><DialogContent className="w-[calc(100%_-_2rem)] max-w-md rounded-xl"><DialogHeader><DialogTitle>Message the property owner</DialogTitle></DialogHeader><form onSubmit={e=>{e.preventDefault();void sendEnquiry(draft.trim());}} className="space-y-4"><p className="text-sm text-[#5f685e]">Start a private conversation about {property?.title||'this property'}. Your email and phone are not automatically shared. If a conversation already exists, we will open it instead.</p><label htmlFor="enquiry-message" className="text-sm font-semibold">Your message</label><textarea id="enquiry-message" required minLength={5} maxLength={2000} className="min-h-32 w-full rounded-lg border p-3 text-base" value={draft} onChange={e=>setDraft(e.target.value)} placeholder="Is this property still available?"/>{contactError&&<p role="alert" className="text-sm text-red-700">{contactError}</p>}<Button className="w-full min-h-[48px] avara-primary" disabled={contactLoading||draft.trim().length<5}>{contactLoading?'Opening…':'Start conversation'}</Button></form></DialogContent></Dialog>
       {property && (
         <BookingModal
           open={showBookingModal}

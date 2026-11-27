@@ -46,8 +46,7 @@ export default function LoginPage() {
 
       if (response.ok) {
         // Successful login; redirect based on role if provided
-        const role = data.data?.role;
-        const fallback = role === 'admin' || role === 'super-admin' ? '/admin/dashboard' : role === 'host' ? '/host/dashboard' : '/';
+        const fallback = '/workspace';
         const requested = new URLSearchParams(window.location.search).get('next');
         let target = fallback;
         if (requested?.startsWith('/') && !requested.startsWith('//')) {
@@ -93,7 +92,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right: Login Form */}
-      <div className="flex items-center justify-center p-5 sm:p-8 bg-[#f7f5ef]">
+      <div className="flex items-center justify-center p-5 sm:p-8 bg-[#f8faf6]">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center lg:text-left">
             <Link href="/" className="avara-display mb-6 inline-block text-4xl text-[#243b31]">avara<span className="text-[#a68650]">.</span></Link>
@@ -131,7 +130,7 @@ export default function LoginPage() {
                 <Label htmlFor="password" className="text-gray-700">Password</Label>
                 <Link
                   href="/auth/forgot-password"
-                  className="text-sm font-medium text-teal-600 hover:text-teal-500"
+                  className="text-sm font-medium text-[#416746] hover:underline"
                 >
                   Forgot password?
                 </Link>
@@ -153,7 +152,7 @@ export default function LoginPage() {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-gray-600"
+                  aria-label={showPassword?"Hide password":"Show password"} className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-gray-600"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -163,21 +162,12 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              className="w-full h-11 bg-gray-900 hover:bg-gray-800 text-white font-medium transition-all"
+              className="w-full h-11 avara-primary font-medium"
               disabled={loading}
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-gray-200" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-gray-500">Or continue with</span>
-            </div>
-          </div>
 
           <div className="text-center text-sm">
             <span className="text-gray-500">Don&apos;t have an account? </span>

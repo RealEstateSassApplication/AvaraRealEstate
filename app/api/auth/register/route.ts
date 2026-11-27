@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import dbConnect from '@/lib/db';
 import User from '@/models/User';
+import {supabaseMode,provider,providerFailure,privateHeaders} from '@/lib/supabase-auth';
 import { hashPassword, generateToken } from '@/lib/auth';
 
 const registerSchema = z.object({
   name: z.string().trim().min(2).max(120),
   email: z.string().trim().email().max(254),
-  phone: z.string().trim().min(7).max(30),
+  phone: z.string().trim().regex(/^\+?[0-9 ()-]{7,30}$/),
   password: z.string().min(8).max(128),
   role: z.enum(['user', 'host']).optional(),
 }).strict();
@@ -26,6 +27,7 @@ export async function POST(request: NextRequest) {
     const { name, phone, password } = parsed.data;
     const email = parsed.data.email.toLowerCase();
     const requestedRole = parsed.data.role || 'user';
+    if(supabaseMode()){try{await provider('signup','POST',{email,password,data:{name,phone,managerRequested:requestedRole==='host'}});return NextResponse.json({verificationRequired:true,message:'Check your email to verify your account.'},{status:201,headers:privateHeaders});}catch(e){return providerFailure(e);}}
 
     const existing = await User.findOne({ $or: [{ email }, { phone }] }).select('_id');
     if (existing) {
@@ -33,13 +35,14 @@ export async function POST(request: NextRequest) {
     }
 
     const passwordHash = await hashPassword(password);
-    const roles = requestedRole === 'host' ? ['user', 'host'] : ['user'];
+    const roles = ['user'];
     const user = await User.create({
       name,
       email,
       phone,
       passwordHash,
-      role: requestedRole,
+      role: 'user',
+      ...(requestedRole==='host'?{managerRequestedAt:new Date()}:{}),
       roles,
       verified: false,
       emailVerified: false,

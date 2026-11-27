@@ -115,7 +115,8 @@ class PropertyService {
     // Public property pages should not embed owner phone/email in page HTML.
     if (includeOwner) q.populate('owner', 'name profilePhoto verified');
     const prop = await q.exec();
-    if (prop) await Property.findByIdAndUpdate(id, { $inc: { views: 1 } });
+    // Metadata, crawlers and server renders must not mutate view counts.
+    // Add consent-aware analytics separately.
     return prop as IProperty | null;
   }
 
