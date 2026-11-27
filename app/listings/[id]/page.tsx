@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       height: 630,
       alt: property.title,
     }))
-    : [{ url: `${BASE_URL}/og-image.jpg`, width: 1200, height: 630, alt: 'Avara Real Estate' }];
+    : [{ url: `${BASE_URL}/opengraph-image`, width: 1200, height: 630, alt: 'Avara Real Estate' }];
 
   return {
     title,
@@ -67,7 +67,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       card: 'summary_large_image',
       title,
       description,
-      images: property.images?.[0] || `${BASE_URL}/og-image.jpg`,
+      images: property.images?.[0] || `${BASE_URL}/opengraph-image`,
     },
     alternates: {
       canonical: `${BASE_URL}/listings/${params.id}`,

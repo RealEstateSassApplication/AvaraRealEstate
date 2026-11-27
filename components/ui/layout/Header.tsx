@@ -90,7 +90,7 @@ export default function Header() {
             <Link href="/listings?purpose=sale" className="text-sm font-medium text-[#4b584c] transition-colors hover:text-slate-950">Buy</Link>
             <Link href="/listings?purpose=booking" className="text-sm font-medium text-[#4b584c] transition-colors hover:text-slate-950">Stays</Link>
             <Link href="/tools" className="text-sm font-medium text-[#4b584c] hover:text-slate-950">Tools</Link>
-            <Link href="/blog" className="text-sm font-medium text-[#4b584c] transition-colors hover:text-slate-950">Insights</Link>
+            <Link href="/guides" className="text-sm font-medium text-[#4b584c] transition-colors hover:text-slate-950">Guides</Link>
             {user && (
               <>
                 {hasHostRole(user) && (
@@ -165,7 +165,7 @@ export default function Header() {
             <Link href="/listings?purpose=sale" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Buy</Link>
             <Link href="/listings?purpose=booking" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Stays</Link>
             <Link href="/tools" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Tools</Link>
-            <Link href="/blog" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Insights</Link>
+            <Link href="/guides" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Guides</Link>
             {!loading&&!user&&<div className="mt-3 grid grid-cols-2 gap-2 border-t pt-4"><Link onClick={closeMenu} href="/auth/login" className="rounded-lg border px-4 py-3 text-center text-sm">Sign in</Link><Link onClick={closeMenu} href="/auth/register" className="rounded-lg bg-[#243b31] px-4 py-3 text-center text-sm text-white">Join Avara</Link></div>}
             {user && (
               <>

@@ -14,7 +14,7 @@ async function noOverflow(page){await expect.poll(()=>page.evaluate(()=>document
 for(const width of [320,360,390,768,1440]){
  test('public routes have no horizontal overflow at '+width,async({page})=>{
   await page.setViewportSize({width,height:850});await mock(page);
-  for(const path of ['/','/explore','/explore/nugegoda','/listings?purpose=rent','/tools','/tools/mortgage','/tools/rent-vs-buy','/tools/land-converter','/tools/living-cost','/blog']){
+  for(const path of ['/','/explore','/explore/nugegoda','/listings?purpose=rent','/tools','/tools/mortgage','/tools/rent-vs-buy','/tools/land-converter','/tools/living-cost','/blog','/guides','/guides/buying-land-sri-lanka','/guides/perch-acre-square-feet','/about']){
    const response=await page.goto(path,{waitUntil:'domcontentloaded'});expect(response.status(),path).toBe(200);
    await expect(page.getByRole('heading',{level:1}).first()).toBeVisible();
    await noOverflow(page);
@@ -76,4 +76,12 @@ test('not-found recovery and safe login return',async({page})=>{
  await page.locator('input[name="password"]').fill('TestPassword123!');
  await page.locator('button[type="submit"]').click();
  await expect(page).toHaveURL('http://127.0.0.1:3000/');
+});
+
+test('knowledge pages expose crawlable answers and canonical metadata',async({request})=>{
+ const response=await request.get('/guides/buying-land-sri-lanka');expect(response.status()).toBe(200);
+ const html=await response.text();expect(html).toContain('What should I check before buying land in Sri Lanka?');expect(html).toContain('online.land.rgd.gov.lk');expect(html).toContain('rel="canonical"');expect(html).toContain('application/ld+json');
+ const sitemap=await (await request.get('/sitemap.xml')).text();expect(sitemap).toContain('/guides/buying-land-sri-lanka');expect(sitemap).toContain('/about');expect(sitemap).not.toContain('/admin/');
+ const robots=await (await request.get('/robots.txt')).text();expect(robots).toContain('OAI-SearchBot');expect(robots).toContain('Disallow: /admin');
+ const image=await request.get('/opengraph-image');expect(image.status()).toBe(200);expect(image.headers()['content-type']).toContain('image/png');
 });

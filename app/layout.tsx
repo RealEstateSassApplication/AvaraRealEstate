@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import { OrganizationSchema } from '@/components/seo/JsonLd';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -12,22 +13,7 @@ export const metadata: Metadata = {
     default: 'Avara | Discover Property & Places in Sri Lanka',
     template: '%s | Avara',
   },
-  description: 'Find your dream property in Sri Lanka. Browse houses, apartments, villas, and land for sale and rent in Colombo, Kandy, Galle, and across Sri Lanka. Explore neighbourhoods and plan your living costs.',
-  keywords: [
-    'property Sri Lanka',
-    'houses for sale Sri Lanka',
-    'apartments for rent Colombo',
-    'land for sale Sri Lanka',
-    'real estate Sri Lanka',
-    'buy house Colombo',
-    'rent apartment Kandy',
-    'villa Galle',
-    'property booking Sri Lanka',
-    'Avara real estate',
-    'Sri Lanka property portal',
-    'houses in Negombo',
-    'luxury villas Sri Lanka',
-  ],
+  description: 'Discover Sri Lankan property, neighbourhood guides, land and mortgage calculators, and practical advice for your next move.',
   authors: [{ name: 'Avara', url: BASE_URL }],
   creator: 'Avara',
   publisher: 'Avara',
@@ -42,13 +28,13 @@ export const metadata: Metadata = {
     url: BASE_URL,
     siteName: 'Avara',
     title: 'Avara | Discover Property & Places in Sri Lanka',
-    description: 'Explore property in Sri Lanka. Find houses, apartments, villas, and land for sale and rent across Colombo, Kandy, Galle, and more.',
+    description: 'Explore Sri Lankan properties, places, practical guides and planning tools.',
     images: [
       {
-        url: `${BASE_URL}/og-image.jpg`,
+        url: `${BASE_URL}/opengraph-image`,
         width: 1200,
         height: 630,
-        alt: 'Avara - Find Your Dream Property in Sri Lanka',
+        alt: 'Avara — Property, places and perspective',
       },
     ],
   },
@@ -56,8 +42,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Avara | Properties in Sri Lanka',
     description: 'Find houses, apartments, villas for sale and rent in Sri Lanka.',
-    images: [`${BASE_URL}/og-image.jpg`],
-    creator: '@avara_lk',
+    images: [`${BASE_URL}/opengraph-image`],
   },
   robots: {
     index: true,
@@ -71,14 +56,6 @@ export const metadata: Metadata = {
     },
   },
   category: 'real estate',
-  other: {
-    'geo.region': 'LK',
-    'geo.placename': 'Sri Lanka',
-    'geo.position': '7.8731;80.7718',
-    'ICBM': '7.8731, 80.7718',
-    'distribution': 'Sri Lanka',
-    'coverage': 'Sri Lanka',
-  },
 };
 
 export default function RootLayout({
@@ -87,23 +64,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <head>
-        {/* Geo meta tags for Sri Lankan market */}
-        <meta name="geo.region" content="LK" />
-        <meta name="geo.placename" content="Sri Lanka" />
-        <meta name="geo.position" content="7.8731;80.7718" />
-        <meta name="ICBM" content="7.8731, 80.7718" />
+    <html lang="en-LK">
 
-        {/* Preconnect to external services */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-
-        {/* Favicon */}
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-      </head>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}><OrganizationSchema name="Avara" url={BASE_URL} description="Property discovery, neighbourhood guides and planning tools for Sri Lanka."/>{children}</body>
     </html>
   );
 }

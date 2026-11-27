@@ -18,49 +18,12 @@ export interface OrganizationSchemaProps {
     };
 }
 
-export function OrganizationSchema({
-    name = 'Avara Real Estate',
-    url = 'https://avara.lk',
-    logo = 'https://avara.lk/logo.png',
-    description = 'Sri Lanka\'s premier real estate platform for buying, renting, and booking properties.',
-    address = { city: 'Colombo', country: 'Sri Lanka' },
-    contactPoint = { telephone: '+94771234567', email: 'contact@avara.lk' }
-}: OrganizationSchemaProps) {
-    const schema = {
-        '@context': 'https://schema.org',
-        '@type': 'RealEstateAgent',
-        name,
-        url,
-        logo,
-        description,
-        address: {
-            '@type': 'PostalAddress',
-            addressLocality: address.city,
-            addressCountry: address.country
-        },
-        contactPoint: {
-            '@type': 'ContactPoint',
-            telephone: contactPoint.telephone,
-            email: contactPoint.email,
-            contactType: 'customer service'
-        },
-        areaServed: {
-            '@type': 'Country',
-            name: 'Sri Lanka'
-        },
-        sameAs: [
-            'https://www.facebook.com/avara.lk',
-            'https://www.instagram.com/avara.lk',
-            'https://www.linkedin.com/company/avara-lk'
-        ]
-    };
-
-    return (
-        <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }}
-        />
-    );
+export function OrganizationSchema({name='Avara',url='https://avara.lk',logo,description='Property discovery and planning tools for Sri Lanka.',address,contactPoint}:OrganizationSchemaProps) {
+ const schema={'@context':'https://schema.org','@graph':[
+ {'@type':'Organization','@id':url.replace(/\/$/,'')+'/#organization',name,url,description,logo,address:address?{'@type':'PostalAddress',addressLocality:address.city,addressCountry:address.country}:undefined,contactPoint:contactPoint?{'@type':'ContactPoint',telephone:contactPoint.telephone,email:contactPoint.email}:undefined,areaServed:{'@type':'Country',name:'Sri Lanka'}},
+ {'@type':'WebSite','@id':url.replace(/\/$/,'')+'/#website',name,url,inLanguage:'en-LK',publisher:{'@id':url.replace(/\/$/,'')+'/#organization'}}
+ ]};
+ return <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema).replace(/</g,'\\u003c')}}/>;
 }
 
 // Real Estate Listing Schema - for individual property pages

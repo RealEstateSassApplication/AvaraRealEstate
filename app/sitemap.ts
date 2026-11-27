@@ -3,36 +3,36 @@ import dbConnect from '@/lib/db';
 import Property from '@/models/Property';
 import BlogPost from '@/models/BlogPost';
 import { neighbourhoods } from '@/lib/discovery/content';
+import {guides,guideReviewed} from '@/lib/discovery/guides';
+export const revalidate=3600;
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://avara.lk';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date();
 
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: BASE_URL,
-      lastModified: now,
       changeFrequency: 'daily',
       priority: 1,
     },
     {
       url: `${BASE_URL}/listings`,
-      lastModified: now,
       changeFrequency: 'hourly',
       priority: 0.9,
     },
     {
       url: `${BASE_URL}/blog`,
-      lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.7,
     },
   ];
 
-  for (const path of ['/explore', '/tools', '/tools/living-cost', '/tools/mortgage', '/tools/rent-vs-buy', '/tools/land-converter', ...neighbourhoods.map(n => '/explore/'+n.slug)]) {
+  for (const path of ['/about', '/guides', '/explore', '/tools', '/tools/living-cost', '/tools/mortgage', '/tools/rent-vs-buy', '/tools/land-converter', ...neighbourhoods.map(n => '/explore/'+n.slug)]) {
     staticPages.push({ url: new URL(path, BASE_URL).toString() });
   }
+
+  for(const guide of guides) staticPages.push({url:new URL('/guides/'+guide.slug,BASE_URL).toString(),lastModified:guideReviewed});
 
   let propertyPages: MetadataRoute.Sitemap = [];
   let blogPages: MetadataRoute.Sitemap = [];
@@ -57,14 +57,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
       propertyPages = properties.map((property: any) => ({
         url: `${BASE_URL}/listings/${property._id}`,
-        lastModified: property.updatedAt || now,
+        lastModified: property.updatedAt || undefined,
         changeFrequency: 'weekly' as const,
         priority: 0.8,
       }));
 
       blogPages = posts.map((post: any) => ({
         url: `${BASE_URL}/blog/${post.slug}`,
-        lastModified: post.updatedAt || now,
+        lastModified: post.updatedAt || undefined,
         changeFrequency: 'monthly' as const,
         priority: 0.6,
       }));
