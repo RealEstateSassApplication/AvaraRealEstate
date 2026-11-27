@@ -1,0 +1,12 @@
+import 'server-only';
+import {z} from 'zod';
+import {getProviderIdentity} from '@/lib/supabase-auth';
+type Profile={id:string;display_name:string;phone:string|null;role:'customer'|'manager'|'admin'|'super_admin';manager_requested_at:string|null};
+const columns='id,display_name,phone,role,manager_requested_at';
+const metadataSchema=z.object({name:z.string().trim().min(2).max(120),phone:z.string().trim().regex(/^\+?[0-9 ()-]{7,30}$/),managerRequested:z.boolean().optional()});
+function endpoint(){const base=new URL(process.env.SUPABASE_URL||'');const key=process.env.SUPABASE_PUBLISHABLE_KEY||process.env.SUPABASE_ANON_KEY;if(base.protocol!=='https:'||base.username||base.password||!key)throw new Error('Supabase profiles not configured');return {url:new URL('/rest/v1/avara_profiles',base),key};}
+async function readProfile(access:string,id:string):Promise<Profile|null>{const {url,key}=endpoint();url.searchParams.set('id','eq.'+id);url.searchParams.set('select',columns);url.searchParams.set('limit','1');const res=await fetch(url,{headers:{apikey:key,Authorization:'Bearer '+access},cache:'no-store',signal:AbortSignal.timeout(8000)});if(!res.ok)throw new Error('Profile unavailable');const rows=await res.json() as Profile[];return rows[0]||null;}
+// Used by the future PostgreSQL-only auth routes. No legacy Mongo identity mapping.
+// Auth verifies the access token and confirmed email; metadata never grants a role.
+export async function postgresProfile(access:string,provision=false){const identity=await getProviderIdentity(access);if(!identity)return null;let row=await readProfile(access,identity.id);if(!row&&provision){const data=metadataSchema.safeParse(identity.user_metadata);if(!data.success)return null;const {url,key}=endpoint();const res=await fetch(url,{method:'POST',headers:{apikey:key,Authorization:'Bearer '+access,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({id:identity.id,display_name:data.data.name,phone:data.data.phone,manager_requested_at:data.data.managerRequested?new Date().toISOString():null}),cache:'no-store',signal:AbortSignal.timeout(8000)});if(!res.ok&&res.status!==409)throw new Error('Profile provisioning unavailable');row=await readProfile(access,identity.id);}
+if(!row)return null;return {id:row.id,name:row.display_name,email:identity.email,phone:row.phone,role:row.role,managerRequestedAt:row.manager_requested_at};}

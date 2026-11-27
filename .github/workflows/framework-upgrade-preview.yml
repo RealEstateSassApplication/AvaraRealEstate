@@ -27,7 +27,9 @@ jobs:
           npm view next@latest version peerDependencies engines --json > upgrade-report/next-latest.json
           npm view zod@latest version --json > upgrade-report/zod-latest.json
           npm pkg delete dependencies.@next/swc-wasm-nodejs
-          npm install --package-lock-only --ignore-scripts --no-fund next@15 react@19 react-dom@19 @types/react@19 @types/react-dom@19 eslint-config-next@15 postcss@latest zod@latest @hookform/resolvers@latest cmdk@latest react-day-picker@latest vaul@latest next-themes@latest typescript@5 > upgrade-report/install.log 2>&1
+          set -o pipefail
+          npm view embla-carousel-react@latest version peerDependencies --json > upgrade-report/embla.json
+          npm install --package-lock-only --ignore-scripts --no-fund --save-exact next@15 react@19 react-dom@19 @types/react@19 @types/react-dom@19 eslint-config-next@15 postcss@latest zod@latest @hookform/resolvers@latest cmdk@latest react-day-picker@latest vaul@latest next-themes@latest embla-carousel-react@8.6.0 framer-motion@latest lucide-react@latest recharts@latest sonner@latest react-resizable-panels@2 input-otp@latest react-hook-form@latest typescript@5 2>&1 | tee upgrade-report/install.log
           cp package.json package-lock.json upgrade-report/
           npm audit --omit=dev --json > upgrade-report/audit.json || test "$?" -eq 1
           node -e 'const a=require("./upgrade-report/audit.json"); console.log(JSON.stringify(a.metadata?.vulnerabilities));for(const [k,v] of Object.entries(a.vulnerabilities||{})) console.log(k,v.severity,JSON.stringify(v.fixAvailable))'
@@ -36,6 +38,12 @@ jobs:
           npm ci --ignore-scripts
           set -o pipefail
           npx tsc --noEmit 2>&1 | tee upgrade-report/typecheck.log
+      - name: Candidate production build
+        run: |
+          set -o pipefail
+          npm run build 2>&1 | tee upgrade-report/build.log
+      - name: Reject unresolved high or critical candidate vulnerabilities
+        run: node -e 'const a=require("./upgrade-report/audit.json");if(!a.metadata||a.metadata.vulnerabilities.high||a.metadata.vulnerabilities.critical)process.exit(1)'
       - uses: actions/upload-artifact@v7
         if: always()
         with:

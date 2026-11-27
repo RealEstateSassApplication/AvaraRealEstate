@@ -1,0 +1,14 @@
+import 'server-only';
+import {publicBase} from '@/lib/discovery/collections';
+export type CatalogFilter={purpose?:'rent'|'sale'|'booking';type?:string;city?:string;district?:string;currency?:'LKR'|'USD';period?:'monthly'|'weekly'|'daily';minPrice?:number;maxPrice?:number};
+type Row={id:string;title:string;property_type:string;purpose:string;city:string;district:string;price:number;currency:string;rent_period?:string|null;bedrooms?:number|null;bathrooms?:number|null;area_sqft?:number|null;images:string[];updated_at:string};
+export async function postgresCatalog(filter:CatalogFilter={},limit=20,page=1){
+ if(!Number.isInteger(limit)||limit<1||limit>50||!Number.isInteger(page)||page<1||page>100)throw new Error('Invalid pagination');
+ const base=new URL(process.env.SUPABASE_URL||'');const key=process.env.SUPABASE_PUBLISHABLE_KEY||process.env.SUPABASE_ANON_KEY;if(base.protocol!=='https:'||base.username||base.password||!key)throw new Error('Supabase catalog not configured');
+ const url=new URL('/rest/v1/avara_properties',base);const p=url.searchParams;p.set('select','id,title,property_type,purpose,city,district,price,currency,rent_period,bedrooms,bathrooms,area_sqft,images,updated_at');p.set('status','eq.active');p.set('order','created_at.desc,id.desc');p.set('limit',String(limit+1));p.set('offset',String((page-1)*limit));
+ for(const [field,value] of [['purpose',filter.purpose],['property_type',filter.type],['city',filter.city],['district',filter.district],['currency',filter.currency||((filter.minPrice!==undefined||filter.maxPrice!==undefined)?'LKR':undefined)],['rent_period',filter.period]] as const){if(value!==undefined){if(value.length>120||!/^[\p{L}\p{M}\p{N} .'-]+$/u.test(value))throw new Error('Invalid filter');p.set(field,'eq.'+value);}}
+ for(const [op,value] of [['gte',filter.minPrice],['lte',filter.maxPrice]] as const){if(value!==undefined){if(!Number.isFinite(value)||value<0||value>1e12)throw new Error('Invalid price');p.append('price',op+'.'+value);}}
+ if(filter.minPrice!==undefined&&filter.maxPrice!==undefined&&filter.minPrice>filter.maxPrice)throw new Error('Invalid price range');
+ const res=await fetch(url,{headers:{apikey:key,Accept:'application/json'},cache:'no-store',signal:AbortSignal.timeout(8000)});if(!res.ok)throw new Error('PostgreSQL catalog unavailable');const rows=await res.json() as Row[];if(!Array.isArray(rows))throw new Error('Invalid catalog response');
+ return {hasMore:rows.length>limit,items:rows.slice(0,limit).map(r=>({id:r.id,url:publicBase()+'/listings/'+r.id,title:r.title,type:r.property_type,purpose:r.purpose,city:r.city,district:r.district,price:Number(r.price),currency:r.currency,period:r.rent_period||undefined,bedrooms:r.bedrooms??undefined,bathrooms:r.bathrooms??undefined,areaSqft:r.area_sqft??undefined,image:r.images?.[0],updatedAt:r.updated_at}))};
+}

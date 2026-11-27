@@ -159,3 +159,6 @@
 .avara-soft-panel{background:#e3efdf;color:#20352b;border:1px solid #cbdcc6}
 .avara-editorial :is(a,button)[aria-current="page"]{background:#dcebd8;color:#20352b}
 .avara-header .avara-wordmark{color:#20352b}
+
+/* Compact discovery on small screens, preserve space for search and results. */
+@media(max-width:639px){.avara-hero-copy{padding:1.5rem}.avara-hero-copy h1{font-size:clamp(2.6rem,10vw,3.6rem);line-height:1.04}.avara-hero-image{min-height:180px}.avara-quick-links{gap:.6rem 1rem;margin-top:1rem}.avara-section{padding-block:2.75rem}.avara-header button:focus-visible{outline-offset:2px}}

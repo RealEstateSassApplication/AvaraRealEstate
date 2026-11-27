@@ -1,3 +1,4 @@
+import {isTrustedMutation} from '@/lib/request-origin';
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import User from '@/models/User';
@@ -16,14 +17,16 @@ function parseCredentials(body: any) {
 }
 
 export async function POST(request: NextRequest) {
+  if(!isTrustedMutation(request))return NextResponse.json({error:'Invalid origin'},{status:403,headers:privateHeaders});
   try {
-    await dbConnect();
-    const body = await request.json();
+    const body = await request.json().catch(()=>null);
+    if(!body||typeof body!=='object')return errorJson('Invalid credentials',400);
     const { emailOrPhone, password } = parseCredentials(body);
     if(typeof emailOrPhone!=='string'||typeof password!=='string'||emailOrPhone.length>254||password.length>128)return errorJson('Invalid credentials',400);
     if(supabaseMode()){try{if(!z.string().email().safeParse(emailOrPhone).success)return errorJson('Use your email address',400);const session=await providerLogin(emailOrPhone.toLowerCase(),password);const user=session.access_token?await provisionProviderUser(session.access_token):null;if(!user)return errorJson('Verify your email or contact support to migrate an existing account.',403);return attachSession(NextResponse.json({data:{id:user._id,name:user.name,role:user.role,roles:user.roles},message:'Login successful'},{headers:privateHeaders}),session);}catch(e){return providerFailure(e);}}
     if (!emailOrPhone || !password) return errorJson('Missing fields', 400);
 
+    await dbConnect();
     const query = { $or: [{ email: (emailOrPhone as string).toLowerCase() }, { phone: emailOrPhone }] };
     const user = await User.findOne(query);
     if (!user || !user.passwordHash) return errorJson('Invalid credentials', 401);
@@ -46,6 +49,6 @@ export async function POST(request: NextRequest) {
     return res;
   } catch (err: any) {
     console.error('Login error:', err);
-    return errorJson(err.message || 'Internal server error', 500);
+    return errorJson('Authentication temporarily unavailable', 503);
   }
 }
