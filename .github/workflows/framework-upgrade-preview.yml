@@ -36,7 +36,7 @@ jobs:
           npm ci --ignore-scripts
           set -o pipefail
           npx tsc --noEmit 2>&1 | tee upgrade-report/typecheck.log
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: framework-upgrade-preview
