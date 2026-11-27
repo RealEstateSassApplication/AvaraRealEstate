@@ -75,7 +75,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   let projects:MetadataRoute.Sitemap=[];
-  if(process.env.MONGODB_URI){try{await dbConnect();const rows=await Development.find({status:'published'}).select('slug updatedAt').lean();projects=rows.map(x=>({url:new URL('/developments/'+x.slug,BASE_URL).toString(),lastModified:x.updatedAt}));}catch{}}
+  if(process.env.MONGODB_URI){try{await dbConnect();const rows=await Development.find({status:'published'}).select('slug updatedAt').lean();projects=rows.map((x:{slug:string;updatedAt?:Date})=>({url:new URL('/developments/'+x.slug,BASE_URL).toString(),lastModified:x.updatedAt}));}catch{}}
   return [
     ...projects,
     ...staticPages,

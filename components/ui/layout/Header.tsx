@@ -85,7 +85,7 @@ export default function Header() {
           <Link href="/" aria-label="Avara home" className="avara-wordmark shrink-0 text-[2.15rem] sm:text-[2.55rem] leading-none text-[#243b31]">avara<span className="text-[#a68650]">.</span></Link>
 
           <nav aria-label="Main navigation" className="hidden items-center gap-6 xl:flex">
-            <Link href="/explore" className="text-sm font-medium text-[#4b584c] hover:text-slate-950">Explore</Link>
+            <Link href="/discover" className="text-sm font-medium text-[#4b584c] hover:text-slate-950">Explore</Link>
             <Link href="/rentals" className="text-sm font-medium text-[#4b584c] transition-colors hover:text-slate-950">Rent</Link>
             <Link href="/listings?purpose=sale" className="text-sm font-medium text-[#4b584c] transition-colors hover:text-slate-950">Buy</Link>
             <Link href="/listings?purpose=booking" className="text-sm font-medium text-[#4b584c] transition-colors hover:text-slate-950">Stays</Link>
