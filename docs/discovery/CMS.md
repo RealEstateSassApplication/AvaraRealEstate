@@ -1,0 +1,17 @@
+# Discovery CMS — setup and release checks
+
+## Scope
+This PR implements a small, structured editorial CMS. Homepage hero, section headings/visibility, existing collection copy, neighbourhood directory and viewing checklists are editable. Destination URLs, neighbourhood slugs/names and colour palette are fixed. Property Management OS stays a GitHub reference. Blog content, listing operations, tenants and payments remain in the existing MongoDB application. Media uploads, new neighbourhood CRUD, full reviewer roles, revision restore, Supabase Auth and listing migration are deferred.
+
+## Configure a disposable Supabase staging project
+1. Create a separate staging database. Apply supabase/migrations/20261127180000_discovery_cms.sql via the Supabase SQL editor or your established CLI migration workflow. Do not apply to a production database without review/backup.
+2. Set SUPABASE_URL, SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY in the server runtime. This adapter uses legacy JWT anon/service_role API keys (Bearer authentication). Never prefix the service role key with NEXT_PUBLIC_, commit secrets or send it to browsers. Use an isolated staging MongoDB database and existing JWT configuration.
+3. Sign in using an existing authorized Avara admin account, open /admin/discovery. Save a draft, review the content-only preview, then explicitly publish the saved revision. Before first publication, the bundled baseline remains visible.
+4. Open / and /explore plus all five neighbourhood detail routes anonymously. Saved drafts must not appear before publication. Pages read the public snapshot per request (no-store); no separate cache invalidation or redeploy is required. Fixed slug routes remain stable.
+5. Remove Supabase environment settings to roll back the editorial read adapter to bundled baseline. Existing property operations are untouched. A database/network failure also serves the bundled baseline; this can temporarily revert editorial changes and needs monitoring. Never use this CMS for urgent safety notices or legal takedowns until fail-closed behavior is designed.
+
+## Trust model
+Next.js verifies the legacy JWT against MongoDB and requires admin/super-admin on every read/write. Same-origin JSON POST, bounded body, strict Zod schema, fixed routes/identities, React text escaping. Server-only service-role credentials execute a transactional SQL function restricted to service_role. Advisory lock and expected revision prevent lost updates; publish snapshots the stored draft, not browser payload. The separate published table exposes only public content via anon/authenticated SELECT; private draft and audit tables have no public grants. The revision log stores actor IDs privately. No user-supplied HTML or arbitrary URLs.
+
+## Verification
+GitHub CI runs lint, typecheck, build and a PostgreSQL integration test with Supabase-equivalent roles. SQL test covers anonymous/authenticated denial, service-role revision conflicts, draft isolation, publication, subsequent draft separation and audit write denial. It does not exercise real Supabase PostgREST, Mongo auth, or UI. In staging verify 401/403 for unauthenticated/non-admin requests, cross-origin POST rejection, malformed/oversized payload rejection, stale revision 409, no service key in browser/network responses, reload after conflict, draft preview and public content after publish. Verify actual Supabase keys and database schema, and browser layouts. Monitor fallback logs and latency before rollout. Do not claim deployment or production readiness from the PR alone.

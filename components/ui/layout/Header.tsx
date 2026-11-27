@@ -139,7 +139,7 @@ export default function Header() {
                           <DropdownMenuItem asChild><Link href="/host/dashboard">Legacy host operations</Link></DropdownMenuItem>
                         </>
                       )}
-                      {isAdmin(user) && <DropdownMenuItem asChild><Link href="/admin/dashboard">Admin panel</Link></DropdownMenuItem>}
+                      {isAdmin(user) && <><DropdownMenuItem asChild><Link href="/admin/dashboard">Admin panel</Link></DropdownMenuItem><DropdownMenuItem asChild><Link href="/admin/discovery">Discovery CMS</Link></DropdownMenuItem></>}
                       <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

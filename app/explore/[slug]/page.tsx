@@ -5,7 +5,9 @@ import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import Header from '@/components/ui/layout/Header';
 import DiscoveryFooter from '@/components/discovery/DiscoveryFooter';
 import { neighbourhoods } from '@/lib/discovery/content';
+import { getPublicContent } from '@/lib/discovery/repository';
 
+export const dynamic = 'force-dynamic';
 export const dynamicParams = false;
 export function generateStaticParams(){return neighbourhoods.map(n=>({slug:n.slug}));}
 type Props = {params:{slug:string}};
@@ -14,8 +16,9 @@ export function generateMetadata({params}:Props):Metadata {
  if(!n)return {title:'Neighbourhood not found'};
  return {title:'Explore '+n.name,description:'Property viewing checklist, rental discovery and living cost planning for '+n.name+'.',alternates:{canonical:'/explore/'+n.slug}};
 }
-export default function AreaPage({params}:Props){
- const n=neighbourhoods.find(a=>a.slug===params.slug);
+export default async function AreaPage({params}:Props){
+ const content = await getPublicContent();
+ const n=content.neighbourhoods.find(a=>a.slug===params.slug);
  if(!n)notFound();
  const city=encodeURIComponent(n.name);
  return <div className="min-h-screen bg-[#f4f1ea] text-[#20372e]"><Header/><main className="mx-auto max-w-6xl px-5 py-12">
