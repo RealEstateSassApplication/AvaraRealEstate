@@ -1,0 +1,5 @@
+import mongoose,{Schema,type Model} from 'mongoose';
+export interface ConversationRow{_id:string;propertyId:mongoose.Types.ObjectId;propertyTitle:string;seeker:mongoose.Types.ObjectId;owner:mongoose.Types.ObjectId;messages:{sender:mongoose.Types.ObjectId;text:string;sentAt:Date}[];blockedBy:mongoose.Types.ObjectId[];createdAt:Date;updatedAt:Date;}
+const schema=new Schema<ConversationRow>({_id:{type:String,required:true},propertyId:{type:Schema.Types.ObjectId,required:true},propertyTitle:{type:String,required:true},seeker:{type:Schema.Types.ObjectId,required:true},owner:{type:Schema.Types.ObjectId,required:true},messages:[{_id:false,sender:{type:Schema.Types.ObjectId,required:true},text:{type:String,required:true,maxlength:2000},sentAt:{type:Date,required:true}}],blockedBy:[{type:Schema.Types.ObjectId}]},{timestamps:true});
+schema.index({seeker:1,updatedAt:-1});schema.index({owner:1,updatedAt:-1});
+export default (mongoose.models.Conversation as Model<ConversationRow>|undefined)||mongoose.model<ConversationRow>('Conversation',schema);

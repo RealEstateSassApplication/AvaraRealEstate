@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import {useRouter} from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ApplicationForm from './ApplicationForm';
@@ -52,6 +53,9 @@ interface Props {
 }
 
 export default function ListingActions({ propertyId, initialFavorite = false, hostContact, property }: Props) {
+  const router=useRouter();
+  const [showContact,setShowContact]=useState(false),[draft,setDraft]=useState(''),[contactError,setContactError]=useState('');
+  const openContact=()=>{setDraft('');setContactError('');setShowContact(true);};
   const saved = useSavedProperties();
   const favorite = saved.ready ? saved.ids.includes(propertyId) : initialFavorite;
   const [contactLoading, setContactLoading] = useState(false);
@@ -106,7 +110,7 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
 
   const sendEnquiry = async (message: string) => {
     if (contactLoading) return;
-    setContactLoading(true);
+    setContactLoading(true);setContactError('');
     try {
       const res = await fetch(`/api/properties/${propertyId}/contact`, {
         method: 'POST',
@@ -115,12 +119,12 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        toast({ title: 'Could not send enquiry', description: data.error || 'Please try again.' });
+        setContactError(data.error || 'Please try again.');
         return;
       }
-      toast({ title: 'Enquiry sent', description: data.message || 'The property owner has been notified.' });
+      if(!data.conversationId){setContactError('Conversation unavailable. Please retry.');return;}setShowContact(false);router.push('/messages?thread='+encodeURIComponent(data.conversationId));
     } catch {
-      toast({ title: 'Network error', description: 'Could not send your enquiry.' });
+      setContactError('Network error. Could not send your enquiry.');
     } finally {
       setContactLoading(false);
     }
@@ -197,7 +201,7 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
                 >
                   Apply to Rent
                 </Button>
-              <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[90dvh] overflow-y-auto rounded-xl">
+              <DialogContent className="w-[calc(100%_-_2rem)] max-w-md max-h-[90dvh] overflow-y-auto rounded-xl">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <CalendarDays className="w-5 h-5" />
@@ -238,7 +242,7 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
             <Button
               className="w-full bg-[#243b31] hover:bg-[#385345] text-white text-base py-3 font-semibold"
               disabled={contactLoading}
-              onClick={() => handleCheckAuth(() => void sendEnquiry(`I am interested in purchasing ${property?.title || 'this property'}. Please contact me with the next steps.`))}
+              onClick={() => handleCheckAuth(openContact)}
             >
               <Send className="w-4 h-4 mr-2" />
               {contactLoading ? 'Sending...' : 'Contact for Purchase'}
@@ -259,10 +263,10 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
                 variant="outline"
                 size="sm"
                 disabled={contactLoading}
-                onClick={() => handleCheckAuth(() => void sendEnquiry(`I am interested in ${property?.title || 'this property'}. Please contact me with more information.`))}
+                onClick={() => handleCheckAuth(openContact)}
               >
                 <Send className="w-4 h-4 mr-2" />
-                Enquire
+                Message owner
               </Button>
             </div>
           </div>
@@ -274,6 +278,7 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
         {saved.error&&<p role="alert" className="text-sm text-red-700">{saved.error}</p>}
       </div>
 
+      <Dialog open={showContact} onOpenChange={open=>{if(!contactLoading)setShowContact(open);}}><DialogContent className="w-[calc(100%_-_2rem)] max-w-md rounded-xl"><DialogHeader><DialogTitle>Message the property owner</DialogTitle></DialogHeader><form onSubmit={e=>{e.preventDefault();void sendEnquiry(draft.trim());}} className="space-y-4"><p className="text-sm text-[#5f685e]">Start a private conversation about {property?.title||'this property'}. Your email and phone are not automatically shared. If a conversation already exists, we will open it instead.</p><label htmlFor="enquiry-message" className="text-sm font-semibold">Your message</label><textarea id="enquiry-message" required minLength={5} maxLength={2000} className="min-h-32 w-full rounded-lg border p-3 text-base" value={draft} onChange={e=>setDraft(e.target.value)} placeholder="Is this property still available?"/>{contactError&&<p role="alert" className="text-sm text-red-700">{contactError}</p>}<Button className="w-full min-h-[48px] bg-[#243b31] text-white" disabled={contactLoading||draft.trim().length<5}>{contactLoading?'Opening…':'Start conversation'}</Button></form></DialogContent></Dialog>
       {property && (
         <BookingModal
           open={showBookingModal}

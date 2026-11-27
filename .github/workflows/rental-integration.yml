@@ -42,4 +42,4 @@ jobs:
             if curl --fail --silent http://127.0.0.1:3000/rentals >/dev/null; then break; fi
             sleep 1
           done
-          node --test tests/rental-integration.cjs
+          node --test tests/rental-integration.cjs tests/messaging-integration.cjs

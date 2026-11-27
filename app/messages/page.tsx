@@ -1,0 +1,1 @@
+import type {Metadata} from 'next';import MessageInbox from '@/components/discovery/MessageInbox';export const metadata:Metadata={title:'Avara Connect',robots:{index:false,follow:false}};export default function Page(){return <MessageInbox/>;}
