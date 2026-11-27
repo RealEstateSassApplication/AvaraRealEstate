@@ -32,10 +32,6 @@ jobs:
           git diff -- package.json package-lock.json > audit/safe-fix.patch
           npm audit --omit=dev --json > audit/candidate-production.json || test "$?" -eq 1
           node -e 'const a=require("./audit/candidate-production.json");if(!a.metadata)throw Error("Candidate audit unavailable");console.log("Candidate production",JSON.stringify(a.metadata.vulnerabilities));'
-      - name: Emit reproducible lockfile delta
-        run: |
-          git show HEAD:package-lock.json > /tmp/avara-original-lock.json
-          node -e 'const a=require("/tmp/avara-original-lock.json"),b=require("./package-lock.json");for(const k of new Set([...Object.keys(a.packages),...Object.keys(b.packages)])){if(JSON.stringify(a.packages[k])!==JSON.stringify(b.packages[k]))console.log("AVARA_LOCK_DELTA "+JSON.stringify([k,b.packages[k]||null]));}console.log("AVARA_LOCK_COUNT "+Object.keys(b.packages).length);'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
