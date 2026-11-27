@@ -12,7 +12,7 @@ flowchart TD
   D --> A[Supabase Auth for staff and agents]
   D --> B[Supabase Storage]
   D --> M[Legacy Mongo adapter during migration]
-  N --> O[Separate Property OS source and product page]
+  N --> O[Separate Property OS GitHub link]
   D -. consented future handoff .-> O
 ```
 

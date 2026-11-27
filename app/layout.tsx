@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
     default: 'Avara | Discover Property & Places in Sri Lanka',
-    template: '%s | Avara Real Estate Sri Lanka',
+    template: '%s | Avara',
   },
   description: 'Find your dream property in Sri Lanka. Browse houses, apartments, villas, and land for sale and rent in Colombo, Kandy, Galle, and across Sri Lanka. Explore neighbourhoods and plan your living costs.',
   keywords: [
@@ -28,9 +28,9 @@ export const metadata: Metadata = {
     'houses in Negombo',
     'luxury villas Sri Lanka',
   ],
-  authors: [{ name: 'Avara Real Estate', url: BASE_URL }],
-  creator: 'Avara Real Estate',
-  publisher: 'Avara Real Estate',
+  authors: [{ name: 'Avara', url: BASE_URL }],
+  creator: 'Avara',
+  publisher: 'Avara',
   formatDetection: {
     email: false,
     address: false,
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_LK',
     url: BASE_URL,
-    siteName: 'Avara Real Estate',
+    siteName: 'Avara',
     title: 'Avara | Discover Property & Places in Sri Lanka',
     description: 'Explore property in Sri Lanka. Find houses, apartments, villas, and land for sale and rent across Colombo, Kandy, Galle, and more.',
     images: [
@@ -48,13 +48,13 @@ export const metadata: Metadata = {
         url: `${BASE_URL}/og-image.jpg`,
         width: 1200,
         height: 630,
-        alt: 'Avara Real Estate - Find Your Dream Property in Sri Lanka',
+        alt: 'Avara - Find Your Dream Property in Sri Lanka',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Avara Real Estate | Properties in Sri Lanka',
+    title: 'Avara | Properties in Sri Lanka',
     description: 'Find houses, apartments, villas for sale and rent in Sri Lanka.',
     images: [`${BASE_URL}/og-image.jpg`],
     creator: '@avara_lk',
@@ -69,9 +69,6 @@ export const metadata: Metadata = {
       'max-image-preview': 'large',
       'max-snippet': -1,
     },
-  },
-  alternates: {
-    canonical: BASE_URL,
   },
   category: 'real estate',
   other: {

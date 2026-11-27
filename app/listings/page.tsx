@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense, useCallback } from 'react';
+import { useState, useEffect, Suspense, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/ui/layout/Header';
 import SearchFilters from '@/components/search/SearchFilters';
@@ -54,12 +54,16 @@ interface SearchFiltersState {
   city?: string;
   district?: string;
   province?: string;
+  featured?: boolean;
+  verified?: boolean;
 }
 
 function ListingsContent() {
   const searchParams = useSearchParams();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const activeRequest = useRef<AbortController | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
@@ -79,11 +83,17 @@ function ListingsContent() {
       bedrooms: searchParams.get('bedrooms') ? Number(searchParams.get('bedrooms')) : undefined,
       bathrooms: searchParams.get('bathrooms') ? Number(searchParams.get('bathrooms')) : undefined,
       amenities: searchParams.getAll('amenities') ?? [],
+      featured: searchParams.get('featured') === 'true' ? true : undefined,
+      verified: searchParams.get('verified') === 'true' ? true : undefined,
     };
   });
 
   const searchProperties = useCallback(async (page: number = 1) => {
+    activeRequest.current?.abort();
+    const controller = new AbortController();
+    activeRequest.current = controller;
     setLoading(true);
+    setError(false);
     try {
       const params = new URLSearchParams();
 
@@ -100,9 +110,10 @@ function ListingsContent() {
       params.append('page', page.toString());
       params.append('limit', '20');
 
-      const response = await fetch(`/api/properties?${params.toString()}`);
+      const response = await fetch(`/api/properties?${params.toString()}`, { signal: controller.signal });
       if (response.ok) {
         const data = await response.json();
+        if (controller.signal.aborted) return;
         setProperties(data.properties || []);
         setTotalPages(data.totalPages || 1);
         setTotal(data.total || 0);
@@ -112,17 +123,18 @@ function ListingsContent() {
         url.search = params.toString();
         window.history.replaceState({}, '', url.toString());
       } else {
-        console.error('Failed to fetch properties');
+        throw new Error('Listing request failed');
       }
     } catch (error) {
-      console.error('Error searching properties:', error);
+      if (!controller.signal.aborted) { setError(true); setProperties([]); setTotal(0); }
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   }, [filters]);
 
   useEffect(() => {
     searchProperties(1);
+    return () => activeRequest.current?.abort();
   }, [filters, searchProperties]);
 
   const handleFiltersChange = (newFilters: SearchFiltersState) => {
@@ -158,7 +170,7 @@ function ListingsContent() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#f4f1ea]">
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -171,7 +183,7 @@ function ListingsContent() {
 
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="font-serif text-4xl text-[#20372e]">
               {filters.purpose ? (
                 filters.purpose === 'booking' ? 'Properties for Booking' :
                 filters.purpose === 'rent' ? 'Properties for Rent' :
@@ -181,7 +193,7 @@ function ListingsContent() {
               {!filters.city && filters.province && ` in ${filters.province}`}
             </h1>
             <p className="text-gray-600 mt-1">
-              {loading ? 'Searching...' : `${total.toLocaleString()} properties found`}
+              {loading ? 'Searching...' : error ? 'Listings unavailable' : `${total.toLocaleString()} properties found`}
             </p>
           </div>
 
@@ -207,6 +219,8 @@ function ListingsContent() {
 
         {loading ? (
           <LoadingSkeleton />
+        ) : error ? (
+          <div role="alert" className="rounded-xl border bg-white p-8 text-center"><h2 className="font-semibold">Listings are temporarily unavailable.</h2><p className="mt-2 text-sm text-slate-600">Try again in a moment.</p><Button className="mt-5" onClick={() => searchProperties(currentPage)}>Retry</Button></div>
         ) : properties.length === 0 ? (
           <div className="text-center py-16">
             <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -276,7 +290,7 @@ function ListingsContent() {
 export default function ListingsPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#f4f1ea]">
         <Header />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="animate-pulse">

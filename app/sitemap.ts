@@ -2,6 +2,7 @@ import { MetadataRoute } from 'next';
 import dbConnect from '@/lib/db';
 import Property from '@/models/Property';
 import BlogPost from '@/models/BlogPost';
+import { neighbourhoods } from '@/lib/discovery/content';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://avara.lk';
 
@@ -29,7 +30,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  for (const path of ['/explore', '/tools/living-cost', '/property-os']) {
+  for (const path of ['/explore', '/tools/living-cost', ...neighbourhoods.map(n => '/explore/'+n.slug)]) {
     staticPages.push({ url: new URL(path, BASE_URL).toString() });
   }
 
@@ -72,43 +73,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  const sriLankanCities = [
-    'Colombo', 'Kandy', 'Galle', 'Negombo', 'Nuwara Eliya',
-    'Bentota', 'Jaffna', 'Trincomalee', 'Batticaloa', 'Matara'
-  ];
-
-  const locationPages: MetadataRoute.Sitemap = sriLankanCities.map((city) => ({
-    url: `${BASE_URL}/listings?city=${encodeURIComponent(city)}`,
-    lastModified: now,
-    changeFrequency: 'daily' as const,
-    priority: 0.75,
-  }));
-
-  const purposePages: MetadataRoute.Sitemap = [
-    {
-      url: `${BASE_URL}/listings?purpose=rent`,
-      lastModified: now,
-      changeFrequency: 'daily' as const,
-      priority: 0.85,
-    },
-    {
-      url: `${BASE_URL}/listings?purpose=sale`,
-      lastModified: now,
-      changeFrequency: 'daily' as const,
-      priority: 0.85,
-    },
-    {
-      url: `${BASE_URL}/listings?purpose=booking`,
-      lastModified: now,
-      changeFrequency: 'daily' as const,
-      priority: 0.85,
-    },
-  ];
-
   return [
     ...staticPages,
-    ...purposePages,
-    ...locationPages,
     ...propertyPages,
     ...blogPages,
   ];

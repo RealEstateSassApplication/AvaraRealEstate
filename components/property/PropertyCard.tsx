@@ -166,14 +166,15 @@ export default function PropertyCard({
               </Badge>
             </div>
 
-            <Button
+            {onToggleFavorite && <Button
+              aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
               variant="ghost"
               size="sm"
               className="absolute top-2 right-2 bg-white/80 hover:bg-white/90 p-2"
               onClick={handleToggleFavorite}
             >
               <Heart className={`w-4 h-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
-            </Button>
+            </Button>}
           </div>
 
           <CardContent className="p-4">

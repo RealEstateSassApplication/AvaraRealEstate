@@ -1,6 +1,6 @@
 # Avara — Property Discovery & Intelligence
 
-Avara is evolving into an account-optional public discovery platform for Sri Lanka. Explore neighbourhoods and listings, estimate living costs and discover the separate Property Management OS.
+Avara is evolving into an account-optional public discovery platform for Sri Lanka. Explore neighbourhoods and listings, estimate living costs and find the separate Property Management OS project on GitHub.
 
 - [Discovery product strategy](docs/discovery/PRODUCT.md)
 - [Target architecture and migration](docs/discovery/ARCHITECTURE.md)
