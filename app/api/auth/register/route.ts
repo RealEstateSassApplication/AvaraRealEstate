@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import dbConnect from '@/lib/db';
 import User from '@/models/User';
+import {supabaseMode,provider,providerFailure,privateHeaders} from '@/lib/supabase-auth';
 import { hashPassword, generateToken } from '@/lib/auth';
 
 const registerSchema = z.object({
@@ -26,6 +27,7 @@ export async function POST(request: NextRequest) {
     const { name, phone, password } = parsed.data;
     const email = parsed.data.email.toLowerCase();
     const requestedRole = parsed.data.role || 'user';
+    if(supabaseMode()){try{await provider('signup','POST',{email,password,data:{name,phone}});return NextResponse.json({verificationRequired:true,message:'Check your email to verify your account.'},{status:201,headers:privateHeaders});}catch(e){return providerFailure(e);}}
 
     const existing = await User.findOne({ $or: [{ email }, { phone }] }).select('_id');
     if (existing) {

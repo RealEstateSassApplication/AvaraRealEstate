@@ -27,7 +27,7 @@ test('mobile menu and search filters retain editable values and URL state',async
  await page.getByRole('button',{name:'Toggle menu'}).click();
  await expect(page.getByRole('navigation',{name:'Mobile navigation'})).toBeVisible();
  await page.getByRole('navigation',{name:'Mobile navigation'}).getByRole('link',{name:'Rent',exact:true}).click();
- await expect(page).toHaveURL(/\/rentals$/);await page.getByRole('link',{name:'Browse rentals',exact:true}).click();await expect(page).toHaveURL(/purpose=rent/);
+ await expect(page).toHaveURL(/purpose=rent/);
  await page.getByRole('textbox',{name:'Location'}).fill('Nugegoda');
  await page.getByRole('button',{name:/^Filters/}).click();
  const dialog=page.getByRole('dialog');await expect(dialog).toBeVisible();

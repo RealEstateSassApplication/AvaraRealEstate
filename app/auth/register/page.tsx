@@ -32,6 +32,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [needsVerification,setNeedsVerification]=useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -62,8 +63,8 @@ export default function RegisterPage() {
       setError('Phone number is required');
       return false;
     }
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters');
       return false;
     }
     if (formData.password !== formData.confirmPassword) {
@@ -106,6 +107,7 @@ export default function RegisterPage() {
 
       if (response.ok) {
         setSuccess(true);
+        if(data.verificationRequired){setNeedsVerification(true);return;}
         // Redirect to home after successful registration
         setTimeout(() => {
           window.location.href = '/';
@@ -132,10 +134,10 @@ export default function RegisterPage() {
               Welcome to Avara!
             </h2>
             <p className="text-gray-600 mb-4">
-              Your account has been created successfully. You are now signed in.
+              {needsVerification?'Check your email and verify your address before signing in.':'Your account has been created successfully. You are now signed in.'}
             </p>
             <p className="text-sm text-gray-500">
-              Redirecting to home page...
+              {needsVerification?<Link href="/auth/login" className="underline">Return to sign in</Link>:'Redirecting to home page...'}
             </p>
           </CardContent>
         </Card>

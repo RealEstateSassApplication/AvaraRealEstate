@@ -6,6 +6,7 @@ export interface IUser extends Document {
   email: string;
   phone: string;
   passwordHash?: string;
+  supabaseUserId?: string;
   role?: 'user' | 'tenant' | 'host' | 'admin' | 'super-admin';
   // preferred multi-role array
   roles?: string[];
@@ -41,6 +42,7 @@ const UserSchema = new Schema<IUser>({
   email: { type: String, required: true, unique: true, lowercase: true },
   phone: { type: String, required: true, unique: true },
   passwordHash: { type: String },
+  supabaseUserId: {type:String,unique:true,sparse:true,immutable:true},
   role: {
     type: String,
     enum: ['user', 'tenant', 'host', 'admin', 'super-admin'],

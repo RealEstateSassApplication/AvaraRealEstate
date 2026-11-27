@@ -46,7 +46,6 @@ export default function LoginPage() {
 
       if (response.ok) {
         // Successful login; redirect based on role if provided
-        const role = data.data?.role;
         const fallback = '/workspace';
         const requested = new URLSearchParams(window.location.search).get('next');
         let target = fallback;
@@ -168,7 +167,7 @@ export default function LoginPage() {
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
-          </form>
+          <Link href="/auth/forgot-password" className="block text-sm font-semibold underline text-[#243b31]">Forgot password?</Link></form>
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
