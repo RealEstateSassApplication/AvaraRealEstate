@@ -1,11 +1,11 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
-import Image from 'next/image';
+import Link from 'next/link';
+import ListingGallery from '@/components/discovery/ListingGallery';
+import DiscoveryFooter from '@/components/discovery/DiscoveryFooter';
 import PropertyService from '@/services/propertyService';
 import Header from '@/components/ui/layout/Header';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
 import ListingActions from '@/components/listing/ListingActions';
 import { RealEstateListingSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { MapPin, Wifi, Car, Mountain, Users, Bed, Bath, Square, Star, Verified } from 'lucide-react';
@@ -85,9 +85,6 @@ export default async function ListingDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const isLand = property.type === 'land';
-  const mainImage = property.images?.[0] || '/images/property-placeholder.jpg';
-  const additionalImages = property.images?.slice(1, 5) || [];
 
   const amenityIcons: { [key: string]: any } = {
     wifi: Wifi,
@@ -99,7 +96,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-20">
+    <div className="avara-editorial min-h-screen">
       {/* JSON-LD Structured Data for SEO */}
       <RealEstateListingSchema
         name={property.title}
@@ -109,7 +106,6 @@ export default async function ListingDetailPage({ params }: PageProps) {
         price={property.price}
         priceCurrency={property.currency || 'LKR'}
         address={{
-          street: property.address?.street,
           city: property.address?.city || '',
           district: property.address?.district || '',
           country: 'Sri Lanka'
@@ -131,11 +127,12 @@ export default async function ListingDetailPage({ params }: PageProps) {
       />
 
       <Header />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="avara-shell py-8 sm:py-14">
 
+        <Link href="/listings" className="avara-text-link mb-6">← All properties</Link>
         {/* Header Section */}
         <div className="flex flex-col gap-5 mb-10">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
+          <h1 className="avara-display text-[clamp(2.5rem,5vw,4.8rem)] leading-tight">
             {property.title}
           </h1>
           <div className="flex flex-wrap items-center gap-4 text-sm md:text-base text-slate-600">
@@ -170,65 +167,21 @@ export default async function ListingDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Image Gallery */}
-        <div className="mb-16 rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5 bg-slate-100">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-1.5 h-[500px] md:h-[600px]">
-            {/* Main Image */}
-            <div className="md:col-span-2 lg:col-span-2 md:row-span-2 relative group cursor-pointer overflow-hidden">
-              <Image
-                src={mainImage}
-                alt={property.title}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-1000 ease-in-out"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              {property.featured && (
-                <div className="absolute top-6 left-6">
-                  <Badge className="bg-white/95 text-slate-900 hover:bg-white backdrop-blur-md border-0 shadow-lg px-4 py-1.5 text-sm font-bold tracking-wide uppercase">
-                    Featured
-                  </Badge>
-                </div>
-              )}
-            </div>
+        <ListingGallery images={property.images || []} title={property.title}/>
 
-            {/* Additional Images Grid */}
-            <div className="hidden md:grid col-span-2 lg:col-span-2 grid-cols-2 gap-1.5 h-full">
-              {additionalImages.map((image, index) => (
-                <div key={index} className="relative group cursor-pointer overflow-hidden">
-                  <Image
-                    src={image}
-                    alt={`${property.title} - View ${index + 2}`}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
-                  />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
-                  {index === 3 && additionalImages.length > 4 && (
-                    <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center backdrop-blur-sm transition-opacity hover:bg-slate-900/70">
-                      <span className="text-white font-semibold text-xl tracking-tight">+{additionalImages.length - 4} photos</span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
+        <div className="grid min-w-0 grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-14">
           {/* Left Column: Details */}
-          <div className="lg:col-span-2 space-y-12">
+          <div className="min-w-0 space-y-10 lg:col-span-2 lg:space-y-12">
 
             {/* Stats Bar */}
             <div className="flex flex-wrap items-center justify-between gap-6 pb-8 border-b border-slate-200">
               <div className="space-y-2">
-                <div className="text-3xl font-bold capitalize text-slate-800">
+                <div className="avara-display text-3xl capitalize">
                   {property.type} hosted by {(property.owner as any)?.name?.split(' ')[0] || 'Host'}
                 </div>
-                <div className="text-slate-500 flex items-center gap-3 text-base">
+                <div className="text-slate-500 flex flex-wrap items-center gap-3 text-sm">
                   {property.bedrooms && <span>{property.bedrooms} bedrooms</span>}
-                  <span className="w-1 h-1 rounded-full bg-slate-300" />
                   {property.bathrooms && <span>{property.bathrooms} bathrooms</span>}
-                  <span className="w-1 h-1 rounded-full bg-slate-300" />
                   {property.areaSqft && <span>{property.areaSqft} sqft</span>}
                 </div>
               </div>
@@ -242,7 +195,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
 
             {/* Description */}
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-slate-900">About this place</h2>
+              <h2 className="avara-display text-3xl">About this place</h2>
               <p className="text-slate-600 leading-loose whitespace-pre-line text-lg font-normal">
                 {property.description}
               </p>
@@ -251,8 +204,8 @@ export default async function ListingDetailPage({ params }: PageProps) {
             {/* Amenities Section */}
             {property.amenities?.length > 0 && (
               <div className="py-10 border-t border-slate-200">
-                <h2 className="text-2xl font-bold mb-8 text-slate-900">What this place offers</h2>
-                <div className="grid grid-cols-2 gap-y-6 gap-x-12">
+                <h2 className="avara-display mb-6 text-3xl">What this place offers</h2>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
                   {property.amenities.map((amenity) => {
                     const IconComponent = amenityIcons[amenity.toLowerCase()] || Mountain;
                     return (
@@ -260,7 +213,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
                         <div className="p-2 rounded-lg bg-slate-50 group-hover:bg-slate-100 transition-colors">
                           <IconComponent className="w-6 h-6 text-slate-900" />
                         </div>
-                        <span className="capitalize text-lg font-medium">{amenity}</span>
+                        <span className="break-words capitalize text-base font-medium">{amenity}</span>
                       </div>
                     );
                   })}
@@ -270,52 +223,25 @@ export default async function ListingDetailPage({ params }: PageProps) {
 
             {/* Host Section */}
             <div className="py-10 border-t border-slate-200">
-              <h2 className="text-2xl font-bold mb-8 text-slate-900">Meet your host</h2>
-              <div className="bg-slate-50 rounded-3xl p-10 flex flex-col sm:flex-row gap-8 items-start shadow-sm ring-1 ring-slate-100">
+              <h2 className="avara-display mb-6 text-3xl">Meet your host</h2>
+              <div className="rounded-xl border bg-white p-5 sm:p-8 flex flex-col sm:flex-row gap-5 items-start">
                 <div className="flex-shrink-0">
                   <div className="w-20 h-20 rounded-full bg-slate-900 text-white flex items-center justify-center text-3xl font-bold shadow-xl ring-4 ring-white">
                     {((property.owner as any)?.name || 'H').charAt(0)}
                   </div>
                 </div>
-                <div className="space-y-5 flex-1">
+                <div className="min-w-0 space-y-5 flex-1">
                   <div>
                     <h3 className="text-xl font-bold text-slate-900">{(property.owner as any)?.name || 'Host'}</h3>
-                    <p className="text-sm text-slate-500 font-medium mt-1">Joined in 2023</p>
                   </div>
                   <div className="flex flex-wrap gap-3">
                     {(property.owner as any)?.verified && (
                       <Badge variant="outline" className="bg-white text-slate-700 border-slate-200 px-3 py-1 text-sm font-medium shadow-sm">Verified Identity</Badge>
                     )}
-                    <Badge variant="outline" className="bg-white text-slate-700 border-slate-200 px-3 py-1 text-sm font-medium shadow-sm">Superhost</Badge>
                   </div>
-                  <p className="text-slate-600 leading-relaxed">The host is a verified Avara member. We've confirmed their identity to ensure a safe experience for you.</p>
+                  <p className="text-slate-600 leading-relaxed">Use the enquiry option to request further information directly through Avara. Independently confirm property and agreement details.</p>
 
-                  {/* Contact Details */}
-                  <div className="mt-4 p-4 bg-white rounded-xl border border-slate-200 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-600">Name</span>
-                      <span className="font-medium text-slate-900">{(property.owner as any)?.name || 'Host'}</span>
-                    </div>
-                    {(property.owner as any)?.email && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-600">Email</span>
-                        <a href={`mailto:${(property.owner as any)?.email}`} className="font-medium text-slate-900 hover:underline">
-                          {(property.owner as any)?.email}
-                        </a>
-                      </div>
-                    )}
-                    {(property.owner as any)?.phone && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-600">Phone</span>
-                        <a href={`tel:${(property.owner as any)?.phone}`} className="font-medium text-slate-900 hover:underline">
-                          {(property.owner as any)?.phone}
-                        </a>
-                      </div>
-                    )}
-                    {!(property.owner as any)?.email && !(property.owner as any)?.phone && (
-                      <p className="text-sm text-slate-500">No direct contact details available. Use the Contact Host button below.</p>
-                    )}
-                  </div>
+                  <p className="text-sm text-slate-600">Contact the owner through the enquiry form.</p>
                 </div>
               </div>
             </div>
@@ -323,17 +249,16 @@ export default async function ListingDetailPage({ params }: PageProps) {
           </div>
 
           {/* Right Column: Sticky Booking Widget */}
-          <div className="relative">
-            <div className="sticky top-28">
-              <div className="border border-slate-200/60 rounded-3xl shadow-2xl shadow-slate-200/50 bg-white p-8 overflow-hidden relative">
+          <div className="relative min-w-0">
+            <div className="lg:sticky lg:top-28">
+              <div className="border border-[#dedbd0] rounded-xl bg-white p-5 sm:p-7 overflow-hidden relative">
 
                 {/* Decorative background blur */}
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-teal-100/50 to-blue-100/50 rounded-full blur-3xl -z-10" />
 
                 {/* Price Header */}
                 <div className="mb-8 flex flex-col gap-1">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-extrabold tracking-tight text-slate-900">
+                  <div className="flex flex-wrap items-baseline gap-2">
+                    <span className="avara-display break-words text-3xl sm:text-4xl">
                       {property.currency || 'LKR'} {property.price.toLocaleString()}
                     </span>
                     {property.purpose === 'booking' ? (
@@ -353,8 +278,8 @@ export default async function ListingDetailPage({ params }: PageProps) {
                     <Verified className="w-5 h-5 text-teal-600" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-slate-900">Avara Cover</p>
-                    <p className="text-xs text-slate-600 mt-1 leading-normal">Every booking includes free protection from cancellations, accuracy issues, and more.</p>
+                    <p className="text-sm font-bold text-slate-900">Property verification</p>
+                    <p className="text-xs text-slate-600 mt-1 leading-normal">Check the listing details, verification record and applicable terms before making a payment.</p>
                   </div>
                 </div>
 
@@ -365,8 +290,6 @@ export default async function ListingDetailPage({ params }: PageProps) {
                     initialFavorite={false}
                     hostContact={{
                       name: (property.owner as any)?.name,
-                      email: (property.owner as any)?.email,
-                      phone: (property.owner as any)?.phone,
                       verified: (property.owner as any)?.verified,
                     }}
                     property={{
@@ -382,29 +305,17 @@ export default async function ListingDetailPage({ params }: PageProps) {
                     }}
                   />
 
-                  <div className="text-center">
-                    <p className="text-xs font-medium text-slate-400">You won't be charged yet</p>
-                  </div>
-                </div>
 
-                <Separator className="my-8" />
-
-                <div className="flex justify-between items-center text-sm font-medium text-slate-600">
-                  <span className="underline decoration-slate-300 decoration-wavy cursor-help">Avara Fee</span>
-                  <span className="font-bold text-slate-900">$0</span>
                 </div>
 
               </div>
 
-              <div className="mt-8 text-center">
-                <button className="text-slate-400 text-sm font-medium hover:text-slate-600 hover:underline flex items-center justify-center gap-2 w-full transition-colors">
-                  <MapPin className="w-4 h-4" /> Report this listing
-                </button>
-              </div>
+
             </div>
           </div>
         </div>
       </div>
+      <DiscoveryFooter/>
     </div>
   );
 }

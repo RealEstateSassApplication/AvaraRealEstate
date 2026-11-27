@@ -143,3 +143,12 @@
 .avara-header{background:#f7f5ef;box-shadow:0 1px 0 rgba(36,59,49,.06)}
 @media(min-width:1024px){.avara-hero{grid-template-columns:1fr 1.03fr;min-height:555px}.avara-hero-image{min-height:100%}.avara-search-wrap{margin-top:-2rem;width:calc(100% - 5rem)}}
 @media(prefers-reduced-motion:reduce){.avara-art,.avara-round-arrow,.avara-tool-card,.avara-hero-link{transition:none!important}.avara-editorial-card:hover .avara-art,.avara-editorial-card:hover .avara-round-arrow,.avara-tool-card:hover{transform:none}}
+
+/* Mobile launch polish: local contrast, wrapping and accessible list layout. */
+.avara-editorial main{min-width:0}
+.avara-editorial :is(input,select,textarea){max-width:100%}
+.avara-editorial :is(h1,h2,h3,p){overflow-wrap:anywhere}
+.avara-editorial .avara-list-card .avara-card-body{display:block}
+.avara-header nav a{white-space:nowrap}
+@media(min-width:640px){.avara-editorial .avara-list-card .avara-card-body{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr)}.avara-list-card .avara-card-photo{height:100%;min-height:240px}.avara-list-card .avara-card-content{align-self:center}}
+@media(max-width:639px){.avara-hero-copy{padding:1.65rem}.avara-hero-copy h1{font-size:clamp(2.8rem,12vw,4rem)}.avara-hero-image{min-height:220px}.avara-area-copy h3{font-size:clamp(1.85rem,9vw,2.7rem)}.avara-shell{padding-inline:1rem}.avara-editorial input,.avara-editorial select{font-size:16px}}

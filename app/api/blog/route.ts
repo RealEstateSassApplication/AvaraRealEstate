@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import BlogPost from '@/models/BlogPost';
-import User from '@/models/User';
+import '@/models/User';
+import {parsePositiveInt} from '@/lib/security';
 
 // GET /api/blog - Get published blog posts (public)
 export const dynamic = 'force-dynamic';
@@ -14,15 +15,15 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category');
     const tag = searchParams.get('tag');
     const search = searchParams.get('search');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '9');
+    const page = parsePositiveInt(searchParams.get('page'),1,100000);
+    const limit = parsePositiveInt(searchParams.get('limit'),9,50);
 
     const filter: any = { status: 'published' };
 
     if (category) filter.category = category;
     if (tag) filter.tags = tag;
     if (search) {
-      filter.$text = { $search: search };
+      filter.$text = { $search: search.slice(0,200) };
     }
 
     const skip = (page - 1) * limit;
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('Error fetching blog posts:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch blog posts', details: error.message },
+      { error: 'Failed to fetch blog posts',  },
       { status: 500 }
     );
   }

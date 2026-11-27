@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ApplicationForm from './ApplicationForm';
 import BookingModal from '@/components/booking/BookingModal';
 import { toast } from '@/hooks/use-toast';
+import { useSavedProperties } from '@/components/discovery/useSavedProperties';
 import { CalendarDays, MapPin, ShieldCheck, CheckCircle2, CircleDashed, Send } from 'lucide-react';
 
 interface HostContact {
@@ -51,8 +52,8 @@ interface Props {
 }
 
 export default function ListingActions({ propertyId, initialFavorite = false, hostContact, property }: Props) {
-  const [favorite, setFavorite] = useState<boolean>(initialFavorite);
-  const [loading, setLoading] = useState(false);
+  const saved = useSavedProperties();
+  const favorite = saved.ready ? saved.ids.includes(propertyId) : initialFavorite;
   const [contactLoading, setContactLoading] = useState(false);
   const [showRentModal, setShowRentModal] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
@@ -75,25 +76,6 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
       .catch(() => undefined);
     return () => { mounted = false; };
   }, [propertyId]);
-
-  const toggleFavorite = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/properties/${propertyId}/favorite`, { method: 'POST' });
-      if (res.ok) {
-        const data = await res.json();
-        setFavorite(Boolean(data.favorite));
-        toast({ title: data.favorite ? 'Added to favorites' : 'Removed from favorites' });
-      } else {
-        const err = await res.json();
-        toast({ title: 'Error', description: err?.error || 'Could not toggle favorite' });
-      }
-    } catch {
-      toast({ title: 'Network error', description: 'Could not contact server' });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleApplicationSubmitted = () => {
     toast({ title: 'Application Submitted', description: 'Your application has been sent to the host.' });
@@ -174,7 +156,7 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
 
           <div className="space-y-2.5">
             {passportChecks.map(([label, passed]) => (
-              <div key={label} className="flex items-center justify-between gap-3 text-sm">
+              <div key={label} className="flex flex-wrap items-center justify-between gap-3 text-sm">
                 <span className="text-white/80">{label}</span>
                 {passed ? (
                   <span className="inline-flex items-center gap-1.5 font-medium text-emerald-300">
@@ -199,7 +181,7 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
         <div className="flex flex-col gap-2">
           {isBooking && (
             <Button
-              className="w-full h-12 bg-gray-900 hover:bg-black text-white text-lg font-medium transition-all shadow-lg hover:shadow-xl"
+              className="w-full min-h-[48px] bg-[#243b31] hover:bg-[#385345] text-white text-base font-medium transition-all shadow-lg hover:shadow-xl"
               onClick={() => handleCheckAuth(() => setShowBookingModal(true))}
             >
               <CalendarDays className="w-5 h-5 mr-2" />
@@ -209,22 +191,20 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
 
           {isRentable && (
             <Dialog open={showRentModal} onOpenChange={setShowRentModal}>
-              <DialogTrigger asChild>
                 <Button
-                  className="w-full h-12 bg-gray-900 hover:bg-black text-white text-lg font-medium transition-all shadow-lg hover:shadow-xl"
+                  className="w-full min-h-[48px] bg-[#243b31] hover:bg-[#385345] text-white text-base font-medium transition-all shadow-lg hover:shadow-xl"
                   onClick={() => handleCheckAuth(() => setShowRentModal(true))}
                 >
                   Apply to Rent
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md w-full">
+              <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[90dvh] overflow-y-auto rounded-xl">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <CalendarDays className="w-5 h-5" />
                     Apply to Rent
                   </DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4 p-4 max-h-[80vh] overflow-auto">
+                <div className="space-y-4 max-h-[75dvh] overflow-auto">
                   <div className="border rounded-lg p-3 bg-gray-50">
                     <div className="flex items-center gap-3 mb-2">
                       {property?.images && property.images.length > 0 && (
@@ -256,7 +236,7 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
 
           {isPurchasable && (
             <Button
-              className="w-full bg-slate-900 hover:bg-black text-white text-lg py-3 font-semibold"
+              className="w-full bg-[#243b31] hover:bg-[#385345] text-white text-base py-3 font-semibold"
               disabled={contactLoading}
               onClick={() => handleCheckAuth(() => void sendEnquiry(`I am interested in purchasing ${property?.title || 'this property'}. Please contact me with the next steps.`))}
             >
@@ -288,9 +268,10 @@ export default function ListingActions({ propertyId, initialFavorite = false, ho
           </div>
         )}
 
-        <Button className="w-full" variant="outline" onClick={toggleFavorite} disabled={loading}>
+        <Button className="w-full" variant="outline" onClick={()=>void saved.toggle(propertyId)} disabled={!saved.ready}>
           {favorite ? 'Remove from Favorites' : 'Add to Favorites'}
         </Button>
+        {saved.error&&<p role="alert" className="text-sm text-red-700">{saved.error}</p>}
       </div>
 
       {property && (

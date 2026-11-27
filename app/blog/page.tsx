@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import Header from '@/components/ui/layout/Header';
+import DiscoveryFooter from '@/components/discovery/DiscoveryFooter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -93,29 +95,29 @@ export default function BlogPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      {/* Modern Hero Section with Mesh Gradient */}
-      <div className="relative overflow-hidden bg-white">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-teal-100/50 via-blue-50/30 to-transparent opacity-70"></div>
-        <div className="relative max-w-7xl mx-auto px-6 py-24 sm:py-32">
+    <div className="avara-editorial min-h-screen">
+      <Header/>
+      {/* Editorial journal */}
+      <div className="relative overflow-hidden bg-[#eaece2]">
+        <div className="avara-shell py-16 sm:py-24">
           <div className="text-center max-w-3xl mx-auto space-y-6">
             <Badge variant="secondary" className="bg-teal-50 text-teal-700 hover:bg-teal-100 transition-colors px-4 py-1.5 rounded-full text-sm font-medium border border-teal-100 mb-4">
               <Sparkles className="w-3.5 h-3.5 mr-2 inline-block" />
               Discover Insights
             </Badge>
-            <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-gray-900 leading-[1.1]">
-              The Avara <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-blue-600">Journal</span>
+            <h1 className="avara-display text-5xl sm:text-7xl leading-[1.1]">
+              The Avara <span className="text-[#243b31]">Journal</span>
             </h1>
             <p className="text-xl text-gray-600 leading-relaxed font-light">
-              Expert advice, market analysis, and the latest trends in Sri Lankan real estate.
+              Explore published property articles, practical guides and perspectives.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-12 -mt-10 relative z-10">
+      <div className="avara-shell py-10">
         {/* Modern Filter Bar */}
-        <div className="bg-white/80 backdrop-blur-xl border border-white/20 shadow-xl rounded-2xl p-4 mb-12">
+        <div className="bg-white border border-[#dedbd0] rounded-2xl p-4 mb-12">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -145,12 +147,12 @@ export default function BlogPage() {
         </div>
 
         {/* Blog Posts Grid */}
-        {filteredPosts.length === 0 ? (
+        {error ? <div role="alert" className="rounded-xl border bg-white p-8"><h2 className="avara-display text-3xl">Articles are temporarily unavailable.</h2><Button className="mt-4" onClick={()=>void fetchPosts()}>Retry</Button></div> : filteredPosts.length === 0 ? (
           <div className="text-center py-24 bg-white rounded-3xl border border-dashed border-gray-200">
             <BookOpen className="w-16 h-16 text-gray-200 mx-auto mb-4" />
             <h3 className="text-2xl font-semibold text-gray-900 mb-2">No articles found</h3>
             <p className="text-gray-500">We couldn't find any posts matching your search.</p>
-            <Button variant="link" onClick={() => { setSearchTerm(''); setCategoryFilter('all'); }} className="mt-4 text-teal-600">
+            <Button variant="link" onClick={() => { setSearchTerm(''); setCategoryFilter('all'); }} className="mt-4 text-[#243b31]">
               Clear filters
             </Button>
           </div>
@@ -159,7 +161,7 @@ export default function BlogPage() {
             {filteredPosts.map((post, index) => (
               <Card
                 key={post._id}
-                className="group border-0 bg-white shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 rounded-2xl overflow-hidden flex flex-col h-full"
+                className="group relative border border-[#dedbd0] bg-white hover:shadow-md transition-all duration-300 rounded-2xl overflow-hidden flex flex-col h-full"
               >
                 <div className="relative aspect-[16/10] overflow-hidden">
                   {post.featuredImage ? (
@@ -182,7 +184,7 @@ export default function BlogPage() {
                 </div>
 
                 <CardContent className="flex flex-col flex-grow p-6">
-                  <div className="flex items-center gap-3 text-sm text-gray-500 mb-4">
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-4">
                     <div className="flex items-center gap-1.5">
                       <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-teal-500 to-blue-500 flex items-center justify-center text-[10px] text-white font-bold">
                         {post.author?.firstName ? post.author.firstName.charAt(0) : 'A'}
@@ -196,7 +198,7 @@ export default function BlogPage() {
                     </div>
                   </div>
 
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 leading-tight group-hover:text-teal-600 transition-colors">
+                  <h3 className="avara-display text-2xl mb-3 line-clamp-2 leading-tight group-hover:text-[#243b31] transition-colors">
                     <Link href={`/blog/${post.slug}`} className="before:absolute before:inset-0">
                       {post.title}
                     </Link>
@@ -211,7 +213,7 @@ export default function BlogPage() {
                       <Eye className="w-3.5 h-3.5 text-gray-400" />
                       {post.views || 0} reads
                     </div>
-                    <span className="text-teal-600 text-sm font-semibold flex items-center group-hover:translate-x-1 transition-transform">
+                    <span className="text-[#243b31] text-sm font-semibold flex items-center group-hover:translate-x-1 transition-transform">
                       Read Article <ArrowRight className="w-4 h-4 ml-1" />
                     </span>
                   </div>
@@ -221,6 +223,7 @@ export default function BlogPage() {
           </div>
         )}
       </div>
+      <DiscoveryFooter/>
     </div>
   );
 }

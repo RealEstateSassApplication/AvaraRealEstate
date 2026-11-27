@@ -20,9 +20,9 @@ export async function GET(request: NextRequest) {
       filters.purpose = purpose as PropertyFilters['purpose'];
     }
 
-    const types = searchParams.getAll('type').filter(Boolean);
+    const types = searchParams.getAll('type').map(v=>v.trim().slice(0,100)).filter(Boolean).slice(0,30);
     if (types.length) filters.type = types;
-    const amenities = searchParams.getAll('amenities').filter(Boolean);
+    const amenities = searchParams.getAll('amenities').map(v=>v.trim().slice(0,100)).filter(Boolean).slice(0,30);
     if (amenities.length) filters.amenities = amenities;
 
     const numericKeys = ['minPrice', 'maxPrice', 'bedrooms', 'bathrooms', 'lat', 'lng', 'radius'] as const;
@@ -30,9 +30,10 @@ export async function GET(request: NextRequest) {
       const raw = searchParams.get(key);
       if (raw === null || raw === '') continue;
       const value = Number(raw);
-      if (Number.isFinite(value)) (filters as any)[key] = value;
+      if (Number.isFinite(value) && (key === 'lat' ? Math.abs(value)<=90 : key==='lng' ? Math.abs(value)<=180 : value>=0&&value<=1e12)) (filters as any)[key] = value;
     }
 
+    if (filters.minPrice!==undefined&&filters.maxPrice!==undefined&&filters.minPrice>filters.maxPrice) return NextResponse.json({error:'Invalid price range'},{status:400});
     const city = searchParams.get('city')?.trim();
     const district = searchParams.get('district')?.trim();
     const province = searchParams.get('province')?.trim();

@@ -103,8 +103,8 @@ export default function PropertyCard({
 
   return (
     <Card className={`group relative overflow-hidden border-[#dedbd0] bg-white text-[#243b31] shadow-none transition hover:border-[#8a9685] hover:shadow-md ${className}`}>
-        <div className="relative">
-          <div className="relative aspect-[4/3] overflow-hidden">
+        <div className="avara-card-body relative">
+          <div className="avara-card-photo relative aspect-[4/3] overflow-hidden">
             <Link href={`/listings/${property._id}`} aria-label={`View ${property.title}`} className="block h-full w-full">
             <img
               src={imageErrored ? '/images/property-placeholder.jpg' : (images[currentImageIndex] || '/images/property-placeholder.jpg')}
@@ -170,7 +170,7 @@ export default function PropertyCard({
             </div>
 
             {onToggleFavorite && <Button
-              aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+              aria-pressed={isFavorite} aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
               variant="ghost"
               size="sm"
               className="absolute top-3 right-3 rounded-full bg-white/95 hover:bg-white p-2"
@@ -180,7 +180,7 @@ export default function PropertyCard({
             </Button>}
           </div>
 
-          <CardContent className="p-5">
+          <CardContent className="avara-card-content min-w-0 p-5">
             <div className="flex items-center text-sm text-gray-600 mb-2">
               <MapPin className="w-4 h-4 mr-1" />
               {property.address.city}, {property.address.district}
