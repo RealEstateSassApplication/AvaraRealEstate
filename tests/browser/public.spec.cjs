@@ -30,7 +30,7 @@ test('mobile menu and search filters retain editable values and URL state',async
  await page.getByRole('button',{name:/^Filters/}).click();
  const dialog=page.getByRole('dialog');await expect(dialog).toBeVisible();
  await dialog.getByLabel('Maximum',{exact:true}).fill('65000');
- await dialog.getByLabel('Apartment',{exact:true}).check();
+ await dialog.getByLabel('apartment',{exact:true}).check();
  await dialog.getByRole('button',{name:'Apply filters'}).click();
  await expect(page).toHaveURL(/maxPrice=65000/);await expect(page).toHaveURL(/city=Nugegoda/);await expect(page).toHaveURL(/type=apartment/);
  await expect(page.getByText('40 properties found')).toBeVisible();
