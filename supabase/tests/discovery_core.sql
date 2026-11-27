@@ -30,4 +30,14 @@ do $$ begin
  if (select count(*) from public.avara_favorites)<>0 then raise exception 'favorite leak'; end if;
 end $$;
 reset role;
+insert into auth.users(id) values ('00000000-0000-4000-8000-000000000004'),('00000000-0000-4000-8000-000000000005');
+set local role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000004',true);
+do $ begin
+ begin insert into public.avara_profiles(id,display_name,role) values('00000000-0000-4000-8000-000000000004','Escalation','admin'); raise exception 'role escalation on insert'; exception when insufficient_privilege then null; end;
+ begin insert into public.avara_profiles(id,display_name) values('00000000-0000-4000-8000-000000000005','Wrong user'); raise exception 'cross user provisioning'; exception when insufficient_privilege then null; end;
+ insert into public.avara_profiles(id,display_name,manager_requested_at) values('00000000-0000-4000-8000-000000000004','New customer',now());
+ if (select role from public.avara_profiles where id='00000000-0000-4000-8000-000000000004')<>'customer' then raise exception 'default role mismatch'; end if;
+end $;
+reset role;
 rollback;
