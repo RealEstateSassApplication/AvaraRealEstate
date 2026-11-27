@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {postgresPreview,postgresDetail} from '@/lib/postgres/public-read';
 import PropertyService from '@/services/propertyService';
 import { requireAuth } from '@/lib/auth';
 import { updatePropertySchema } from '@/lib/propertyInput';
@@ -10,6 +11,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    if(postgresPreview()){const property=await postgresDetail(params.id);return property?NextResponse.json({property},{headers:{'Cache-Control':'no-store'}}):NextResponse.json({error:'Property not found'},{status:404});}
     if(!/^[a-f0-9]{24}$/i.test(params.id))return NextResponse.json({error:'Property not found'},{status:404});
     const property = await PropertyService.getById(params.id);
     if (!property) return NextResponse.json({ error: 'Property not found' }, { status: 404 });
@@ -25,6 +27,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    if(postgresPreview())return NextResponse.json({error:'Read-only catalog preview'},{status:503});
     if(!isTrustedMutation(request))return NextResponse.json({error:'Invalid origin'},{status:403});
     const user = await requireAuth(request);
     if(!/^[a-f0-9]{24}$/i.test(params.id))return NextResponse.json({error:'Property not found'},{status:404});
@@ -57,6 +60,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    if(postgresPreview())return NextResponse.json({error:'Read-only catalog preview'},{status:503});
     if(!isTrustedMutation(request))return NextResponse.json({error:'Invalid origin'},{status:403});
     const user = await requireAuth(request);
     if(!/^[a-f0-9]{24}$/i.test(params.id))return NextResponse.json({error:'Property not found'},{status:404});

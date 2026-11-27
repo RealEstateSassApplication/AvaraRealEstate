@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {postgresPreview,readPublicRows,cardRow} from '@/lib/postgres/public-read';
 import PropertyService, { PropertyFilters } from '@/services/propertyService';
 import getUserFromReq from '@/lib/auth';import {rolesFor} from '@/lib/workspace-roles';
 import { createPropertySchema } from '@/lib/propertyInput';
@@ -52,6 +53,7 @@ export async function GET(request: NextRequest) {
 
     const page = parsePositiveInt(searchParams.get('page'), 1, 1000);
     const limit = parsePositiveInt(searchParams.get('limit'), 20, 100);
+    if(postgresPreview()){const {rows,total}=await readPublicRows(filters,limit,page);return NextResponse.json({properties:rows.map(cardRow),total,totalPages:Math.max(1,Math.ceil(total/limit)),page},{headers:{'Cache-Control':'no-store'}});}
     const results = await PropertyService.searchProperties(filters, page, limit);
 
     return NextResponse.json({
@@ -61,12 +63,14 @@ export async function GET(request: NextRequest) {
       page: results.page || page,
     },{headers:{'Cache-Control':'no-store'}});
   } catch (err: any) {
+    if(postgresPreview())return NextResponse.json({error:'Property catalog unavailable'},{status:503,headers:{'Cache-Control':'no-store'}});
     console.error('Property GET error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
+  if(postgresPreview())return NextResponse.json({error:'Read-only catalog preview'},{status:503});
   if(!isTrustedMutation(request))return NextResponse.json({error:'Invalid origin'},{status:403});
   try {
     const user = await getUserFromReq(request as any);

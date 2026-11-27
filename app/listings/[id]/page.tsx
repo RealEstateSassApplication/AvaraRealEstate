@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import ListingGallery from '@/components/discovery/ListingGallery';
 import DiscoveryFooter from '@/components/discovery/DiscoveryFooter';
+import {postgresPreview,postgresDetail} from '@/lib/postgres/public-read';
 import PropertyService from '@/services/propertyService';
 import Header from '@/components/ui/layout/Header';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +19,7 @@ export const revalidate = 0; // always fresh in dev
 
 // Generate dynamic metadata for each property page
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const property = await PropertyService.getById(params.id, true);
+  const property = (postgresPreview()?await postgresDetail(params.id):await PropertyService.getById(params.id,true));
 
   if (!property) {
     return {
@@ -80,7 +81,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function ListingDetailPage({ params }: PageProps) {
-  const property = await PropertyService.getById(params.id, true);
+  const property = (postgresPreview()?await postgresDetail(params.id):await PropertyService.getById(params.id,true));
   if (!property) {
     notFound();
   }
@@ -286,7 +287,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
 
                 {/* Action Component */}
                 <div className="space-y-6">
-                  <ListingActions
+                  {postgresPreview()?<p className="text-sm text-slate-600">This is a read-only discovery preview. Enquiries and saved listings are not yet enabled.</p>:<ListingActions
                     propertyId={String(property._id)}
                     initialFavorite={false}
                     hostContact={{
@@ -304,7 +305,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
                       amenities: property.amenities,
                       images: property.images
                     }}
-                  />
+                  />}
 
 
                 </div>
