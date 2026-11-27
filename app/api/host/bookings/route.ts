@@ -4,9 +4,10 @@ import Booking from '@/models/Booking';
 import Property from '@/models/Property';
 import getUserFromReq from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
-    await dbConnect();
     const user = await getUserFromReq(request as any);
 
     if (!user) {
@@ -73,6 +74,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ bookings });
   } catch (error: any) {
     console.error('Error fetching bookings:', error);
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

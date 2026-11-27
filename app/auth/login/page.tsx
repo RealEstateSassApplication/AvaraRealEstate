@@ -47,7 +47,15 @@ export default function LoginPage() {
       if (response.ok) {
         // Successful login; redirect based on role if provided
         const role = data.data?.role;
-        const target = role === 'admin' ? '/admin/dashboard' : role === 'host' ? '/host/dashboard' : '/';
+        const fallback = role === 'admin' || role === 'super-admin' ? '/admin/dashboard' : role === 'host' ? '/host/dashboard' : '/';
+        const requested = new URLSearchParams(window.location.search).get('next');
+        let target = fallback;
+        if (requested?.startsWith('/') && !requested.startsWith('//')) {
+          try {
+            const parsed = new URL(requested, window.location.origin);
+            if (parsed.origin === window.location.origin && !parsed.pathname.startsWith('/auth/')) target = parsed.pathname + parsed.search + parsed.hash;
+          } catch { /* fall back to the account dashboard */ }
+        }
         router.push(target);
         router.refresh();
       } else {
@@ -61,7 +69,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
+    <div className="avara-editorial min-h-screen grid lg:grid-cols-2">
       {/* Left: Decorative Image */}
       <div className="hidden lg:block relative bg-gray-900">
         <div
@@ -75,20 +83,21 @@ export default function LoginPage() {
             </div>
             <span className="text-xl font-bold">Avara</span>
           </div>
-          <h2 className="text-4xl font-bold mb-4 max-w-md leading-tight">
+          <h2 className="avara-display text-5xl mb-4 max-w-md leading-tight">
             Find the perfect place to call home.
           </h2>
           <p className="text-gray-300 max-w-sm mb-8 text-lg">
-            Join thousands of satisfied users finding their dream properties in Sri Lanka.
+            Discover homes, save your shortlist and plan your next move in Sri Lanka.
           </p>
         </div>
       </div>
 
       {/* Right: Login Form */}
-      <div className="flex items-center justify-center p-8 bg-white">
+      <div className="flex items-center justify-center p-5 sm:p-8 bg-[#f7f5ef]">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center lg:text-left">
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">Welcome back</h1>
+            <Link href="/" className="avara-display mb-6 inline-block text-4xl text-[#243b31]">avara<span className="text-[#a68650]">.</span></Link>
+            <h1 className="avara-display text-4xl text-[#243b31]">Welcome back</h1>
             <p className="text-sm text-gray-500 mt-2">
               Enter your credentials to access your account
             </p>

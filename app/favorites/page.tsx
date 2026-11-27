@@ -1,46 +1,16 @@
+import Link from 'next/link';
 import Header from '@/components/ui/layout/Header';
+import DiscoveryFooter from '@/components/discovery/DiscoveryFooter';
+import SavedCollection from '@/components/discovery/SavedCollection';
 import dbConnect from '@/lib/db';
-import User from '@/models/User';
-import PropertyCard from '@/components/property/PropertyCard';
-import { cookies } from 'next/headers';
+import Property from '@/models/Property';
+import {cookies} from 'next/headers';
 import getUserFromReq from '@/lib/auth';
-
-export default async function FavoritesPage() {
-  // Use server-side cookie auth to get the current user
-  const cookieHeader = cookies().toString();
-  const fakeReq: any = { headers: { cookie: cookieHeader } };
-  const user = await getUserFromReq(fakeReq);
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-background text-foreground">
-        <Header />
-        <div className="max-w-4xl mx-auto p-8 text-center">
-          <h2 className="text-xl font-semibold">Sign in to see your favorites</h2>
-        </div>
-      </div>
-    );
-  }
-
-  await dbConnect();
-  const populatedAny = await User.findById(user._id).populate('favorites').lean() as any;
-  const favorites = (populatedAny?.favorites || []) as any[];
-
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      <Header />
-      <div className="max-w-6xl mx-auto p-8">
-        <h1 className="text-2xl font-bold mb-6">Your Favorites</h1>
-        {favorites.length === 0 ? (
-          <div className="text-center text-muted-foreground">You have no favorites yet.</div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {favorites.map((f) => (
-              <PropertyCard key={f._id} property={f} onToggleFavorite={() => {}} isFavorite={true} />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+export const dynamic='force-dynamic';
+export default async function FavoritesPage(){
+ const user=await getUserFromReq({headers:{cookie:cookies().toString()}});
+ if(!user)return <div className="avara-editorial min-h-screen"><Header/><main className="avara-shell py-16"><h1 className="avara-display text-4xl">Your saved properties</h1><p className="mt-4">Sign in to create your shortlist.</p><Link className="mt-6 inline-block rounded-lg bg-[#243b31] px-5 py-3 text-white" href="/auth/login?next=%2Ffavorites">Sign in</Link></main><DiscoveryFooter/></div>;
+ await dbConnect();
+ const rows=await Property.find({_id:{$in:user.favorites||[]},status:'active'}).select('title description type purpose price currency rentFrequency bedrooms bathrooms areaSqft images address.city address.district amenities ratings featured verified trustScore trustLevel owner').populate('owner','name profilePhoto verified').lean();
+ return <div className="avara-editorial min-h-screen"><Header/><main className="avara-shell py-12"><p className="avara-kicker">Your collection</p><h1 className="avara-display mt-3 text-5xl">Saved properties.</h1><SavedCollection initial={JSON.parse(JSON.stringify(rows))}/></main><DiscoveryFooter/></div>;
 }

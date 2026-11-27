@@ -58,7 +58,7 @@ export function OrganizationSchema({
     return (
         <script
             type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }}
         />
     );
 }
@@ -112,13 +112,12 @@ export function RealEstateListingSchema({
         description,
         url,
         image,
-        datePosted: datePosted || new Date().toISOString(),
+        datePosted,
         offers: {
             '@type': 'Offer',
             price,
             priceCurrency,
-            availability: 'https://schema.org/InStock',
-            priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+            availability: 'https://schema.org/InStock'
         },
         address: {
             '@type': 'PostalAddress',
@@ -162,7 +161,7 @@ export function RealEstateListingSchema({
     return (
         <script
             type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }}
         />
     );
 }
@@ -219,7 +218,7 @@ export function BlogPostSchema({
     return (
         <script
             type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }}
         />
     );
 }
@@ -247,7 +246,7 @@ export function BreadcrumbSchema({ items }: BreadcrumbSchemaProps) {
     return (
         <script
             type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }}
         />
     );
 }
@@ -277,7 +276,7 @@ export function FAQSchema({ questions }: FAQSchemaProps) {
     return (
         <script
             type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }}
         />
     );
 }

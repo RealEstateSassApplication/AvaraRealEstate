@@ -6,6 +6,8 @@ import Property from '@/models/Property';
 import User from '@/models/User';
 import Transaction from '@/models/Transaction'; // Assuming this tracks payments
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
     try {
         await requireRole(request, ['admin', 'super-admin']);
@@ -84,6 +86,8 @@ export async function GET(request: NextRequest) {
 
     } catch (err: any) {
         console.error('Admin reports error:', err);
-        return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+        if (err?.message === 'Authentication required') return NextResponse.json({error:'Authentication required'}, {status:401});
+    if (err?.message === 'Insufficient permissions') return NextResponse.json({error:'Insufficient permissions'}, {status:403});
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
