@@ -30,7 +30,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  for (const path of ['/explore', '/tools/living-cost', ...neighbourhoods.map(n => '/explore/'+n.slug)]) {
+  for (const path of ['/explore', '/tools', '/tools/living-cost', '/tools/mortgage', '/tools/rent-vs-buy', '/tools/land-converter', ...neighbourhoods.map(n => '/explore/'+n.slug)]) {
     staticPages.push({ url: new URL(path, BASE_URL).toString() });
   }
 

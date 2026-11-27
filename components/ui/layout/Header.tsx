@@ -89,7 +89,7 @@ export default function Header() {
             <Link href="/listings?purpose=rent" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Rent</Link>
             <Link href="/listings?purpose=sale" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Buy</Link>
             <Link href="/listings?purpose=booking" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Stays</Link>
-            <Link href="/tools/living-cost" className="text-sm font-medium text-slate-700 hover:text-slate-950">Living costs</Link>
+            <Link href="/tools" className="text-sm font-medium text-slate-700 hover:text-slate-950">Tools</Link>
             <Link href="/blog" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Insights</Link>
             {user && (
               <>
@@ -164,7 +164,7 @@ export default function Header() {
             <Link href="/listings?purpose=rent" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Rent</Link>
             <Link href="/listings?purpose=sale" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Buy</Link>
             <Link href="/listings?purpose=booking" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Stays</Link>
-            <Link href="/tools/living-cost" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Living costs</Link>
+            <Link href="/tools" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Tools</Link>
             <Link href="/blog" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Insights</Link>
             {user && (
               <>
