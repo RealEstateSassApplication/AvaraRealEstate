@@ -6,10 +6,10 @@ import User from '@/models/User';
 import { getUserFromRequest } from '@/lib/auth';
 
 // GET /api/user/rents - Get all rents for the logged-in user (as tenant)
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
-    await dbConnect();
-    
     const user = await getUserFromRequest(request);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('Error fetching user rents:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch rents', details: error.message },
+      { error: 'Failed to fetch rents' },
       { status: 500 }
     );
   }

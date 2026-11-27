@@ -4,6 +4,8 @@ import dbConnect from '@/lib/db';
 import Rent from '@/models/Rent';
 
 // GET /api/admin/rents - Get all rentals for admin
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     await requireRole(request, ['admin', 'super-admin']);
@@ -73,6 +75,8 @@ export async function GET(request: NextRequest) {
     });
   } catch (err: any) {
     console.error('Admin rents list error:', err);
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+    if (err?.message === 'Authentication required') return NextResponse.json({error:'Authentication required'}, {status:401});
+    if (err?.message === 'Insufficient permissions') return NextResponse.json({error:'Insufficient permissions'}, {status:403});
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

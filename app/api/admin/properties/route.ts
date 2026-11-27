@@ -3,6 +3,8 @@ import { requireRole } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import Property from '@/models/Property';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     await requireRole(request, ['admin', 'super-admin']);
@@ -19,6 +21,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ properties });
   } catch (err: any) {
     console.error('Admin properties list error:', err);
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+    if (err?.message === 'Authentication required') return NextResponse.json({error:'Authentication required'}, {status:401});
+    if (err?.message === 'Insufficient permissions') return NextResponse.json({error:'Insufficient permissions'}, {status:403});
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

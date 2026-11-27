@@ -5,9 +5,10 @@ import RentalRequest from '@/models/RentalRequest';
 import Property from '@/models/Property';
 import { checkPropertyMatch } from '@/lib/matchRentalRequests';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
-    await dbConnect();
     const user = await requireAuth(request);
     const { searchParams } = new URL(request.url);
 
@@ -90,7 +91,7 @@ export async function GET(request: NextRequest) {
       );
     }
     return NextResponse.json(
-      { error: err.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
