@@ -130,12 +130,12 @@ export default function Header() {
                         <p className="font-medium text-slate-950">{user.name}</p>
                         <p className="truncate text-xs text-slate-500">{user.email}</p>
                       </div>
-                      <DropdownMenuItem asChild><Link href="/user/profile">Profile</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild><Link href="/user/profile">Profile</Link></DropdownMenuItem>{!hasHostRole(user)&&<DropdownMenuItem asChild><Link href="/host/apply">List a property</Link></DropdownMenuItem>}
                       <DropdownMenuItem asChild><Link href="/workspace">My dashboard</Link></DropdownMenuItem><DropdownMenuItem asChild><Link href="/messages">Messages</Link></DropdownMenuItem>
                       
                       {hasHostRole(user) && (
                         <>
-                          <DropdownMenuItem asChild><Link href="/owner">Owner OS</Link></DropdownMenuItem>
+                          <DropdownMenuItem asChild><Link href="/owner">Portfolio</Link></DropdownMenuItem>
                           <DropdownMenuItem asChild><Link href="/host/dashboard">Manage listings</Link></DropdownMenuItem>
                         </>
                       )}
@@ -166,6 +166,7 @@ export default function Header() {
             <Link href="/listings?purpose=booking" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Stays</Link>
             
             
+            {!loading&&!user&&<Link href="/host/apply" className="block rounded-lg px-3 py-3 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>List a property</Link>}
             {!loading&&!user&&<div className="mt-3 grid grid-cols-2 gap-2 border-t pt-4"><Link onClick={closeMenu} href="/auth/login" className="rounded-lg border px-4 py-3 text-center text-sm">Sign in</Link><Link onClick={closeMenu} href="/auth/register" className="rounded-lg avara-primary px-4 py-3 text-center text-sm">Join Avara</Link></div>}
             {user && (
               <>
@@ -176,7 +177,7 @@ export default function Header() {
                     <Link href="/host/listings/create" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>List property</Link>
                   </>
                 )}
-                {isAdmin(user) && <Link href="/admin/dashboard" className="block rounded-lg px-3 py-2 text-sm font-semibold text-blue-700" onClick={closeMenu}>Admin panel</Link>}
+                {isAdmin(user) && <Link href="/admin/dashboard" className="block rounded-lg px-3 py-2 text-sm font-semibold text-[#20352b]" onClick={closeMenu}>Admin panel</Link>}
                 <button className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-[#4b584c]" onClick={logout}>Logout</button>
               </>
             )}
