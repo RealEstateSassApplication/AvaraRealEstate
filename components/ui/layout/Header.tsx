@@ -136,7 +136,7 @@ export default function Header() {
                       {hasHostRole(user) && (
                         <>
                           <DropdownMenuItem asChild><Link href="/owner">Owner OS</Link></DropdownMenuItem>
-                          <DropdownMenuItem asChild><Link href="/host/dashboard">Legacy host operations</Link></DropdownMenuItem>
+                          <DropdownMenuItem asChild><Link href="/rentals/opportunities">Rental opportunities</Link></DropdownMenuItem><DropdownMenuItem asChild><Link href="/host/dashboard">Legacy host operations</Link></DropdownMenuItem>
                         </>
                       )}
                       {isAdmin(user) && <><DropdownMenuItem asChild><Link href="/admin/dashboard">Admin panel</Link></DropdownMenuItem><DropdownMenuItem asChild><Link href="/admin/discovery">Discovery CMS</Link></DropdownMenuItem></>}
@@ -169,11 +169,11 @@ export default function Header() {
             {!loading&&!user&&<div className="mt-3 grid grid-cols-2 gap-2 border-t pt-4"><Link onClick={closeMenu} href="/auth/login" className="rounded-lg border px-4 py-3 text-center text-sm">Sign in</Link><Link onClick={closeMenu} href="/auth/register" className="rounded-lg bg-[#243b31] px-4 py-3 text-center text-sm text-white">Join Avara</Link></div>}
             {user && (
               <>
-                <Link href="/user/dashboard" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Dashboard</Link>
+                <Link href="/user/dashboard" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Dashboard</Link><Link href="/rentals/my-requests" className="block rounded-lg px-3 py-3 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>My rental requests</Link>
                 {hasHostRole(user) && (
                   <>
                     <Link href="/owner" className="block rounded-lg bg-slate-950 px-3 py-2 text-sm font-semibold text-white" onClick={closeMenu}>Owner OS</Link>
-                    <Link href="/host/listings/create" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>List property</Link>
+                    <Link href="/rentals/opportunities" className="block rounded-lg px-3 py-3 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Rental opportunities</Link><Link href="/host/listings/create" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>List property</Link>
                   </>
                 )}
                 {isAdmin(user) && <Link href="/admin/dashboard" className="block rounded-lg px-3 py-2 text-sm font-semibold text-blue-700" onClick={closeMenu}>Admin panel</Link>}

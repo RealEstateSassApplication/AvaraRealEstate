@@ -839,7 +839,7 @@ export default function UserDashboardPage() {
                     <CardDescription>Properties you're looking for</CardDescription>
                   </div>
                   <Button asChild>
-                    <Link href="/request-property">
+                    <Link href="/rentals/my-requests">
                       <Plus className="w-4 h-4 mr-2" />
                       New Request
                     </Link>
