@@ -4,16 +4,19 @@ import { getUserFromRequest } from '@/lib/auth';
 import User from '@/models/User';
 import Property from '@/models/Property';
 import { Types } from 'mongoose';
+import {isTrustedMutation} from '@/lib/request-origin';
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+  if(!isTrustedMutation(request))return NextResponse.json({error:'Invalid origin'},{status:403});
   try {
     const user = await getUserFromRequest(request);
     if (!user) return NextResponse.json({error:'Sign in required'}, {status:401});
     const userId = (user as any)._id?.toString();
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+    if(!Types.ObjectId.isValid(params.id))return NextResponse.json({error:'Invalid property'},{status:400});
     const fav = await PropertyService.toggleFavorite(userId, params.id);
-    return NextResponse.json({ favorite: fav });
+    return NextResponse.json({ favorite: fav },{headers:{'Cache-Control':'private, no-store'}});
   } catch (err: any) {
     console.error('Toggle favorite error:', err);
     return NextResponse.json({ error: 'Could not update favorite' }, { status: 500 });
@@ -22,6 +25,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
 // Explicit desired state is safe to retry; legacy POST retained for existing clients.
 export async function PATCH(request: NextRequest,{params}:{params:{id:string}}){
+ if(!isTrustedMutation(request))return NextResponse.json({error:'Invalid origin'},{status:403});
  try{
   const user=await getUserFromRequest(request);
   if(!user)return NextResponse.json({error:'Sign in required'},{status:401});

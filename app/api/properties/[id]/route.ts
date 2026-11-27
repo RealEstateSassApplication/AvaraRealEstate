@@ -2,15 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import PropertyService from '@/services/propertyService';
 import { requireAuth } from '@/lib/auth';
 import { updatePropertySchema } from '@/lib/propertyInput';
+import {publicProperty} from '@/lib/discovery/public-property';
+import {isTrustedMutation} from '@/lib/request-origin';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    if(!/^[a-f0-9]{24}$/i.test(params.id))return NextResponse.json({error:'Property not found'},{status:404});
     const property = await PropertyService.getById(params.id);
     if (!property) return NextResponse.json({ error: 'Property not found' }, { status: 404 });
-    return NextResponse.json({ property });
+    return NextResponse.json({property:publicProperty(property)},{headers:{'Cache-Control':'no-store'}});
   } catch (error: any) {
     console.error('Property fetch error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -22,8 +25,10 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    if(!isTrustedMutation(request))return NextResponse.json({error:'Invalid origin'},{status:403});
     const user = await requireAuth(request);
-    const parsed = updatePropertySchema.safeParse(await request.json());
+    if(!/^[a-f0-9]{24}$/i.test(params.id))return NextResponse.json({error:'Property not found'},{status:404});
+    const parsed = updatePropertySchema.safeParse(await request.json().catch(()=>null));
     if (!parsed.success || Object.keys(parsed.data).length === 0) {
       return NextResponse.json({ error: 'Invalid property update' }, { status: 400 });
     }
@@ -52,7 +57,9 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    if(!isTrustedMutation(request))return NextResponse.json({error:'Invalid origin'},{status:403});
     const user = await requireAuth(request);
+    if(!/^[a-f0-9]{24}$/i.test(params.id))return NextResponse.json({error:'Property not found'},{status:404});
     const deleted = await PropertyService.deleteProperty(params.id, user._id.toString());
     if (!deleted) {
       return NextResponse.json({ error: 'Property not found or unauthorized' }, { status: 404 });
