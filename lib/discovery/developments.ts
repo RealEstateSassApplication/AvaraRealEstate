@@ -1,0 +1,4 @@
+import {cache} from 'react';import dbConnect from '@/lib/db';import Development from '@/models/Development';
+export type DevelopmentRow={slug:string;name:string;developer:string;city:string;district:string;summary:string;stage:string;sourceUrl:string;sourceDate:Date;status:string;publishedAt?:Date;updatedAt?:Date};
+export async function listDevelopments(){if(!process.env.MONGODB_URI)return null;try{await dbConnect();return await Development.find({status:'published'}).select('-editor -__v').sort({publishedAt:-1}).limit(100).lean() as unknown as DevelopmentRow[];}catch{return null;}}
+export const getDevelopment=cache(async(slug:string)=>{if(!/^[a-z0-9-]{1,100}$/.test(slug))return null;if(!process.env.MONGODB_URI)throw Error('Development data unavailable');await dbConnect();return await Development.findOne({slug,status:'published'}).select('-editor -__v').lean() as unknown as DevelopmentRow|null;});

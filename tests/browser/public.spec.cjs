@@ -14,7 +14,7 @@ async function noOverflow(page){await expect.poll(()=>page.evaluate(()=>document
 for(const width of [320,360,390,768,1440]){
  test('public routes have no horizontal overflow at '+width,async({page})=>{
   await page.setViewportSize({width,height:850});await mock(page);
-  for(const path of ['/','/explore','/explore/nugegoda','/listings?purpose=rent','/tools','/tools/mortgage','/tools/rent-vs-buy','/tools/land-converter','/tools/living-cost','/blog','/rentals','/request-property','/rentals/my-requests','/rentals/opportunities','/guides','/guides/buying-land-sri-lanka','/guides/perch-acre-square-feet','/about']){
+  for(const path of ['/','/explore','/explore/nugegoda','/listings?purpose=rent','/tools','/tools/mortgage','/tools/rent-vs-buy','/tools/land-converter','/tools/living-cost','/blog','/rentals','/request-property','/rentals/my-requests','/rentals/opportunities','/discover','/map','/compare','/new-properties','/developments','/market','/concierge','/guides','/guides/buying-land-sri-lanka','/guides/perch-acre-square-feet','/about']){
    const response=await page.goto(path,{waitUntil:'domcontentloaded'});expect(response.status(),path).toBe(200);
    await expect(page.getByRole('heading',{level:1}).first()).toBeVisible();
    await noOverflow(page);
@@ -98,3 +98,5 @@ test('owner offers a matching property once',async({page})=>{
  await page.route('**/api/rental-requests/*/offer',route=>{expect(route.request().postDataJSON().propertyId).toBe(fixture._id);sent=true;return route.fulfill({status:201,json:{success:true}});});
  await page.goto('/rentals/opportunities');await page.getByRole('button',{name:'Offer property'}).click();await expect(page.getByRole('button',{name:'Offer sent'})).toBeDisabled();await noOverflow(page);
 });
+
+test('comparison shortlist and concierge filters',async({page})=>{await page.setViewportSize({width:390,height:844});await mock(page);const p={id:fixture._id,title:'Fixture apartment',type:'apartment',purpose:'rent',price:30000,currency:'LKR',period:'monthly',city:'Nugegoda',district:'Colombo',amenities:['Parking'],verified:false,coordinates:[79.9,6.86]};await page.route('**/api/discovery/properties?*',route=>route.fulfill({status:200,json:{properties:[p]}}));await page.goto('/compare');await page.getByRole('button',{name:'Add to comparison'}).click();await expect(page.getByRole('heading',{name:'Your shortlist (1/4)'})).toBeVisible();await expect(page.getByRole('table')).toBeVisible();await noOverflow(page);await page.goto('/concierge');await page.getByLabel('What are you looking for?').fill('A room in Nugegoda under LKR 30,000 with parking');await page.getByRole('button',{name:'Find search filters'}).click();await expect(page.getByRole('link',{name:'Review matching listings →'})).toHaveAttribute('href',/maxPrice=30000/);await noOverflow(page);});
