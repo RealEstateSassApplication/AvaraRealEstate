@@ -1,35 +1,16 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { ArrowUpRight } from 'lucide-react';
 import Header from '@/components/ui/layout/Header';
+import DiscoveryFooter from '@/components/discovery/DiscoveryFooter';
+import { neighbourhoods } from '@/lib/discovery/content';
 
-export const metadata: Metadata = {
-  title: 'Explore neighbourhoods in Sri Lanka',
-  description: 'Explore five Colombo-area locations, browse rental listings and plan your living costs.',
-  alternates: { canonical: '/explore' },
-};
-
-const areas = ['Colombo', 'Nugegoda', 'Maharagama', 'Rajagiriya', 'Dehiwala'];
+export const metadata: Metadata = { title:'Explore neighbourhoods in Sri Lanka',description:'Discover five Colombo-area neighbourhoods with practical property viewing checklists and rental links.',alternates:{canonical:'/explore'} };
 
 export default function ExplorePage() {
-  return <div className="min-h-screen bg-[#f4f1ea] text-[#20372e]">
-    <Header />
-    <main className="mx-auto max-w-6xl px-5 py-14 sm:py-20">
-      <p className="text-xs font-semibold uppercase tracking-widest">Avara Explore / Colombo region</p>
-      <h1 className="mt-4 max-w-3xl font-serif text-5xl leading-tight sm:text-6xl">Where would you like to live?</h1>
-      <p className="mt-5 max-w-2xl text-lg text-slate-700">Start with a location, explore available listings and consider your commute, daily needs and housing budget before choosing a home.</p>
-      <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {areas.map((area, i) => <article key={area} className="rounded-2xl border border-[#d8d8cc] bg-white p-6">
-          <p className="text-xs text-slate-500">AREA {String(i+1).padStart(2,'0')}</p>
-          <h2 className="mt-3 font-serif text-3xl">{area}</h2>
-          <p className="mt-3 text-sm text-slate-600">Check rent, transport options, utilities, nearby amenities and your daily travel needs.</p>
-          <Link className="mt-6 inline-block font-medium underline" href={'/listings?purpose=rent&city='+encodeURIComponent(area)}>Browse rental listings</Link>
-        </article>)}
-      </div>
-      <section className="mt-10 rounded-2xl bg-[#20372e] p-8 text-white">
-        <h2 className="font-serif text-3xl">What will it cost to live there?</h2>
-        <p className="mt-3 max-w-xl text-white/80">Estimate your own monthly expenses. We do not yet publish measured neighbourhood cost indices or verified market averages.</p>
-        <Link className="mt-5 inline-block rounded-lg bg-white px-5 py-3 font-semibold text-[#20372e]" href="/tools/living-cost">Open living cost calculator</Link>
-      </section>
-    </main>
-  </div>;
+ return <div className="min-h-screen bg-[#f4f1ea] text-[#20372e]"><Header/><main className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
+  <p className="text-xs font-semibold uppercase tracking-[.2em]">The neighbourhood edit</p><h1 className="mt-4 max-w-3xl font-serif text-5xl sm:text-7xl">Find a place that fits your life.</h1><p className="mt-5 max-w-2xl text-lg text-slate-700">Start with five places in the Colombo region. Use practical viewing questions, browse properties and build your own budget. These are planning checklists, not market rankings or measured area profiles.</p>
+  <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{neighbourhoods.map((n,i)=><Link key={n.slug} href={'/explore/'+n.slug} className="overflow-hidden rounded-2xl border border-[#dedacf] bg-white hover:border-[#20372e]"><div className="flex min-h-[180px] flex-col justify-between p-6 text-white" style={{backgroundColor:n.accent}}><p className="text-xs">0{i+1} / Colombo region</p><div><p className="text-xs">{n.label}</p><h2 className="mt-2 font-serif text-4xl">{n.name}</h2></div></div><div className="p-6"><p className="text-sm leading-relaxed text-slate-600">{n.intro}</p><span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold">Explore {n.name} <ArrowUpRight size={16}/></span></div></Link>)}</div>
+  <section className="mt-10 rounded-2xl bg-[#20372e] p-8 text-white"><h2 className="font-serif text-3xl">Compare your total living budget.</h2><p className="mt-3 text-white/85">Use your own rent and expenses. No account required.</p><Link href="/tools/living-cost" className="mt-5 inline-block rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#20372e]">Estimate living costs</Link></section>
+ </main><DiscoveryFooter/></div>;
 }

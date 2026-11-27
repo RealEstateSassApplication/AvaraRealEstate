@@ -11,7 +11,7 @@ Answer "Where should I live and what will it cost?" Avara Explore covers propert
 - 30 permissioned listings/references and five agent conversations; refresh inventory weekly.
 - Personal monthly living cost tool, followed by rent/buy scenarios, perches/square feet conversion, and asking-price comparison.
 - Consented direct enquiries; no in-platform payment required for discovery.
-- Property OS product page: verified source repository and explicit developer ZIP, not a fabricated installer.
+- Property OS: one secondary section linking directly to its GitHub repository; packaging and release distribution deferred.
 - CMS-managed editorial home sections, guides, collections, partner information and navigation with draft/preview/publish workflow.
 - Do not scrape or republish listings, photos or personal details without authorization.
 

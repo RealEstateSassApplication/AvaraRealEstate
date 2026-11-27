@@ -68,7 +68,7 @@ const amenitiesList = [
 ];
 
 const sriLankanCities = [
-  'Colombo', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya',
+  'Colombo', 'Nugegoda', 'Maharagama', 'Rajagiriya', 'Dehiwala', 'Negombo', 'Bentota', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya',
   'Galle', 'Matara', 'Hambantota', 'Jaffna', 'Kilinochchi', 'Mannar',
   'Vavuniya', 'Mullaitivu', 'Batticaloa', 'Ampara', 'Trincomalee',
   'Kurunegala', 'Puttalam', 'Anuradhapura', 'Polonnaruwa', 'Badulla',
@@ -99,21 +99,18 @@ export default function SearchFilters({
   }, [filters]);
 
   const handleFilterChange = (key: keyof SearchFilters, value: any) => {
-    const newFilters = { ...localFilters, [key]: value };
-    setLocalFilters(newFilters);
+    setLocalFilters(prev => ({ ...prev, [key]: value }));
   };
 
   const handleApplyFilters = () => {
-    onFiltersChange(localFilters);
-    onSearch();
+    onFiltersChange({ ...localFilters });
     setShowMobileFilters(false);
   };
 
   const handleClearFilters = () => {
-    const clearedFilters = { search: localFilters.search };
+    const clearedFilters = {};
     setLocalFilters(clearedFilters);
     onFiltersChange(clearedFilters);
-    onSearch();
   };
 
   // If 'land' type is selected, remove bedroom/bathroom filters and hide controls
@@ -387,7 +384,7 @@ export default function SearchFilters({
   );
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+    <div className="bg-white rounded-xl border border-[#dedacf] p-4 mb-6">
       {/* Search Bar */}
       <div className="flex gap-2 mb-4">
         <div className="flex-1 relative">
@@ -419,8 +416,7 @@ export default function SearchFilters({
               variant={localFilters.purpose === purpose.value ? 'default' : 'outline'}
               size="sm"
               onClick={() => {
-                handleFilterChange('purpose', purpose.value);
-                setTimeout(handleApplyFilters, 100);
+                const next = { ...localFilters, purpose: purpose.value as SearchFilters['purpose'], minPrice: undefined, maxPrice: undefined }; setLocalFilters(next); onFiltersChange(next);
               }}
             >
               {purpose.label}
@@ -433,8 +429,7 @@ export default function SearchFilters({
             <Select 
               value={localFilters.city} 
               onValueChange={(value) => {
-                handleFilterChange('city', value);
-                setTimeout(handleApplyFilters, 100);
+                const next = { ...localFilters, city: value }; setLocalFilters(next); onFiltersChange(next);
               }}
             >
               <SelectTrigger className="w-40">
@@ -452,8 +447,7 @@ export default function SearchFilters({
             <Select
               value={localFilters.province}
               onValueChange={(value) => {
-                handleFilterChange('province', value);
-                setTimeout(handleApplyFilters, 100);
+                const next = { ...localFilters, province: value }; setLocalFilters(next); onFiltersChange(next);
               }}
             >
               <SelectTrigger className="w-40">
@@ -506,8 +500,7 @@ export default function SearchFilters({
               <X
                 className="w-3 h-3 ml-1 cursor-pointer"
                 onClick={() => {
-                  handleFilterChange('purpose', undefined);
-                  setTimeout(handleApplyFilters, 100);
+                  const next = { ...localFilters, purpose: undefined }; setLocalFilters(next); onFiltersChange(next);
                 }}
               />
             </div>
@@ -518,8 +511,7 @@ export default function SearchFilters({
               <X
                 className="w-3 h-3 ml-1 cursor-pointer"
                 onClick={() => {
-                  handleFilterChange('city', undefined);
-                  setTimeout(handleApplyFilters, 100);
+                  const next = { ...localFilters, city: undefined }; setLocalFilters(next); onFiltersChange(next);
                 }}
               />
             </div>
@@ -530,8 +522,7 @@ export default function SearchFilters({
               <X
                 className="w-3 h-3 ml-1 cursor-pointer"
                 onClick={() => {
-                  handleFilterChange('province', undefined);
-                  setTimeout(handleApplyFilters, 100);
+                  const next = { ...localFilters, province: undefined }; setLocalFilters(next); onFiltersChange(next);
                 }}
               />
             </div>
@@ -546,8 +537,7 @@ export default function SearchFilters({
                 className="w-3 h-3 ml-1 cursor-pointer"
                 onClick={() => {
                   const newTypes = localFilters.type?.filter(t => t !== type);
-                  handleFilterChange('type', newTypes);
-                  setTimeout(handleApplyFilters, 100);
+                  const next = { ...localFilters, type: newTypes }; setLocalFilters(next); onFiltersChange(next);
                 }}
               />
             </div>

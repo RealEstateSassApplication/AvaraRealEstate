@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { Heart, MapPin, Menu, X } from 'lucide-react';
+import { Heart, Menu, X } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import ListPropertyButton from '@/components/ui/ListPropertyButton';
@@ -79,30 +79,20 @@ export default function Header() {
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-white/95 shadow-sm backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-[#e5e1d7] bg-[#fdfcf8]/95 backdrop-blur">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="rounded-lg bg-slate-950 p-2 text-white">
-              <MapPin className="h-6 w-6" />
-            </div>
-            <div className="hidden sm:block">
-              <div className="text-xl font-bold tracking-tight text-slate-950">Avara</div>
-              <div className="text-xs text-slate-500">Sri Lanka</div>
-            </div>
-          </Link>
+          <Link href="/" aria-label="Avara home" className="font-serif text-3xl tracking-tight text-[#20372e]">avara<span className="text-[#a68650]">.</span></Link>
 
-          <nav className="hidden items-center gap-4 lg:flex">
-            <Link href="/explore" className="text-sm font-medium text-slate-700 hover:text-slate-950">Explore</Link>
-            <Link href="/property-os" className="text-sm font-medium text-slate-700 hover:text-slate-950">Property OS</Link>
+          <nav className="hidden items-center gap-5 xl:flex">
+            <Link href="/explore" className="text-sm font-medium text-slate-700 hover:text-slate-950">Places</Link>
             <Link href="/listings?purpose=rent" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Rent</Link>
             <Link href="/listings?purpose=sale" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Buy</Link>
             <Link href="/listings?purpose=booking" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Stays</Link>
+            <Link href="/tools/living-cost" className="text-sm font-medium text-slate-700 hover:text-slate-950">Living costs</Link>
             <Link href="/blog" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Insights</Link>
             {user && (
               <>
-                <Link href="/request-property" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Request property</Link>
-                <Link href="/user/dashboard" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Dashboard</Link>
                 {hasHostRole(user) && (
                   <Link href="/owner" className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800">
                     Owner OS
@@ -121,7 +111,7 @@ export default function Header() {
             {!loading && (
               user ? (
                 <>
-                  {hasHostRole(user) && <ListPropertyButton className="hidden lg:inline-flex" size="sm" variant="outline" />}
+                  {hasHostRole(user) && <ListPropertyButton className="hidden 2xl:inline-flex" size="sm" variant="outline" />}
                   <Button asChild variant="ghost" size="sm">
                     <Link href="/favorites" aria-label="Favorites"><Heart className="h-4 w-4" /></Link>
                   </Button>
@@ -162,23 +152,22 @@ export default function Header() {
               )
             )}
 
-            <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setIsMenuOpen((open) => !open)} aria-label="Toggle menu">
+            <Button variant="ghost" size="sm" className="xl:hidden" onClick={() => setIsMenuOpen((open) => !open)} aria-label="Toggle menu" aria-expanded={isMenuOpen}>
               {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </Button>
           </div>
         </div>
 
         {isMenuOpen && (
-          <nav className="space-y-1 border-t py-4 lg:hidden">
-            <Link href="/explore" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Explore</Link>
-            <Link href="/property-os" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Property OS</Link>
+          <nav className="space-y-1 border-t py-4 xl:hidden">
+            <Link href="/explore" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Places</Link>
             <Link href="/listings?purpose=rent" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Rent</Link>
             <Link href="/listings?purpose=sale" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Buy</Link>
             <Link href="/listings?purpose=booking" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Stays</Link>
+            <Link href="/tools/living-cost" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Living costs</Link>
             <Link href="/blog" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Insights</Link>
             {user && (
               <>
-                <Link href="/request-property" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Request property</Link>
                 <Link href="/user/dashboard" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Dashboard</Link>
                 {hasHostRole(user) && (
                   <>
