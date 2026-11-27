@@ -15,7 +15,6 @@ const registerSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    await dbConnect();
     const parsed = registerSchema.safeParse(await request.json());
     if (!parsed.success) {
       return NextResponse.json(
@@ -29,6 +28,7 @@ export async function POST(request: NextRequest) {
     const requestedRole = parsed.data.role || 'user';
     if(supabaseMode()){try{await provider('signup','POST',{email,password,data:{name,phone,managerRequested:requestedRole==='host'}});return NextResponse.json({verificationRequired:true,message:'Check your email to verify your account.'},{status:201,headers:privateHeaders});}catch(e){return providerFailure(e);}}
 
+    await dbConnect();
     const existing = await User.findOne({ $or: [{ email }, { phone }] }).select('_id');
     if (existing) {
       return NextResponse.json({ error: 'User already exists' }, { status: 409 });

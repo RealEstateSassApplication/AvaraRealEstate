@@ -90,6 +90,10 @@ end $$;
 grant select(id,title,description,property_type,purpose,status,price,currency,rent_period,city,district,bedrooms,bathrooms,area_sqft,images,amenities,verified,created_at,updated_at) on public.avara_properties to anon,authenticated;
 create policy avara_public_active on public.avara_properties for select to anon,authenticated using(status='active');
 grant select on public.avara_profiles to authenticated;
+-- A verified Auth identity may create only its own default customer profile.
+-- Do not grant insert/update privileges on role or legacy_mongo_id.
+grant insert(id,display_name,phone,manager_requested_at) on public.avara_profiles to authenticated;
+create policy avara_profile_insert_self on public.avara_profiles for insert to authenticated with check(id=(select auth.uid()) and role='customer' and legacy_mongo_id is null);
 create policy avara_profile_self on public.avara_profiles for select to authenticated using(id=(select auth.uid()));
 grant select,insert,delete on public.avara_favorites to authenticated;
 create policy avara_favorites_read on public.avara_favorites for select to authenticated using(user_id=(select auth.uid()));
@@ -99,5 +103,5 @@ grant select on public.avara_conversations,public.avara_messages,public.avara_co
 create policy avara_threads_participant on public.avara_conversations for select to authenticated using((select auth.uid()) in (seeker_id,owner_id));
 create policy avara_messages_participant on public.avara_messages for select to authenticated using(exists(select 1 from public.avara_conversations c where c.id=conversation_id and (select auth.uid()) in(c.seeker_id,c.owner_id)));
 create policy avara_blocks_participant on public.avara_conversation_blocks for select to authenticated using(exists(select 1 from public.avara_conversations c where c.id=conversation_id and (select auth.uid()) in(c.seeker_id,c.owner_id)));
--- All privileged changes, profile provisioning, moderation and message sends require reviewed server operations.
+-- Privileged changes, moderation and message sends require reviewed server operations.
 commit;
