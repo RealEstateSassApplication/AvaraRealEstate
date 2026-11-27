@@ -29,6 +29,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
+  for (const path of ['/explore', '/tools/living-cost', '/property-os']) {
+    staticPages.push({ url: new URL(path, BASE_URL).toString() });
+  }
+
   let propertyPages: MetadataRoute.Sitemap = [];
   let blogPages: MetadataRoute.Sitemap = [];
 

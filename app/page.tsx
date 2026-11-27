@@ -103,13 +103,13 @@ export default function HomePage() {
 
     // Budget mapping
     if (budget !== 'Flexible') {
-      if (budget === '$100k - $500k') {
+      if (budget === 'LKR 100,000 - 500,000') {
         params.append('minPrice', '100000');
         params.append('maxPrice', '500000');
-      } else if (budget === '$500k - $1M') {
+      } else if (budget === 'LKR 500,000 - 1,000,000') {
         params.append('minPrice', '500000');
         params.append('maxPrice', '1000000');
-      } else if (budget === '$1M+') {
+      } else if (budget === 'LKR 1,000,000+') {
         params.append('minPrice', '1000000');
       }
     }
@@ -121,7 +121,7 @@ export default function HomePage() {
   const premiumHighlights = [
     {
       title: 'Verified Listings',
-      description: 'Every property is reviewed for quality, trust, and listing integrity.',
+      description: 'Review available listing verification details before making a decision.',
       icon: ShieldCheck,
     },
     {
@@ -131,7 +131,7 @@ export default function HomePage() {
     },
     {
       title: 'Dedicated Expert Support',
-      description: 'Our team is available to guide you through every decision with confidence.',
+      description: 'Explore property information and resources to support your next decision.',
       icon: Headset,
     },
   ];
@@ -165,7 +165,7 @@ export default function HomePage() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
                 </span>
-                #1 Real Estate Platform in Sri Lanka
+                Property discovery for Sri Lanka
               </div>
 
               <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold leading-tight tracking-tight">
@@ -261,9 +261,9 @@ export default function HomePage() {
                           onChange={(e) => setBudget(e.target.value)}
                         >
                           <option>Flexible</option>
-                          <option>$100k - $500k</option>
-                          <option>$500k - $1M</option>
-                          <option>$1M+</option>
+                          <option>LKR 100,000 - 500,000</option>
+                          <option>LKR 500,000 - 1,000,000</option>
+                          <option>LKR 1,000,000+</option>
                         </select>
                       </div>
                     </div>
@@ -280,6 +280,27 @@ export default function HomePage() {
               </Card>
             </motion.div>
 
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-[#f4f1ea] py-16 text-[#20372e]">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <p className="text-xs font-semibold uppercase tracking-widest">The Avara guide</p>
+          <h2 className="mt-3 max-w-2xl font-serif text-4xl">Find a place to live, not just a property.</h2>
+          <p className="mt-4 max-w-xl text-slate-700">Explore neighbourhoods, work out your monthly living budget and find tools for managing rental properties.</p>
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {[
+              { href: '/explore', title: 'Explore neighbourhoods', description: 'Start with five Colombo-area locations and compare what matters to you.' },
+              { href: '/tools/living-cost', title: 'Estimate living costs', description: 'Build your own monthly budget in LKR, including rent and commuting.' },
+              { href: '/property-os', title: 'Property Management OS', description: 'Explore the separate property management project and download its source.' },
+            ].map(item => (
+              <Link key={item.href} href={item.href} className="rounded-xl border border-[#d8d8cc] bg-white p-6 transition hover:border-[#20372e]">
+                <h3 className="text-xl font-semibold">{item.title}</h3>
+                <p className="mt-2 text-sm text-slate-600">{item.description}</p>
+                <span className="mt-5 inline-block text-sm font-medium underline">Explore</span>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
@@ -376,7 +397,7 @@ export default function HomePage() {
           <motion.h2 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-3xl md:text-4xl font-bold mb-4">
             Ready to find your dream property?
           </motion.h2>
-          <p className="mb-8 max-w-2xl mx-auto">Join thousands of satisfied customers and unlock a smarter way to search, list, and manage properties in Sri Lanka.</p>
+          <p className="mb-8 max-w-2xl mx-auto">Explore, compare and discover properties in Sri Lanka.</p>
           <div className="flex justify-center gap-4">
             <Button asChild size="lg" className="bg-white text-teal-600">
               <Link href="/listings">Browse Properties</Link>
@@ -436,7 +457,7 @@ export default function HomePage() {
                   List Your Property
                 </a>
                 <Link href="/host/dashboard" className="block hover:text-white">Owner Dashboard</Link>
-                <Link href="/pricing" className="block hover:text-white">Pricing Plans</Link>
+                <Link href="/property-os" className="block hover:text-white">Property Management OS</Link>
               </div>
             </div>
 
@@ -444,7 +465,7 @@ export default function HomePage() {
               <h4 className="font-semibold mb-4">Contact Us</h4>
               <div className="space-y-2 text-slate-300">
                 <p>contact@avara.lk</p>
-                <p>+94 77 123 4567</p>
+                
                 <p>Colombo, Sri Lanka</p>
               </div>
             </div>

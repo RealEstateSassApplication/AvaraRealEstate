@@ -92,7 +92,9 @@ export default function Header() {
             </div>
           </Link>
 
-          <nav className="hidden items-center gap-6 md:flex">
+          <nav className="hidden items-center gap-4 lg:flex">
+            <Link href="/explore" className="text-sm font-medium text-slate-700 hover:text-slate-950">Explore</Link>
+            <Link href="/property-os" className="text-sm font-medium text-slate-700 hover:text-slate-950">Property OS</Link>
             <Link href="/listings?purpose=rent" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Rent</Link>
             <Link href="/listings?purpose=sale" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Buy</Link>
             <Link href="/listings?purpose=booking" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Stays</Link>
@@ -160,14 +162,16 @@ export default function Header() {
               )
             )}
 
-            <Button variant="ghost" size="sm" className="md:hidden" onClick={() => setIsMenuOpen((open) => !open)} aria-label="Toggle menu">
+            <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setIsMenuOpen((open) => !open)} aria-label="Toggle menu">
               {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </Button>
           </div>
         </div>
 
         {isMenuOpen && (
-          <nav className="space-y-1 border-t py-4 md:hidden">
+          <nav className="space-y-1 border-t py-4 lg:hidden">
+            <Link href="/explore" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Explore</Link>
+            <Link href="/property-os" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Property OS</Link>
             <Link href="/listings?purpose=rent" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Rent</Link>
             <Link href="/listings?purpose=sale" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Buy</Link>
             <Link href="/listings?purpose=booking" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Stays</Link>
