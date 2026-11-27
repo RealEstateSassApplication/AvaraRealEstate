@@ -2,6 +2,7 @@ import { MetadataRoute } from 'next';
 import dbConnect from '@/lib/db';
 import Property from '@/models/Property';
 import BlogPost from '@/models/BlogPost';
+import Development from '@/models/Development';
 import { neighbourhoods } from '@/lib/discovery/content';
 import {guides,guideReviewed} from '@/lib/discovery/guides';
 export const revalidate=3600;
@@ -28,7 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  for (const path of ['/rentals', '/about', '/guides', '/explore', '/tools', '/tools/living-cost', '/tools/mortgage', '/tools/rent-vs-buy', '/tools/land-converter', ...neighbourhoods.map(n => '/explore/'+n.slug)]) {
+  for (const path of ['/discover','/map','/compare','/new-properties','/developments','/market','/concierge','/rentals', '/about', '/guides', '/explore', '/tools', '/tools/living-cost', '/tools/mortgage', '/tools/rent-vs-buy', '/tools/land-converter', ...neighbourhoods.map(n => '/explore/'+n.slug)]) {
     staticPages.push({ url: new URL(path, BASE_URL).toString() });
   }
 
@@ -73,7 +74,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
+  let projects:MetadataRoute.Sitemap=[];
+  if(process.env.MONGODB_URI){try{await dbConnect();const rows=await Development.find({status:'published'}).select('slug updatedAt').lean();projects=rows.map((x:{slug:string;updatedAt?:Date})=>({url:new URL('/developments/'+x.slug,BASE_URL).toString(),lastModified:x.updatedAt}));}catch{}}
   return [
+    ...projects,
     ...staticPages,
     ...propertyPages,
     ...blogPages,
