@@ -475,6 +475,7 @@ export default function AdminDashboardPage() {
         <div className="mb-8">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Link href="/admin/developments" className="block rounded-xl border border-[#d8d8cc] bg-white p-6 hover:border-[#20372e]"><h3 className="font-bold text-lg text-[#20372e]">Development profiles</h3><p className="text-sm text-gray-600">Manage sourced property projects</p></Link>
             <Link href="/admin/discovery" className="block rounded-xl border border-[#d8d8cc] bg-white p-6 hover:border-[#20372e]"><h3 className="font-bold text-lg text-[#20372e]">Discovery CMS</h3><p className="text-sm text-gray-600">Manage homepage, collections and neighbourhood content</p></Link>
             <Link href="/admin/blog">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-teal-500">

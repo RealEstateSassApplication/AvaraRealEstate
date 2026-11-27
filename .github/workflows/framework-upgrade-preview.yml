@@ -1,0 +1,42 @@
+name: Framework upgrade preview
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/framework-upgrade-preview.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      JWT_SECRET: ci-only-jwt-secret-with-at-least-32-characters
+      NEXTAUTH_SECRET: ci-only-nextauth-secret-with-at-least-32-characters
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Resolve patched framework candidate in an isolated checkout
+        run: |
+          mkdir -p upgrade-report
+          npm view next@15 version --json > upgrade-report/next-15-versions.json
+          npm view next@latest version peerDependencies engines --json > upgrade-report/next-latest.json
+          npm view zod@latest version --json > upgrade-report/zod-latest.json
+          npm pkg delete dependencies.@next/swc-wasm-nodejs
+          npm install --package-lock-only --ignore-scripts --no-fund next@15 react@19 react-dom@19 @types/react@19 @types/react-dom@19 eslint-config-next@15 postcss@latest zod@latest @hookform/resolvers@latest > upgrade-report/install.log 2>&1
+          cp package.json package-lock.json upgrade-report/
+          npm audit --omit=dev --json > upgrade-report/audit.json || test "$?" -eq 1
+          node -e 'const a=require("./upgrade-report/audit.json"); console.log(JSON.stringify(a.metadata?.vulnerabilities));for(const [k,v] of Object.entries(a.vulnerabilities||{})) console.log(k,v.severity,JSON.stringify(v.fixAvailable))'
+      - name: Clean install and check migration compatibility
+        run: |
+          npm ci --ignore-scripts
+          npx tsc --noEmit 2>&1 | tee upgrade-report/typecheck.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: framework-upgrade-preview
+          path: upgrade-report/
