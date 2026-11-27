@@ -3,6 +3,8 @@ import PropertyService, { PropertyFilters } from '@/services/propertyService';
 import getUserFromReq from '@/lib/auth';import {rolesFor} from '@/lib/workspace-roles';
 import { createPropertySchema } from '@/lib/propertyInput';
 import { parsePositiveInt } from '@/lib/security';
+import {publicProperty} from '@/lib/discovery/public-property';
+import {isTrustedMutation} from '@/lib/request-origin';
 
 function parseBoolean(value: string | null) {
   if (value === 'true') return true;
@@ -48,16 +50,16 @@ export async function GET(request: NextRequest) {
     if (featured !== undefined) filters.featured = featured;
     if (verified !== undefined) filters.verified = verified;
 
-    const page = parsePositiveInt(searchParams.get('page'), 1, 100000);
+    const page = parsePositiveInt(searchParams.get('page'), 1, 1000);
     const limit = parsePositiveInt(searchParams.get('limit'), 20, 100);
     const results = await PropertyService.searchProperties(filters, page, limit);
 
     return NextResponse.json({
-      properties: results.properties || [],
+      properties: (results.properties || []).map(publicProperty),
       total: results.total || 0,
       totalPages: results.totalPages || 1,
       page: results.page || page,
-    });
+    },{headers:{'Cache-Control':'no-store'}});
   } catch (err: any) {
     console.error('Property GET error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -65,12 +67,13 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  if(!isTrustedMutation(request))return NextResponse.json({error:'Invalid origin'},{status:403});
   try {
     const user = await getUserFromReq(request as any);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     if(!rolesFor(user).includes('host'))return NextResponse.json({error:'Approved property manager access required'},{status:403});
-    const parsed = createPropertySchema.safeParse(await request.json());
+    const parsed = createPropertySchema.safeParse(await request.json().catch(()=>null));
     if (!parsed.success) {
       return NextResponse.json(
         { error: 'Invalid property data', details: parsed.error.flatten().fieldErrors },

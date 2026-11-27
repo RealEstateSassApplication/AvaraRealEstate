@@ -1,3 +1,4 @@
+import {isTrustedMutation} from '@/lib/request-origin';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import dbConnect from '@/lib/db';
@@ -14,8 +15,9 @@ const registerSchema = z.object({
 }).strict();
 
 export async function POST(request: NextRequest) {
+  if(!isTrustedMutation(request))return NextResponse.json({error:'Invalid origin'},{status:403,headers:privateHeaders});
   try {
-    const parsed = registerSchema.safeParse(await request.json());
+    const parsed = registerSchema.safeParse(await request.json().catch(()=>null));
     if (!parsed.success) {
       return NextResponse.json(
         { error: 'Invalid registration data', details: parsed.error.flatten().fieldErrors },
