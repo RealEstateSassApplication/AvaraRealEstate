@@ -116,12 +116,13 @@ export default async function ListingDetailPage({ params }: PageProps) {
         bathrooms={property.bathrooms}
         floorSize={property.areaSqft}
         datePosted={property.createdAt?.toISOString()}
+        period={property.rentFrequency}
       />
       <BreadcrumbSchema
         items={[
           { name: 'Home', url: BASE_URL },
           { name: 'Listings', url: `${BASE_URL}/listings` },
-          { name: property.address?.city || 'Property', url: `${BASE_URL}/listings?city=${property.address?.city}` },
+          { name: property.address?.city || 'Property', url: `${BASE_URL}/listings?city=${encodeURIComponent(property.address?.city||'')}` },
           { name: property.title, url: `${BASE_URL}/listings/${params.id}` },
         ]}
       />
