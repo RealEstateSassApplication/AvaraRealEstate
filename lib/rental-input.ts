@@ -1,6 +1,6 @@
 import {z} from 'zod';
 const names=z.array(z.string().trim().min(1).max(80)).max(12);
-const locations=z.array(z.string().trim().min(1).max(80).regex(/^[\\p{L}\\p{M} .’'-]+$/u)).max(12);
+const locations=z.array(z.string().trim().min(1).max(80).regex(/^[\p{L}\p{M} .’'-]+$/u)).max(12);
 const bound=z.object({min:z.number().finite().min(0).max(1000000).optional(),max:z.number().finite().min(0).max(1000000).optional()}).refine(x=>x.min===undefined||x.max===undefined||x.min<=x.max);
 export const rentalInput=z.object({
  propertyTypes:z.array(z.enum(['apartment','house','villa','bungalow','room','commercial','land'])).min(1).max(7),

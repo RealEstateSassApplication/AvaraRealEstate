@@ -1,0 +1,42 @@
+name: Dependency security audit
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Audit committed lockfile (all and production dependencies)
+        run: |
+          mkdir -p audit
+          npm audit --json > audit/all.json || test "$?" -eq 1
+          npm audit --omit=dev --json > audit/production.json || test "$?" -eq 1
+          node -e 'for(const n of ["all","production"]){const a=require("./audit/"+n+".json");if(!a.metadata||!a.vulnerabilities)throw Error("Audit unavailable");console.log(n,JSON.stringify(a.metadata.vulnerabilities));for(const [k,v] of Object.entries(a.vulnerabilities))console.log(k,JSON.stringify({severity:v.severity,range:v.range,via:v.via,fixAvailable:v.fixAvailable}));}'
+      - name: Generate non-breaking remediation candidate (no repository writes)
+        run: |
+          npm audit fix --package-lock-only --ignore-scripts --no-fund --json > audit/safe-fix.json || test "$?" -eq 1
+          cp package-lock.json audit/candidate-package-lock.json
+          cp package.json audit/candidate-package.json
+          git diff -- package.json package-lock.json > audit/safe-fix.patch
+          npm audit --omit=dev --json > audit/candidate-production.json || test "$?" -eq 1
+          node -e 'const a=require("./audit/candidate-production.json");if(!a.metadata)throw Error("Candidate audit unavailable");console.log("Candidate production",JSON.stringify(a.metadata.vulnerabilities));'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-audit
+          path: audit/
+      - name: Report production vulnerability gate
+        run: |
+          node -e 'const a=require("./audit/production.json");const v=a.metadata.vulnerabilities;if(v.high||v.critical){console.error("Production high/critical vulnerabilities require remediation before deployment");process.exit(1)}'

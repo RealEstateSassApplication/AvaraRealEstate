@@ -10,7 +10,7 @@ test('rental requests privacy, match, offer and close with real MongoDB',async()
  const input={propertyTypes:['room'],purpose:'rent',location:{cities:['Nugegoda'],districts:[],flexible:false},budget:{min:0,max:30000,currency:'LKR',frequency:'monthly'},additionalNotes:'private notes only',shareWithOwners:false};
  assert.equal((await call('/api/rental-requests',null,'POST',input)).status,401);
  assert.equal((await call('/api/rental-requests',tenant,'POST',{...input,budget:{...input.budget,max:-1}})).status,400);
- const created=await call('/api/rental-requests',tenant,'POST',input);assert.equal(created.status,201);assert.equal(created.data.matchedCount,1);const req=String(created.data.data._id),path='/api/rental-requests/'+req;
+ const created=await call('/api/rental-requests',tenant,'POST',input);assert.equal(created.status,201,JSON.stringify(created.data));assert.equal(created.data.matchedCount,1);const req=String(created.data.data._id),path='/api/rental-requests/'+req;
  assert.equal((await call(path,stranger)).status,404);assert.equal((await call('/api/host/rental-requests',host)).data.data.length,0);
  assert.equal((await call(path,tenant,'PATCH',{shareWithOwners:true})).status,200);
  const offers=await call('/api/host/rental-requests',host);assert.equal(offers.status,200);assert.equal(offers.data.data.length,1);assert.ok(!JSON.stringify(offers.data).includes('private notes only'));assert.ok(!JSON.stringify(offers.data).includes('@example.invalid'));
