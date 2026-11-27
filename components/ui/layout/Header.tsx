@@ -79,18 +79,18 @@ export default function Header() {
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#e5e1d7] bg-[#fdfcf8]/95 backdrop-blur">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          <Link href="/" aria-label="Avara home" className="font-serif text-3xl tracking-tight text-[#20372e]">avara<span className="text-[#a68650]">.</span></Link>
+    <header className="avara-header sticky top-0 z-50 border-b border-[#e5e1d7] backdrop-blur">
+      <div className="mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-[4vw]">
+        <div className="flex min-h-[76px] items-center justify-between gap-3">
+          <Link href="/" aria-label="Avara home" className="avara-wordmark text-[2.55rem] leading-none text-[#243b31]">avara<span className="text-[#a68650]">.</span></Link>
 
-          <nav className="hidden items-center gap-5 xl:flex">
-            <Link href="/explore" className="text-sm font-medium text-slate-700 hover:text-slate-950">Places</Link>
-            <Link href="/listings?purpose=rent" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Rent</Link>
-            <Link href="/listings?purpose=sale" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Buy</Link>
-            <Link href="/listings?purpose=booking" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Stays</Link>
-            <Link href="/tools" className="text-sm font-medium text-slate-700 hover:text-slate-950">Tools</Link>
-            <Link href="/blog" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-950">Insights</Link>
+          <nav className="hidden items-center gap-6 xl:flex">
+            <Link href="/explore" className="text-sm font-medium text-[#4b584c] hover:text-slate-950">Explore</Link>
+            <Link href="/listings?purpose=rent" className="text-sm font-medium text-[#4b584c] transition-colors hover:text-slate-950">Rent</Link>
+            <Link href="/listings?purpose=sale" className="text-sm font-medium text-[#4b584c] transition-colors hover:text-slate-950">Buy</Link>
+            <Link href="/listings?purpose=booking" className="text-sm font-medium text-[#4b584c] transition-colors hover:text-slate-950">Stays</Link>
+            <Link href="/tools" className="text-sm font-medium text-[#4b584c] hover:text-slate-950">Tools</Link>
+            <Link href="/blog" className="text-sm font-medium text-[#4b584c] transition-colors hover:text-slate-950">Insights</Link>
             {user && (
               <>
                 {hasHostRole(user) && (
@@ -147,7 +147,7 @@ export default function Header() {
               ) : (
                 <>
                   <Button asChild variant="ghost" size="sm"><Link href="/auth/login">Login</Link></Button>
-                  <Button asChild size="sm"><Link href="/auth/register">Sign up</Link></Button>
+                  <Button asChild size="sm" className="rounded-full bg-[#243b31] px-4 text-white hover:bg-[#385345]"><Link href="/auth/register">Join Avara</Link></Button>
                 </>
               )
             )}
@@ -160,23 +160,23 @@ export default function Header() {
 
         {isMenuOpen && (
           <nav className="space-y-1 border-t py-4 xl:hidden">
-            <Link href="/explore" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Places</Link>
-            <Link href="/listings?purpose=rent" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Rent</Link>
-            <Link href="/listings?purpose=sale" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Buy</Link>
-            <Link href="/listings?purpose=booking" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Stays</Link>
-            <Link href="/tools" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Tools</Link>
-            <Link href="/blog" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Insights</Link>
+            <Link href="/explore" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Explore</Link>
+            <Link href="/listings?purpose=rent" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Rent</Link>
+            <Link href="/listings?purpose=sale" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Buy</Link>
+            <Link href="/listings?purpose=booking" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Stays</Link>
+            <Link href="/tools" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Tools</Link>
+            <Link href="/blog" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Insights</Link>
             {user && (
               <>
-                <Link href="/user/dashboard" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>Dashboard</Link>
+                <Link href="/user/dashboard" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Dashboard</Link>
                 {hasHostRole(user) && (
                   <>
                     <Link href="/owner" className="block rounded-lg bg-slate-950 px-3 py-2 text-sm font-semibold text-white" onClick={closeMenu}>Owner OS</Link>
-                    <Link href="/host/listings/create" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700" onClick={closeMenu}>List property</Link>
+                    <Link href="/host/listings/create" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>List property</Link>
                   </>
                 )}
                 {isAdmin(user) && <Link href="/admin/dashboard" className="block rounded-lg px-3 py-2 text-sm font-semibold text-blue-700" onClick={closeMenu}>Admin panel</Link>}
-                <button className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700" onClick={logout}>Logout</button>
+                <button className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-[#4b584c]" onClick={logout}>Logout</button>
               </>
             )}
           </nav>
