@@ -7,7 +7,7 @@ const collection = z.object({ title: copy(100), description: copy(240), href: z.
 const area = z.object({ slug: z.string(), name: z.string(), label: copy(100), accent: z.string(), intro: copy(600), checks: z.array(copy(300)).min(1).max(8) }).strict();
 
 export const contentSchema = z.object({
-  website: z.object({seoTitle:copy(100),seoDescription:copy(300),heroImage:z.string().max(500).refine(v=>v===''||(/^https:\/\//.test(v)&&(()=>{try{return !new URL(v).username&&!new URL(v).password;}catch{return false;}})())),showOwnerCallout:z.boolean(),ownerTitle:copy(100),ownerDescription:copy(300)}).strict().default({seoTitle:'Find property in Sri Lanka | Avara',seoDescription:'Discover homes, apartments, land and stays in Sri Lanka. Find a place to rent or buy and connect with property owners.',heroImage:'https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg',showOwnerCallout:true,ownerTitle:'Make your next move.',ownerDescription:'Find a home, manage your saved properties or list a place of your own.'}),
+  website: z.object({seoTitle:copy(100),seoDescription:copy(300),heroImage:z.string().max(500).refine(v=>v===''||(/^https:\/\//.test(v)&&(()=>{try{return !new URL(v).username&&!new URL(v).password;}catch{return false;}})())),showOwnerCallout:z.boolean(),ownerTitle:copy(100),ownerDescription:copy(300)}).strict().default({seoTitle:'Sri Lanka Property, Architecture & Home Building | Avara',seoDescription:'Explore Sri Lankan homes, land, rentals and stays. Compare property, read architecture and home-building guides, and plan your next move with Avara.',heroImage:'https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg',showOwnerCallout:true,ownerTitle:'Have a property to share?',ownerDescription:'Create a clear, accurate listing so people can discover your home, land or stay.'}),
   hero: z.object({ eyebrow: copy(100), title: copy(100), description: copy(300), cta: copy(60) }).strict(),
   sections: z.object({ collections: section, listings: section, neighbourhoods: section, tools: section }).strict(),
   directory: z.object({ title: copy(120), description: copy(500) }).strict(),
@@ -30,15 +30,15 @@ export type DiscoveryContent = z.infer<typeof contentSchema>;
 export type SectionKey = keyof DiscoveryContent['sections'];
 
 export const defaultContent: DiscoveryContent = {
-  website:{seoTitle:'Find property in Sri Lanka | Avara',seoDescription:'Discover homes, apartments, land and stays in Sri Lanka. Find a place to rent or buy and connect with property owners.',heroImage:'https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg',showOwnerCallout:true,ownerTitle:'Make your next move.',ownerDescription:'Find a home, manage your saved properties or list a place of your own.'},
-  hero: { eyebrow: 'A different way to discover Sri Lanka', title: 'Find somewhere you belong.', description: 'Explore homes, get to know neighbourhoods and understand what your next move could cost.', cta: 'Explore places' },
+  website:{seoTitle:'Sri Lanka Property, Architecture & Home Building | Avara',seoDescription:'Explore Sri Lankan homes, land, rentals and stays. Compare property, read architecture and home-building guides, and plan your next move with Avara.',heroImage:'https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg',showOwnerCallout:true,ownerTitle:'Have a property to share?',ownerDescription:'Create a clear, accurate listing so people can discover your home, land or stay.'},
+  hero: { eyebrow: 'A different way to discover Sri Lanka', title: 'Discover property. Design your next move.', description: 'Browse homes, land and stays across Sri Lanka. Discover architecture, compare properties and plan a better place to live.', cta: 'Discover Avara' },
   sections: {
     collections: { eyebrow: 'Start with what matters', title: 'Find your kind of place.', enabled: true },
     listings: { eyebrow: 'On the market', title: 'Discover available properties.', enabled: true },
     neighbourhoods: { eyebrow: 'The neighbourhood edit', title: 'A home is more than four walls.', enabled: true },
     tools: { eyebrow: 'Make informed decisions', title: 'Plan your next chapter.', enabled: true },
   },
-  directory: { title: 'Find a place that fits your life.', description: 'Start with five places in the Colombo region. Use practical viewing questions, browse properties and build your own budget. These are planning checklists, not market rankings or measured area profiles.' },
+  directory: { title: 'Explore Sri Lanka, neighbourhood by neighbourhood.', description: 'Explore local viewing guides and property search across Sri Lanka. Start with the Colombo region and use the same practical criteria wherever you plan to move.' },
   collections: collections.map(c => ({...c})),
   neighbourhoods: neighbourhoods.map(n => ({...n, checks: [...n.checks]})),
 };

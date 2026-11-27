@@ -85,27 +85,13 @@ export default function Header() {
           <Link href="/" aria-label="Avara home" className="avara-wordmark shrink-0 text-[2.15rem] sm:text-[2.55rem] leading-none text-[#243b31]">avara<span className="text-[#a68650]">.</span></Link>
 
           <nav aria-label="Main navigation" className="hidden items-center gap-6 xl:flex">
-            <Link href="/explore" className="text-sm font-medium text-[#4b584c] hover:text-slate-950">Explore</Link>
+            <Link href="/discover" className="text-sm font-semibold text-[#20352b] hover:underline">Discover</Link><Link href="/explore" className="text-sm font-medium text-[#4b584c] hover:text-slate-950">Explore</Link>
             <Link href="/listings?purpose=rent" className="text-sm font-medium text-[#4b584c] transition-colors hover:text-slate-950">Rent</Link>
             <Link href="/listings?purpose=sale" className="text-sm font-medium text-[#4b584c] transition-colors hover:text-slate-950">Buy</Link>
             <Link href="/listings?purpose=booking" className="text-sm font-medium text-[#4b584c] transition-colors hover:text-slate-950">Stays</Link>
             
             
-            {user && (
-              <>
-                {hasHostRole(user) && (
-                  <Link href="/workspace?view=manager" className="rounded-full avara-primary px-4 py-2 text-sm font-semibold">
-                    Property manager
-                  </Link>
-                )}
-                {isAdmin(user) && (
-                  <Link href="/workspace?view=admin" className="rounded-md border border-[#cbdcc6] bg-[#e3efdf] px-3 py-1.5 text-sm font-semibold text-[#20352b]">
-                    Admin
-                  </Link>
-                )}
-              </>
-            )}
-          </nav>
+            <Link href="/guides" className="text-sm font-medium text-[#4b584c] hover:text-slate-950">Journal</Link></nav>
 
           <div className="flex min-w-0 items-center gap-1 sm:gap-2">
             {!loading && (
@@ -160,7 +146,7 @@ export default function Header() {
 
         {isMenuOpen && (
           <nav aria-label="Mobile navigation" className="max-h-[calc(100dvh-68px)] space-y-1 overflow-y-auto overscroll-contain border-t py-4 xl:hidden">
-            <Link href="/explore" className="block rounded-lg px-3 py-3 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Explore</Link>
+            <Link href="/discover" className="block rounded-lg px-3 py-3 text-sm font-semibold" onClick={closeMenu}>Discover</Link><Link href="/guides" className="block rounded-lg px-3 py-3 text-sm font-medium" onClick={closeMenu}>Journal</Link><Link href="/explore" className="block rounded-lg px-3 py-3 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Explore</Link>
             <Link href="/listings?purpose=rent" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Rent</Link>
             <Link href="/listings?purpose=sale" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Buy</Link>
             <Link href="/listings?purpose=booking" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Stays</Link>
@@ -173,7 +159,7 @@ export default function Header() {
                 <Link href="/workspace" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Dashboard</Link><Link href="/messages" className="block rounded-lg px-3 py-3 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Messages</Link>
                 {hasHostRole(user) && (
                   <>
-                    <Link href="/owner" className="block rounded-lg avara-primary px-3 py-2 text-sm font-semibold" onClick={closeMenu}>Owner OS</Link>
+                    <Link href="/owner" className="block rounded-lg avara-primary px-3 py-2 text-sm font-semibold" onClick={closeMenu}>Manage my properties</Link>
                     <Link href="/host/listings/create" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>List property</Link>
                   </>
                 )}
