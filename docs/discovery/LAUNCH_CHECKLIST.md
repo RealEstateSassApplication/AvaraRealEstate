@@ -1,0 +1,6 @@
+# Release gates
+- Production dependency audit must pass; do not disable or bypass the gate. Framework migration remains a separate compatibility project.
+- Run build, typecheck, lint, public browser checks and Mongo integration on final combined commit. Staging smoke test using real approved listing, search, save, message, customer dashboard, manager onboarding and admin CMS.
+- Configure dedicated Supabase org/project, Auth SMTP, verified email templates and identity migration before switching auth. Do not connect Freshpick. Ensure secrets only on server. Verify password recovery/session expiry and role boundaries.
+- Verify actual production domain and canonical metadata. Register Google Search Console and Bing Webmaster Tools, submit sitemap, confirm crawl status and AI citations. Read-only catalog now supports explicit currency and rental-period filters; budget defaults to LKR. Add infrastructure rate limiting and monitor errors before public launch. No implied availability or automatic agent integration.
+- Confirm privacy/terms, moderation, abuse reporting and contact support before public rollout. No payments or booking guarantees until operational validation.
