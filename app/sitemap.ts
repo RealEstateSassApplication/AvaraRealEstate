@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next';
+import {postgresPreview,readPublicRows} from '@/lib/postgres/public-read';
 import dbConnect from '@/lib/db';
 import Property from '@/models/Property';
 import BlogPost from '@/models/BlogPost';
@@ -46,7 +47,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Dynamic sitemap records are an enhancement, not a build dependency. Preview
   // and CI environments may intentionally omit database credentials, so always
   // return the static discovery surface if MongoDB is unavailable.
-  if (process.env.MONGODB_URI) {
+  if(postgresPreview()){try{const data=await readPublicRows({},100);propertyPages=data.rows.map(p=>({url:new URL('/listings/'+p.id,BASE_URL).toString(),lastModified:p.updated_at}));}catch{}}else if (process.env.MONGODB_URI) {
     try {
       await dbConnect();
 
@@ -80,7 +81,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   let projects:MetadataRoute.Sitemap=[];
-  if(process.env.MONGODB_URI){try{await dbConnect();const rows=await Development.find({status:'published'}).select('slug updatedAt').lean();projects=rows.map((x:{slug:string;updatedAt?:Date})=>({url:new URL('/developments/'+x.slug,BASE_URL).toString(),lastModified:x.updatedAt}));}catch{}}
+  if(!postgresPreview()&&process.env.MONGODB_URI){try{await dbConnect();const rows=await Development.find({status:'published'}).select('slug updatedAt').lean();projects=rows.map((x:{slug:string;updatedAt?:Date})=>({url:new URL('/developments/'+x.slug,BASE_URL).toString(),lastModified:x.updatedAt}));}catch{}}
   return [
     ...projects,
     ...staticPages,

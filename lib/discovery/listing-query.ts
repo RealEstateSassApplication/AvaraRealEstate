@@ -20,7 +20,7 @@ export function parseListingQuery(query:string){
  for(const k of nums){const v=p.get(k);if(v!==null&&v.trim()!=='')f[k]=Number(v);}
  for(const k of arrs)f[k]=p.getAll(k);
  const n=Number(p.get('page'));
- return {filters:normalizeFilters(f),page:Number.isInteger(n)&&n>0?Math.min(n,100000):1};
+ return {filters:normalizeFilters(f),page:Number.isInteger(n)&&n>0?Math.min(n,1000):1};
 }
 export function listingQuery(f:ListingFilters,page=1){
  const p=new URLSearchParams();for(const [k,v] of Object.entries(normalizeFilters(f))){if(Array.isArray(v))v.forEach(x=>p.append(k,x));else p.set(k,String(v));}if(page>1)p.set('page',String(page));return p.toString();
