@@ -1,316 +1,46 @@
 'use client';
-
-import { useState, useEffect, Suspense, useCallback, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useState, Suspense, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import type { ComponentProps } from 'react';
 import Header from '@/components/ui/layout/Header';
+import DiscoveryFooter from '@/components/discovery/DiscoveryFooter';
 import SearchFilters from '@/components/search/SearchFilters';
 import PropertyCard from '@/components/property/PropertyCard';
-import { Button } from '@/components/ui/button';
-import { Grid3X3, List, MapPin } from 'lucide-react';
-
-interface Property {
-  _id: string;
-  title: string;
-  description: string;
-  type: string;
-  purpose: 'rent' | 'sale' | 'booking';
-  price: number;
-  currency: string;
-  rentFrequency?: string;
-  bedrooms?: number;
-  bathrooms?: number;
-  areaSqft?: number;
-  images: string[];
-  address: {
-    city: string;
-    district: string;
-    province?: string;
-  };
-  amenities: string[];
-  ratings: {
-    average: number;
-    count: number;
-  };
-  featured: boolean;
-  verified: boolean;
-  trustScore?: number;
-  trustLevel?: 'unverified' | 'reviewed' | 'verified' | 'premier';
-  owner: {
-    name: string;
-    profilePhoto?: string;
-    verified: boolean;
-  };
+import { Grid3X3, List, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
+import { listingQuery, parseListingQuery, type ListingFilters } from '@/lib/discovery/listing-query';
+import { useSavedProperties } from '@/components/discovery/useSavedProperties';
+type Property=ComponentProps<typeof PropertyCard>['property'];
+const button='inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-[#dedbd0] bg-white px-4 text-sm font-semibold disabled:opacity-40';
+function ListingsContent(){
+ const router=useRouter(), params=useSearchParams();
+ const raw=params?.toString()||'';
+ const {filters,page}=useMemo(()=>parseListingQuery(raw),[raw]);
+ const canonical=listingQuery(filters,page);
+ const [properties,setProperties]=useState<Property[]>([]);
+ const [total,setTotal]=useState(0),[pages,setPages]=useState(1);
+ const [state,setState]=useState<'loading'|'ready'|'error'>('loading');
+ const [retry,setRetry]=useState(0);
+ const [mode,setMode]=useState<'grid'|'list'>('grid');
+ const saved=useSavedProperties();
+ const resultsRef=useRef<HTMLDivElement>(null);
+ useEffect(()=>{
+  const c=new AbortController();setState('loading');
+  const p=new URLSearchParams(canonical);p.set('limit','20');
+  fetch('/api/properties?'+p,{signal:c.signal,cache:'no-store'}).then(async res=>{if(!res.ok)throw Error('Unavailable');const d=await res.json();if(!Array.isArray(d.properties))throw Error('Invalid response');if(c.signal.aborted)return;setProperties(d.properties);setTotal(Number(d.total)||0);setPages(Math.max(1,Number(d.totalPages)||1));setState('ready');}).catch(()=>{if(!c.signal.aborted){setProperties([]);setState('error');}});
+  return ()=>c.abort();
+ },[canonical,retry]);
+ function navigate(f:ListingFilters,p=1){const q=listingQuery(f,p);if(q===canonical){setRetry(n=>n+1);return;}router.push('/listings'+(q?'?'+q:''),{scroll:false});}
+ const title=filters.purpose==='rent'?'Homes for rent':filters.purpose==='sale'?'Properties for sale':filters.purpose==='booking'?'Find a stay':'Discover properties';
+ return <div className="avara-editorial min-h-screen"><Header/><main className="avara-shell py-8 sm:py-14" id="main-content">
+  <p className="avara-kicker">Avara / The property collection</p><h1 className="avara-display mt-3 text-[clamp(2.5rem,5vw,4.6rem)] leading-tight">{title}{filters.city?' in '+filters.city:''}</h1><p className="mt-3 mb-7 max-w-xl text-sm leading-relaxed text-[#5f685e]">Find a place that fits the way you live. Explore available listings and refine your search.</p>
+  <SearchFilters filters={filters} onFiltersChange={f=>navigate(f)} loading={state==='loading'}/>
+  {saved.error&&<p role="alert" className="mb-4 rounded-lg border bg-white p-3 text-sm">{saved.error}</p>}
+  <div ref={resultsRef} className="mb-5 flex flex-wrap items-center justify-between gap-3"><p role="status" className="text-sm text-[#5f685e]">{state==='loading'?'Finding properties…':state==='error'?'Listings unavailable':total.toLocaleString()+' properties found'}</p><div className="hidden gap-2 sm:flex">{(['grid','list'] as const).map(m=><button key={m} type="button" aria-label={m==='grid'?'Grid view':'List view'} aria-pressed={mode===m} onClick={()=>setMode(m)} className={button+' '+(mode===m?'!bg-[#243b31] text-white':'')}>{m==='grid'?<Grid3X3 size={18}/>:<List size={18}/>}</button>)}</div></div>
+  {state==='loading'?<div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-label="Loading properties">{[0,1,2,3,4,5].map(i=><div key={i} className="h-80 animate-pulse rounded-xl bg-[#e8e5dc]"/>)}</div>:state==='error'?<div role="alert" className="rounded-xl border bg-white p-8 text-center"><h2 className="avara-display text-3xl">Listings are temporarily unavailable.</h2><button className={button+' mt-5'} onClick={()=>setRetry(n=>n+1)}>Retry</button></div>:properties.length===0?<div className="rounded-xl border bg-white p-10 text-center"><MapPin className="mx-auto mb-4 text-[#657557]" size={32}/><h2 className="avara-display text-3xl">No matching properties</h2><p className="mt-3 text-sm text-slate-600">Try a different location or adjust your filters.</p><button className={button+' mt-5'} onClick={()=>navigate({})}>Clear all filters</button></div>:<div className={mode==='grid'?'grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4':'grid gap-5 sm:grid-cols-1'}>{properties.map(p=><PropertyCard key={p._id} property={p} isFavorite={saved.ids.includes(p._id)} onToggleFavorite={()=>void saved.toggle(p._id)} className={mode==='list'?'avara-list-card':'h-full'}/>)}</div>}
+  {state==='ready'&&pages>1&&<nav aria-label="Property pages" className="mt-8 flex flex-wrap items-center justify-center gap-3"><button className={button} disabled={page<=1} onClick={()=>{navigate(filters,page-1);resultsRef.current?.scrollIntoView({block:'start'});}}><ChevronLeft size={16}/> Previous</button><span className="text-sm">Page {page} of {pages}</span><button className={button} disabled={page>=pages} onClick={()=>{navigate(filters,page+1);resultsRef.current?.scrollIntoView({block:'start'});}}>Next <ChevronRight size={16}/></button></nav>}
+  {state==='ready'&&page>pages&&<button className={button+' mt-5'} onClick={()=>navigate(filters,1)}>Return to first page</button>}
+  <div className="mt-12 border-t pt-6"><Link href="/explore" className="avara-text-link">Explore neighbourhoods instead →</Link></div>
+ </main><DiscoveryFooter/></div>;
 }
-
-interface SearchFiltersState {
-  search?: string;
-  purpose?: 'rent' | 'sale' | 'booking';
-  type?: string[];
-  minPrice?: number;
-  maxPrice?: number;
-  bedrooms?: number;
-  bathrooms?: number;
-  amenities?: string[];
-  city?: string;
-  district?: string;
-  province?: string;
-  featured?: boolean;
-  verified?: boolean;
-}
-
-function ListingsContent() {
-  const searchParams = useSearchParams();
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const activeRequest = useRef<AbortController | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [totalPages, setTotalPages] = useState(1);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [total, setTotal] = useState(0);
-
-  const [filters, setFilters] = useState<SearchFiltersState>(() => {
-    if (!searchParams) return {};
-    return {
-      search: searchParams.get('search') ?? undefined,
-      purpose: (searchParams.get('purpose') as SearchFiltersState['purpose']) ?? undefined,
-      type: searchParams.getAll('type') ?? [],
-      city: searchParams.get('city') ?? undefined,
-      district: searchParams.get('district') ?? undefined,
-      province: searchParams.get('province') ?? undefined,
-      minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
-      maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
-      bedrooms: searchParams.get('bedrooms') ? Number(searchParams.get('bedrooms')) : undefined,
-      bathrooms: searchParams.get('bathrooms') ? Number(searchParams.get('bathrooms')) : undefined,
-      amenities: searchParams.getAll('amenities') ?? [],
-      featured: searchParams.get('featured') === 'true' ? true : undefined,
-      verified: searchParams.get('verified') === 'true' ? true : undefined,
-    };
-  });
-
-  const searchProperties = useCallback(async (page: number = 1) => {
-    activeRequest.current?.abort();
-    const controller = new AbortController();
-    activeRequest.current = controller;
-    setLoading(true);
-    setError(false);
-    try {
-      const params = new URLSearchParams();
-
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          if (Array.isArray(value)) {
-            value.forEach((item) => params.append(key, item));
-          } else {
-            params.append(key, value.toString());
-          }
-        }
-      });
-
-      params.append('page', page.toString());
-      params.append('limit', '20');
-
-      const response = await fetch(`/api/properties?${params.toString()}`, { signal: controller.signal });
-      if (response.ok) {
-        const data = await response.json();
-        if (controller.signal.aborted) return;
-        setProperties(data.properties || []);
-        setTotalPages(data.totalPages || 1);
-        setTotal(data.total || 0);
-        setCurrentPage(page);
-
-        const url = new URL(window.location.href);
-        url.search = params.toString();
-        window.history.replaceState({}, '', url.toString());
-      } else {
-        throw new Error('Listing request failed');
-      }
-    } catch (error) {
-      if (!controller.signal.aborted) { setError(true); setProperties([]); setTotal(0); }
-    } finally {
-      if (!controller.signal.aborted) setLoading(false);
-    }
-  }, [filters]);
-
-  useEffect(() => {
-    searchProperties(1);
-    return () => activeRequest.current?.abort();
-  }, [filters, searchProperties]);
-
-  const handleFiltersChange = (newFilters: SearchFiltersState) => {
-    setFilters(newFilters);
-  };
-
-  const handleToggleFavorite = async (propertyId: string) => {
-    try {
-      const res = await fetch(`/api/properties/${propertyId}/favorite`, { method: 'POST' });
-      if (res.ok) {
-        await res.json();
-        searchProperties(currentPage);
-      } else {
-        const err = await res.json();
-        console.error('Favorite toggle error', err);
-      }
-    } catch (error) {
-      console.error('Network error toggling favorite', error);
-    }
-  };
-
-  const LoadingSkeleton = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {[...Array(12)].map((_, i) => (
-        <div key={i} className="animate-pulse">
-          <div className="bg-gray-300 aspect-[4/3] rounded-lg mb-4"></div>
-          <div className="h-4 bg-gray-300 rounded mb-2"></div>
-          <div className="h-4 bg-gray-300 rounded w-2/3 mb-2"></div>
-          <div className="h-6 bg-gray-300 rounded w-1/2"></div>
-        </div>
-      ))}
-    </div>
-  );
-
-  return (
-    <div className="avara-editorial min-h-screen">
-      <Header />
-
-      <div className="avara-shell py-10 sm:py-14">
-        <SearchFilters
-          filters={filters}
-          onFiltersChange={handleFiltersChange}
-          onSearch={() => searchProperties(1)}
-          loading={loading}
-        />
-
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="font-serif text-4xl text-[#20372e]">
-              {filters.purpose ? (
-                filters.purpose === 'booking' ? 'Properties for Booking' :
-                filters.purpose === 'rent' ? 'Properties for Rent' :
-                'Properties for Sale'
-              ) : 'All Properties'}
-              {filters.city && ` in ${filters.city}`}
-              {!filters.city && filters.province && ` in ${filters.province}`}
-            </h1>
-            <p className="text-gray-600 mt-1">
-              {loading ? 'Searching...' : error ? 'Listings unavailable' : `${total.toLocaleString()} properties found`}
-            </p>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Button
-              variant={viewMode === 'grid' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              aria-label="Grid view"
-            >
-              <Grid3X3 className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              aria-label="List view"
-            >
-              <List className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-
-        {loading ? (
-          <LoadingSkeleton />
-        ) : error ? (
-          <div role="alert" className="rounded-xl border bg-white p-8 text-center"><h2 className="font-semibold">Listings are temporarily unavailable.</h2><p className="mt-2 text-sm text-slate-600">Try again in a moment.</p><Button className="mt-5" onClick={() => searchProperties(currentPage)}>Retry</Button></div>
-        ) : properties.length === 0 ? (
-          <div className="text-center py-16">
-            <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">No Properties Found</h3>
-            <p className="text-gray-500 mb-6">Try adjusting your search filters or browse all properties</p>
-            <Button onClick={() => setFilters({})}>Clear All Filters</Button>
-          </div>
-        ) : (
-          <>
-            <div className={viewMode === 'grid'
-              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
-              : 'space-y-6'}>
-              {properties.map((property) => (
-                <PropertyCard
-                  key={property._id}
-                  property={property}
-                  onToggleFavorite={handleToggleFavorite}
-                  className={viewMode === 'list' ? 'flex overflow-hidden' : ''}
-                />
-              ))}
-            </div>
-
-            {totalPages > 1 && (
-              <div className="flex justify-center items-center space-x-2 mt-12">
-                <Button
-                  variant="outline"
-                  onClick={() => searchProperties(currentPage - 1)}
-                  disabled={currentPage === 1 || loading}
-                >
-                  Previous
-                </Button>
-
-                <div className="flex space-x-1">
-                  {[...Array(Math.min(5, totalPages))].map((_, i) => {
-                    const page = Math.max(1, currentPage - 2) + i;
-                    if (page > totalPages) return null;
-                    return (
-                      <Button
-                        key={page}
-                        variant={page === currentPage ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => searchProperties(page)}
-                        disabled={loading}
-                      >
-                        {page}
-                      </Button>
-                    );
-                  })}
-                </div>
-
-                <Button
-                  variant="outline"
-                  onClick={() => searchProperties(currentPage + 1)}
-                  disabled={currentPage === totalPages || loading}
-                >
-                  Next
-                </Button>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-export default function ListingsPage() {
-  return (
-    <Suspense fallback={
-      <div className="avara-editorial min-h-screen">
-        <Header />
-        <div className="avara-shell py-10 sm:py-14">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-300 rounded mb-4 w-1/3"></div>
-            <div className="h-4 bg-gray-300 rounded mb-8 w-1/4"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[...Array(12)].map((_, i) => (
-                <div key={i}>
-                  <div className="bg-gray-300 aspect-[4/3] rounded-lg mb-4"></div>
-                  <div className="h-4 bg-gray-300 rounded mb-2"></div>
-                  <div className="h-4 bg-gray-300 rounded w-2/3 mb-2"></div>
-                  <div className="h-6 bg-gray-300 rounded w-1/2"></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    }>
-      <ListingsContent />
-    </Suspense>
-  );
-}
+export default function ListingsPage(){return <Suspense fallback={<div className="avara-editorial min-h-screen"><Header/><main className="avara-shell py-12"><p role="status">Loading properties…</p></main></div>}><ListingsContent/></Suspense>;}
