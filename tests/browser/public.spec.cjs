@@ -14,7 +14,7 @@ async function noOverflow(page){await expect.poll(()=>page.evaluate(()=>document
 for(const width of [320,360,390,768,1440]){
  test('public routes have no horizontal overflow at '+width,async({page})=>{
   await page.setViewportSize({width,height:850});await mock(page);
-  for(const path of ['/','/explore','/explore/nugegoda','/listings?purpose=rent','/tools','/tools/mortgage','/tools/rent-vs-buy','/tools/land-converter','/tools/living-cost','/blog','/guides','/guides/buying-land-sri-lanka','/guides/perch-acre-square-feet','/about']){
+  for(const path of ['/','/explore','/explore/nugegoda','/listings?purpose=rent','/tools','/tools/mortgage','/tools/rent-vs-buy','/tools/land-converter','/tools/living-cost','/blog','/rentals','/request-property','/rentals/my-requests','/rentals/opportunities','/guides','/guides/buying-land-sri-lanka','/guides/perch-acre-square-feet','/about']){
    const response=await page.goto(path,{waitUntil:'domcontentloaded'});expect(response.status(),path).toBe(200);
    await expect(page.getByRole('heading',{level:1}).first()).toBeVisible();
    await noOverflow(page);
@@ -27,7 +27,7 @@ test('mobile menu and search filters retain editable values and URL state',async
  await page.getByRole('button',{name:'Toggle menu'}).click();
  await expect(page.getByRole('navigation',{name:'Mobile navigation'})).toBeVisible();
  await page.getByRole('navigation',{name:'Mobile navigation'}).getByRole('link',{name:'Rent',exact:true}).click();
- await expect(page).toHaveURL(/purpose=rent/);
+ await expect(page).toHaveURL(/\/rentals$/);await page.getByRole('link',{name:'Browse rentals',exact:true}).click();await expect(page).toHaveURL(/purpose=rent/);
  await page.getByRole('textbox',{name:'Location'}).fill('Nugegoda');
  await page.getByRole('button',{name:/^Filters/}).click();
  const dialog=page.getByRole('dialog');await expect(dialog).toBeVisible();
@@ -84,4 +84,17 @@ test('knowledge pages expose crawlable answers and canonical metadata',async({re
  const sitemap=await (await request.get('/sitemap.xml')).text();expect(sitemap).toContain('/guides/buying-land-sri-lanka');expect(sitemap).toContain('/about');expect(sitemap).not.toContain('/admin/');
  const robots=await (await request.get('/robots.txt')).text();expect(robots).toContain('OAI-SearchBot');expect(robots).toContain('Disallow: /admin');
  const image=await request.get('/opengraph-image');expect(image.status()).toBe(200);expect(image.headers()['content-type']).toContain('image/png');
+});
+
+test('renter submits a room request and reviews offers on mobile',async({page})=>{
+ await page.setViewportSize({width:390,height:844});await mock(page,{auth:true});
+ const row={_id:'507f1f77bcf86cd799439012',propertyTypes:['room'],location:{cities:['Nugegoda'],districts:[],flexible:false},budget:{min:0,max:30000,currency:'LKR',frequency:'monthly'},status:'active',shareWithOwners:true,matchedProperties:[],offers:[{property:fixture,createdAt:'2026-11-27'}]};
+ await page.route('**/api/rental-requests',async route=>{if(route.request().method()==='POST'){const body=route.request().postDataJSON();expect(body.propertyTypes).toEqual(['room']);expect(body.budget.max).toBe(30000);expect(body.shareWithOwners).toBe(true);return route.fulfill({status:201,json:{data:{_id:row._id}}});}return route.fulfill({status:200,json:{data:[row]}});});
+ await page.goto('/request-property');await page.getByLabel('Preferred towns').fill('Nugegoda');await page.getByLabel('Maximum',{exact:true}).fill('30000');await page.getByRole('checkbox',{name:/Allow matching property owners/}).check();await page.getByRole('button',{name:'Create rental request'}).click();await expect(page).toHaveURL(/my-requests/);await expect(page.getByRole('heading',{name:'Looking for room'})).toBeVisible();await expect(page.getByRole('link',{name:/Test apartment/})).toBeVisible();await noOverflow(page);
+});
+test('owner offers a matching property once',async({page})=>{
+ await page.setViewportSize({width:360,height:844});await mock(page,{auth:true});let sent=false;
+ await page.route('**/api/host/rental-requests',route=>route.fulfill({status:200,json:{data:[{_id:'507f1f77bcf86cd799439012',propertyTypes:['room'],location:{cities:['Nugegoda'],districts:[],flexible:false},budget:{min:0,max:30000,currency:'LKR',frequency:'monthly'},status:'active',matchingProperties:[{propertyId:fixture._id,propertyTitle:fixture.title,score:100,sent}]}]}}));
+ await page.route('**/api/rental-requests/*/offer',route=>{expect(route.request().postDataJSON().propertyId).toBe(fixture._id);sent=true;return route.fulfill({status:201,json:{success:true}});});
+ await page.goto('/rentals/opportunities');await page.getByRole('button',{name:'Offer property'}).click();await expect(page.getByRole('button',{name:'Offer sent'})).toBeDisabled();await noOverflow(page);
 });

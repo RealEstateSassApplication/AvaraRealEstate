@@ -86,7 +86,7 @@ export default function Header() {
 
           <nav aria-label="Main navigation" className="hidden items-center gap-6 xl:flex">
             <Link href="/explore" className="text-sm font-medium text-[#4b584c] hover:text-slate-950">Explore</Link>
-            <Link href="/listings?purpose=rent" className="text-sm font-medium text-[#4b584c] transition-colors hover:text-slate-950">Rent</Link>
+            <Link href="/rentals" className="text-sm font-medium text-[#4b584c] transition-colors hover:text-slate-950">Rent</Link>
             <Link href="/listings?purpose=sale" className="text-sm font-medium text-[#4b584c] transition-colors hover:text-slate-950">Buy</Link>
             <Link href="/listings?purpose=booking" className="text-sm font-medium text-[#4b584c] transition-colors hover:text-slate-950">Stays</Link>
             <Link href="/tools" className="text-sm font-medium text-[#4b584c] hover:text-slate-950">Tools</Link>
@@ -132,11 +132,11 @@ export default function Header() {
                       </div>
                       <DropdownMenuItem asChild><Link href="/user/profile">Profile</Link></DropdownMenuItem>
                       <DropdownMenuItem asChild><Link href="/user/dashboard">My dashboard</Link></DropdownMenuItem>
-                      <DropdownMenuItem asChild><Link href="/request-property">Request property</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild><Link href="/request-property">Request property</Link></DropdownMenuItem><DropdownMenuItem asChild><Link href="/rentals/my-requests">My rental requests</Link></DropdownMenuItem>
                       {hasHostRole(user) && (
                         <>
                           <DropdownMenuItem asChild><Link href="/owner">Owner OS</Link></DropdownMenuItem>
-                          <DropdownMenuItem asChild><Link href="/host/dashboard">Legacy host operations</Link></DropdownMenuItem>
+                          <DropdownMenuItem asChild><Link href="/rentals/opportunities">Rental opportunities</Link></DropdownMenuItem><DropdownMenuItem asChild><Link href="/host/dashboard">Legacy host operations</Link></DropdownMenuItem>
                         </>
                       )}
                       {isAdmin(user) && <><DropdownMenuItem asChild><Link href="/admin/dashboard">Admin panel</Link></DropdownMenuItem><DropdownMenuItem asChild><Link href="/admin/discovery">Discovery CMS</Link></DropdownMenuItem></>}
@@ -161,7 +161,7 @@ export default function Header() {
         {isMenuOpen && (
           <nav aria-label="Mobile navigation" className="max-h-[calc(100dvh-68px)] space-y-1 overflow-y-auto overscroll-contain border-t py-4 xl:hidden">
             <Link href="/explore" className="block rounded-lg px-3 py-3 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Explore</Link>
-            <Link href="/listings?purpose=rent" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Rent</Link>
+            <Link href="/rentals" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Rent</Link>
             <Link href="/listings?purpose=sale" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Buy</Link>
             <Link href="/listings?purpose=booking" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Stays</Link>
             <Link href="/tools" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Tools</Link>
@@ -169,11 +169,11 @@ export default function Header() {
             {!loading&&!user&&<div className="mt-3 grid grid-cols-2 gap-2 border-t pt-4"><Link onClick={closeMenu} href="/auth/login" className="rounded-lg border px-4 py-3 text-center text-sm">Sign in</Link><Link onClick={closeMenu} href="/auth/register" className="rounded-lg bg-[#243b31] px-4 py-3 text-center text-sm text-white">Join Avara</Link></div>}
             {user && (
               <>
-                <Link href="/user/dashboard" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Dashboard</Link>
+                <Link href="/user/dashboard" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Dashboard</Link><Link href="/rentals/my-requests" className="block rounded-lg px-3 py-3 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>My rental requests</Link>
                 {hasHostRole(user) && (
                   <>
                     <Link href="/owner" className="block rounded-lg bg-slate-950 px-3 py-2 text-sm font-semibold text-white" onClick={closeMenu}>Owner OS</Link>
-                    <Link href="/host/listings/create" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>List property</Link>
+                    <Link href="/rentals/opportunities" className="block rounded-lg px-3 py-3 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Rental opportunities</Link><Link href="/host/listings/create" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>List property</Link>
                   </>
                 )}
                 {isAdmin(user) && <Link href="/admin/dashboard" className="block rounded-lg px-3 py-2 text-sm font-semibold text-blue-700" onClick={closeMenu}>Admin panel</Link>}

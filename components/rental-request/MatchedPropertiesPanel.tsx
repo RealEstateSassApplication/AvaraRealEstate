@@ -20,7 +20,7 @@ export default function MatchedPropertiesPanel({
       <Alert>
         <Home className="h-4 w-4" />
         <AlertDescription>
-          No matching properties found yet. We'll notify you when properties matching your criteria become available.
+          No matching properties found yet. Refresh your request to check for new matching properties.
         </AlertDescription>
       </Alert>
     );

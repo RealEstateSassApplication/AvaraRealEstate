@@ -43,6 +43,8 @@ export interface IRentalRequest extends Document {
     sms: boolean;
     whatsapp: boolean;
   };
+  shareWithOwners: boolean;
+  offers: {property: mongoose.Types.ObjectId; sender: mongoose.Types.ObjectId; createdAt: Date}[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -101,6 +103,8 @@ const RentalRequestSchema = new Schema<IRentalRequest>({
     default: 'active'
   },
   matchedProperties: [{ type: Schema.Types.ObjectId, ref: 'Property' }],
+  shareWithOwners: {type:Boolean,default:false},
+  offers: [{property:{type:Schema.Types.ObjectId,ref:'Property',required:true},sender:{type:Schema.Types.ObjectId,ref:'User',required:true},createdAt:{type:Date,default:Date.now}}],
   contactPreferences: {
     email: { type: Boolean, default: true },
     sms: { type: Boolean, default: false },
@@ -113,6 +117,7 @@ const RentalRequestSchema = new Schema<IRentalRequest>({
 // Indexes for efficient querying
 RentalRequestSchema.index({ user: 1, status: 1 });
 RentalRequestSchema.index({ status: 1, createdAt: -1 });
+RentalRequestSchema.index({shareWithOwners:1,status:1,createdAt:-1});
 RentalRequestSchema.index({ 'location.cities': 1 });
 RentalRequestSchema.index({ 'location.districts': 1 });
 RentalRequestSchema.index({ propertyTypes: 1 });

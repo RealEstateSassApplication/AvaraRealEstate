@@ -1,0 +1,1 @@
+import type {Metadata} from 'next';import RentalExchange from '@/components/rental-request/RentalExchange';export const metadata:Metadata={title:'My rental requests',robots:{index:false,follow:false}};export default function Page(){return <RentalExchange owner={false}/>;}

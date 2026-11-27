@@ -1,0 +1,45 @@
+name: Rental exchange integration
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  rental-api:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ping:1}).ok'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      MONGODB_URI: mongodb://127.0.0.1:27017/avara_rental_ci
+      JWT_SECRET: ci-only-jwt-secret-with-at-least-32-characters
+      NEXT_PUBLIC_BASE_URL: http://127.0.0.1:3000
+      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Start test server and verify API
+        run: |
+          npm run start -- --hostname 127.0.0.1 > /tmp/avara-rental.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true; cat /tmp/avara-rental.log' EXIT
+          for i in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:3000/rentals >/dev/null; then break; fi
+            sleep 1
+          done
+          node --test tests/rental-integration.cjs
