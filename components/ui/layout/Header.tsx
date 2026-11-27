@@ -131,7 +131,7 @@ export default function Header() {
                         <p className="truncate text-xs text-slate-500">{user.email}</p>
                       </div>
                       <DropdownMenuItem asChild><Link href="/user/profile">Profile</Link></DropdownMenuItem>
-                      <DropdownMenuItem asChild><Link href="/user/dashboard">My dashboard</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild><Link href="/user/dashboard">My dashboard</Link></DropdownMenuItem><DropdownMenuItem asChild><Link href="/messages">Messages</Link></DropdownMenuItem>
                       <DropdownMenuItem asChild><Link href="/request-property">Request property</Link></DropdownMenuItem><DropdownMenuItem asChild><Link href="/rentals/my-requests">My rental requests</Link></DropdownMenuItem>
                       {hasHostRole(user) && (
                         <>
@@ -169,7 +169,7 @@ export default function Header() {
             {!loading&&!user&&<div className="mt-3 grid grid-cols-2 gap-2 border-t pt-4"><Link onClick={closeMenu} href="/auth/login" className="rounded-lg border px-4 py-3 text-center text-sm">Sign in</Link><Link onClick={closeMenu} href="/auth/register" className="rounded-lg bg-[#243b31] px-4 py-3 text-center text-sm text-white">Join Avara</Link></div>}
             {user && (
               <>
-                <Link href="/user/dashboard" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Dashboard</Link><Link href="/rentals/my-requests" className="block rounded-lg px-3 py-3 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>My rental requests</Link>
+                <Link href="/user/dashboard" className="block rounded-lg px-3 py-2 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Dashboard</Link><Link href="/messages" className="block rounded-lg px-3 py-3 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>Messages</Link><Link href="/rentals/my-requests" className="block rounded-lg px-3 py-3 text-sm font-medium text-[#4b584c]" onClick={closeMenu}>My rental requests</Link>
                 {hasHostRole(user) && (
                   <>
                     <Link href="/owner" className="block rounded-lg bg-slate-950 px-3 py-2 text-sm font-semibold text-white" onClick={closeMenu}>Owner OS</Link>
