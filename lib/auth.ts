@@ -4,6 +4,8 @@ import crypto from 'crypto';
 import { NextRequest } from 'next/server';
 import dbConnect from './db';
 import User, { IUser } from '@/models/User';
+import {supabaseMode,accessCookie,existingProviderUser} from '@/lib/supabase-auth';
+import {rolesFor} from '@/lib/workspace-roles';
 
 function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET?.trim();
@@ -42,6 +44,7 @@ export function verifyToken(token: string): { userId: string } | null {
 
 export async function getUserFromRequest(request: NextRequest): Promise<IUser | null> {
   try {
+    if(supabaseMode()){const access=request.cookies.get(accessCookie)?.value;return access?await existingProviderUser(access):null;}
     const token = request.headers.get('authorization')?.replace('Bearer ', '') ||
                  request.cookies?.get?.('token')?.value || null;
 
@@ -68,11 +71,8 @@ export async function requireAuth(request: NextRequest): Promise<IUser> {
 
 export async function requireRole(request: NextRequest, roles: string[]): Promise<IUser> {
   const user = await requireAuth(request);
-  const userRolesRaw = Array.isArray((user as any).roles)
-    ? (user as any).roles
-    : ((user as any).role ? [(user as any).role] : []);
-  const userRoles = userRolesRaw.map((x: any) => String(x));
-  const allowed = roles.map(String).some((role) => userRoles.includes(role));
+  const userRolesMap = rolesFor(user);
+  const allowed = roles.map(String).some((role) => userRolesMap.includes(role));
   if (!allowed) throw new Error('Insufficient permissions');
   return user;
 }
@@ -83,6 +83,7 @@ export function generateOTP(): string {
 
 export default async function getUserFromReq(req: any) {
   try {
+    if(supabaseMode())return getUserFromRequest(req as NextRequest);
     const cookieHeader = req.headers?.get ? req.headers.get('cookie') : req.headers?.cookie;
     let token: string | null = null;
     if (cookieHeader) {

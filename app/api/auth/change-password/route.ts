@@ -3,8 +3,10 @@ import dbConnect from '@/lib/db';
 import User from '@/models/User';
 import getUserFromReq from '@/lib/auth';
 import bcrypt from 'bcryptjs';
+import {supabaseMode} from '@/lib/supabase-auth';
 
 export async function POST(request: NextRequest) {
+    if(supabaseMode())return NextResponse.json({error:'Use the email password reset flow to change your password.'},{status:409});
     try {
         await dbConnect();
         const currentUser = await getUserFromReq(request as any);

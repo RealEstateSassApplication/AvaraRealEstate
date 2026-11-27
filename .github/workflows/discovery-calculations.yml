@@ -11,9 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: node --test tests/discovery-calculations.cjs tests/discovery-listing-query.cjs tests/rental-match.cjs tests/discovery-studios.cjs tests/rental-input.cjs
+      - run: node --test tests/discovery-calculations.cjs tests/discovery-listing-query.cjs tests/rental-match.cjs tests/discovery-studios.cjs tests/rental-input.cjs tests/workspace-roles.cjs

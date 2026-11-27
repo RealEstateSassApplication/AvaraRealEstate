@@ -17,7 +17,7 @@ jobs:
       NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -31,7 +31,7 @@ jobs:
         run: '"$RUNNER_TEMP/avara-playwright/node_modules/.bin/playwright" install --with-deps chromium'
       - name: Run public browser checks
         run: '"$RUNNER_TEMP/avara-playwright/node_modules/.bin/playwright" test --config=playwright.config.cjs'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: browser-test-results

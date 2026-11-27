@@ -1,16 +1,2 @@
-import { NextRequest, NextResponse } from 'next/server';
-
-export async function POST(request: NextRequest) {
-  try {
-    const res = NextResponse.json({ message: 'Logged out' });
-
-    // Clear the auth token cookie used by the app
-    // Adjust cookie attributes (Secure, SameSite) to match your production requirements
-    res.headers.set('Set-Cookie', 'token=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax');
-
-    return res;
-  } catch (err: any) {
-    console.error('Logout route error:', err);
-    return NextResponse.json({ error: 'Logout failed' }, { status: 500 });
-  }
-}
+import {NextRequest,NextResponse} from 'next/server';import {supabaseMode,provider,accessCookie,privateHeaders} from '@/lib/supabase-auth';
+export async function POST(req:NextRequest){const access=req.cookies.get(accessCookie)?.value;if(supabaseMode()&&access){try{await provider('logout?scope=local','POST',undefined,access);}catch{}}const res=NextResponse.json({message:'Logged out'},{headers:privateHeaders});for(const key of ['token',accessCookie])res.cookies.set(key,'',{path:'/',maxAge:0,httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'strict'});return res;}

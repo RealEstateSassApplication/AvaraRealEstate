@@ -50,6 +50,7 @@ export interface RealEstateListingSchemaProps {
         lng: number;
     };
     datePosted?: string;
+    period?: string;
 }
 
 export function RealEstateListingSchema({
@@ -66,7 +67,7 @@ export function RealEstateListingSchema({
     bathrooms,
     floorSize,
     coordinates,
-    datePosted
+    datePosted,period
 }: RealEstateListingSchemaProps) {
     const schema: any = {
         '@context': 'https://schema.org',
@@ -80,7 +81,8 @@ export function RealEstateListingSchema({
             '@type': 'Offer',
             price,
             priceCurrency,
-            availability: 'https://schema.org/InStock'
+            url,
+            ...(purpose!=='sale'&&period?{priceSpecification:{'@type':'UnitPriceSpecification',price,priceCurrency,unitText:period}}:{})
         },
         address: {
             '@type': 'PostalAddress',
@@ -89,9 +91,9 @@ export function RealEstateListingSchema({
             addressRegion: address.district,
             addressCountry: address.country || 'Sri Lanka'
         },
-        '@graph': [
-            {
-                '@type': propertyType === 'land' ? 'LandPlot' : 'Accommodation',
+        mainEntity: {
+                '@type': propertyType === 'apartment' ? 'Apartment' : propertyType === 'house' ? 'House' : propertyType === 'land' ? 'Place' : 'Accommodation',
+                address:{'@type':'PostalAddress',addressLocality:address.city,addressRegion:address.district,addressCountry:address.country||'Sri Lanka'},
                 name,
                 numberOfBedrooms: bedrooms,
                 numberOfBathroomsTotal: bathrooms,
@@ -101,7 +103,6 @@ export function RealEstateListingSchema({
                     unitCode: 'FTK' // Square feet
                 } : undefined
             }
-        ]
     };
 
     // Add geo coordinates if available
@@ -164,11 +165,7 @@ export function BlogPostSchema({
         },
         publisher: {
             '@type': 'Organization',
-            name: 'Avara Real Estate',
-            logo: {
-                '@type': 'ImageObject',
-                url: 'https://avara.lk/logo.png'
-            }
+            name: 'Avara'
         },
         datePublished,
         dateModified: dateModified || datePublished,

@@ -34,10 +34,11 @@ export async function GET(request: NextRequest) {
       role,  // Include single role field
       roles, // Include roles array
       listingsCount,
+      managerRequestedAt:user.managerRequestedAt,
       profilePhoto: (user as any).profilePhoto
     };
 
-    return NextResponse.json({ ok: true, user: safeUser, data: safeUser, _id: user._id });
+    return NextResponse.json({ ok: true, user: safeUser, data: safeUser, _id: user._id },{headers:{'Cache-Control':'private, no-store'}});
   } catch (err: any) {
     console.error('Auth me error:', err);
     return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });

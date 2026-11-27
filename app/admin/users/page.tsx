@@ -194,7 +194,7 @@ export default function AdminUsersPage() {
                                             </TableCell>
                                             <TableCell>
                                                 <Badge variant="outline" className="capitalize">
-                                                    {user.role}
+                                                    {user.role}{user.managerRequestedAt&&<span className="ml-2 rounded-full bg-[#dcebd8] px-2 py-1 text-xs text-[#20352b]">Manager requested</span>}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
@@ -250,7 +250,7 @@ export default function AdminUsersPage() {
                         <DialogHeader>
                             <DialogTitle>Edit User</DialogTitle>
                             <DialogDescription>
-                                Update user role and verification status.
+                                Approve manager access by selecting Property manager. Only super-admins can grant administrator access.
                             </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
@@ -269,7 +269,7 @@ export default function AdminUsersPage() {
                                         <SelectContent>
                                             <SelectItem value="user">User</SelectItem>
                                             <SelectItem value="tenant">Tenant</SelectItem>
-                                            <SelectItem value="host">Host</SelectItem>
+                                            <SelectItem value="host">Property manager</SelectItem>
                                             <SelectItem value="admin">Admin</SelectItem>
                                         </SelectContent>
                                     </Select>
