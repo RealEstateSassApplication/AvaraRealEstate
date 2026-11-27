@@ -1,56 +1,48 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowUpRight, ArrowRight, Calculator, Compass, BookOpen } from 'lucide-react';
+import { ArrowUpRight, ArrowRight, Compass, BookOpen, Calculator, Landmark, Ruler, Scale } from 'lucide-react';
 import Header from '@/components/ui/layout/Header';
 import DiscoverySearch from '@/components/discovery/DiscoverySearch';
 import DiscoveryListings from '@/components/discovery/DiscoveryListings';
 import DiscoveryFooter from '@/components/discovery/DiscoveryFooter';
-import { collections, neighbourhoods, propertyOSRepository } from '@/lib/discovery/content';
-
+import ArchitectureArt from '@/components/discovery/ArchitectureArt';
+import { SectionHeading, CollectionCards, AreaCards } from '@/components/discovery/EditorialCards';
+import { propertyOSRepository } from '@/lib/discovery/content';
+import { getPublicContent } from '@/lib/discovery/repository';
+import { planningTools } from '@/lib/discovery/tools';
 export const metadata: Metadata = { alternates: { canonical: '/' } };
-
-export default function HomePage() {
-  return <div className="min-h-screen bg-[#f4f1ea] text-[#20372e]">
-    <Header />
-    <main>
-      <section className="mx-auto max-w-7xl px-5 pb-12 pt-8 sm:pt-12 lg:px-8">
-        <div className="relative isolate overflow-hidden rounded-[2rem] bg-[#20372e] px-7 py-14 text-white sm:px-12 sm:py-20 lg:min-h-[480px] lg:px-16">
-          <div className="absolute inset-y-0 right-0 -z-10 hidden w-[58%] bg-cover bg-center lg:block" style={{backgroundImage:"linear-gradient(90deg,#20372e 0%,rgba(32,55,46,.25) 60%),url('https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg')"}}/>
-          <p className="text-xs font-semibold uppercase tracking-[.24em] text-[#e1c58f]">A different way to discover Sri Lanka</p>
-          <h1 className="mt-6 max-w-2xl font-serif text-5xl leading-[1.04] tracking-tight sm:text-7xl">Find somewhere<br/> you belong.</h1>
-          <p className="mt-6 max-w-md text-base leading-relaxed text-white/85 sm:text-lg">Explore homes, get to know neighbourhoods and understand what your next move could cost.</p>
-          <Link href="/explore" className="mt-8 inline-flex items-center gap-2 rounded-full border border-white/50 px-5 py-3 text-sm font-semibold hover:bg-white hover:text-[#20372e]">Explore places <ArrowUpRight size={16}/></Link>
-          <span className="absolute bottom-4 right-6 hidden text-xs text-white/90 lg:block">Illustrative architecture photograph</span>
-        </div>
-        <div className="relative mx-auto -mt-5 max-w-6xl px-1 sm:-mt-10 sm:px-4"><DiscoverySearch/></div>
-        <div className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-slate-600"><Link href="/listings?purpose=rent" className="hover:underline">Long-term rentals</Link><Link href="/listings?purpose=sale" className="hover:underline">Homes &amp; land</Link><Link href="/listings?purpose=booking" className="hover:underline">Short stays</Link><Link href="/tools/living-cost" className="hover:underline">Plan your budget</Link></div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-5 py-10 lg:px-8">
-        <p className="text-xs font-semibold uppercase tracking-[.2em] text-[#657557]">Start with what matters</p>
-        <h2 className="mt-3 font-serif text-4xl sm:text-5xl">Find your kind of place.</h2>
-        <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {collections.map(c=><Link key={c.href} href={c.href} className="group flex min-h-[190px] flex-col rounded-2xl border border-[#dedacf] bg-[#fdfcf8] p-6 transition hover:border-[#20372e]">
-            <span className="text-xs text-[#806d50]">{c.number}</span><h3 className="mt-6 font-serif text-2xl">{c.title}</h3><p className="mt-2 flex-1 text-sm text-slate-600">{c.description}</p><ArrowUpRight className="mt-5 self-end transition group-hover:translate-x-1" size={20}/>
-          </Link>)}
-        </div>
-      </section>
-      <section className="mx-auto max-w-7xl px-5 py-12 lg:px-8">
-        <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[.2em] text-[#657557]">On the market</p><h2 className="mt-3 font-serif text-4xl sm:text-5xl">Discover available properties.</h2></div><Link className="inline-flex items-center gap-2 text-sm font-semibold underline" href="/listings">Browse all <ArrowRight size={16}/></Link></div>
-        <div className="mt-7"><DiscoveryListings/></div>
-      </section>
-      <section className="bg-[#e7e6da] py-14">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8"><div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[.2em]">The neighbourhood edit</p><h2 className="mt-3 max-w-2xl font-serif text-4xl sm:text-5xl">A home is more than four walls.</h2></div><Link className="inline-flex items-center gap-2 text-sm font-semibold underline" href="/explore">Explore all places <ArrowRight size={16}/></Link></div>
-          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">{neighbourhoods.map((n,i)=><Link key={n.slug} href={'/explore/'+n.slug} style={{backgroundColor:n.accent}} className="group flex min-h-[220px] flex-col justify-between rounded-2xl p-5 text-white"><span className="text-xs text-white/85">0{i+1} / Colombo region</span><div><p className="text-xs text-white/85">{n.label}</p><h3 className="mt-2 font-serif text-2xl">{n.name}</h3><ArrowUpRight className="mt-5 transition group-hover:translate-x-1" size={20}/></div></Link>)}</div>
-        </div>
-      </section>
-      <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8"><p className="text-xs font-semibold uppercase tracking-[.2em] text-[#657557]">Make informed decisions</p><h2 className="mt-3 font-serif text-4xl sm:text-5xl">Plan your next chapter.</h2>
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
-          {[{icon:Calculator,title:'Living cost calculator',desc:'Estimate your monthly expenses, including rent, transport and utilities.',href:'/tools/living-cost'},{icon:Compass,title:'Neighbourhood checklists',desc:'Know what to look for before choosing your next home.',href:'/explore'},{icon:BookOpen,title:'Property insights',desc:'Read the published articles and guides in our library.',href:'/blog'}].map(t=><Link key={t.href} href={t.href} className="rounded-2xl border border-[#dedacf] bg-white p-6 hover:border-[#20372e]"><t.icon size={25}/><h3 className="mt-5 font-serif text-2xl">{t.title}</h3><p className="mt-3 text-sm text-slate-600">{t.desc}</p><span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold">Explore <ArrowRight size={15}/></span></Link>)}
-        </div>
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[#dedacf] px-6 py-5"><div><h2 className="font-semibold">For property managers</h2><p className="mt-1 text-sm text-slate-600">Explore the separate Property Management OS project.</p></div><a href={propertyOSRepository} className="inline-flex items-center gap-2 text-sm font-semibold underline">View on GitHub <ArrowUpRight size={16}/></a></div>
-      </section>
-    </main>
-    <DiscoveryFooter/>
-  </div>;
+export const dynamic = 'force-dynamic';
+const toolIcons=[Calculator,Landmark,Scale,Ruler];
+export default async function HomePage(){
+ const {hero,sections,collections,neighbourhoods}=await getPublicContent();
+ return <div className="avara-editorial min-h-screen"><Header/>
+ <main id="main-content">
+  <section className="avara-shell pt-7 sm:pt-10">
+   <div className="avara-hero">
+    <div className="avara-hero-copy">
+      <div className="avara-kicker avara-kicker-light"><span className="avara-rule"/> {hero.eyebrow}</div>
+      <h1 className="avara-display mt-7 text-[clamp(3.1rem,6.35vw,6.4rem)] leading-[.98] tracking-[-.045em]">{hero.title}</h1>
+      <p className="mt-6 max-w-md text-[15px] leading-[1.85] text-[#e1e5dc] sm:text-base">{hero.description}</p>
+      <Link href="/explore" className="avara-hero-link mt-8">{hero.cta}<ArrowUpRight size={18}/></Link>
+      <div className="mt-12 flex items-center gap-3 text-[10px] uppercase tracking-[.2em] text-[#bfc7bb]"><span className="h-px w-10 bg-[#a99d79]"/> Sri Lanka / Property &amp; places</div>
+    </div>
+    <div className="avara-hero-image">
+      <ArchitectureArt kind="house" className="absolute inset-0 h-full w-full"/>
+      <div className="absolute inset-0 bg-cover bg-center" style={{backgroundImage:"url('https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg')"}}/>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"/>
+      <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between gap-4 text-white sm:bottom-8 sm:left-8 sm:right-8"><div><p className="text-[10px] uppercase tracking-[.23em]">The Avara edit</p><p className="avara-display mt-1 text-2xl sm:text-3xl">A sense of place.</p></div><span className="text-right text-[10px] text-white/90">Illustrative imagery</span></div>
+    </div>
+   </div>
+   <div className="avara-search-wrap"><DiscoverySearch/></div>
+   <div className="avara-quick-links"><span className="avara-kicker">Begin with</span><Link href="/listings?purpose=rent">Long-term rentals</Link><Link href="/listings?purpose=sale">Homes &amp; land</Link><Link href="/listings?purpose=booking">Short stays</Link><Link href="/tools">Planning tools</Link></div>
+  </section>
+  {sections.collections.enabled&&<section className="avara-shell avara-section"><SectionHeading eyebrow={sections.collections.eyebrow} title={sections.collections.title} href="/listings" linkLabel="All properties"/><CollectionCards items={collections}/></section>}
+  {sections.listings.enabled&&<section className="avara-shell avara-section avara-top-rule"><SectionHeading eyebrow={sections.listings.eyebrow} title={sections.listings.title} href="/listings" linkLabel="Browse properties"/><div className="mt-9"><DiscoveryListings/></div></section>}
+  {sections.neighbourhoods.enabled&&<section className="avara-area-band"><div className="avara-shell avara-section"><SectionHeading eyebrow={sections.neighbourhoods.eyebrow} title={sections.neighbourhoods.title} href="/explore" linkLabel="All neighbourhoods"/><p className="mt-4 max-w-xl text-sm leading-relaxed text-[#5f685e]">Get to know the questions worth asking, the routines worth considering and the places to explore before your next move.</p><AreaCards items={neighbourhoods} compact/><p className="mt-5 text-xs text-[#5f685e]">Architectural illustrations are conceptual, not photographs or maps of the neighbourhoods.</p></div></section>}
+  {sections.tools.enabled&&<section className="avara-shell avara-section"><SectionHeading eyebrow={sections.tools.eyebrow} title={sections.tools.title} href="/tools" linkLabel="All planning tools"/>
+   <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{planningTools.map((t,i)=>{const Icon=toolIcons[i];return <Link key={t.slug} href={'/tools/'+t.slug} className="avara-tool-card group"><div className="flex items-center justify-between"><span className="avara-icon-tile"><Icon size={22} strokeWidth={1.5}/></span><ArrowUpRight size={18}/></div><p className="avara-kicker mt-8">{t.label}</p><h3 className="avara-display mt-2 text-2xl">{t.title}</h3><p className="mt-3 text-sm leading-relaxed text-[#5f685e]">{t.description}</p></Link>})}</div>
+   <div className="mt-5 grid gap-4 sm:grid-cols-2"><Link className="avara-inline-card" href="/explore"><Compass size={22}/><span><strong>Neighbourhood checklists</strong><small>Prepare for your next property viewing.</small></span><ArrowRight size={18}/></Link><Link className="avara-inline-card" href="/blog"><BookOpen size={22}/><span><strong>Property insights</strong><small>Explore published articles and guides.</small></span><ArrowRight size={18}/></Link></div>
+  </section>}
+  <section className="avara-shell pb-16"><div className="avara-owner-note"><div><p className="avara-kicker">For property managers</p><p className="mt-2 text-sm text-[#5f685e]">Property Management OS, a separate software project.</p></div><a href={propertyOSRepository} className="avara-text-link">View on GitHub <ArrowUpRight size={16}/></a></div></section>
+ </main><DiscoveryFooter/></div>;
 }

@@ -170,10 +170,10 @@ function ListingsContent() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f4f1ea]">
+    <div className="avara-editorial min-h-screen">
       <Header />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="avara-shell py-10 sm:py-14">
         <SearchFilters
           filters={filters}
           onFiltersChange={handleFiltersChange}
@@ -290,9 +290,9 @@ function ListingsContent() {
 export default function ListingsPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#f4f1ea]">
+      <div className="avara-editorial min-h-screen">
         <Header />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="avara-shell py-10 sm:py-14">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-300 rounded mb-4 w-1/3"></div>
             <div className="h-4 bg-gray-300 rounded mb-8 w-1/4"></div>

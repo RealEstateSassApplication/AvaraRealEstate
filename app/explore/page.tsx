@@ -3,14 +3,16 @@ import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import Header from '@/components/ui/layout/Header';
 import DiscoveryFooter from '@/components/discovery/DiscoveryFooter';
-import { neighbourhoods } from '@/lib/discovery/content';
-
-export const metadata: Metadata = { title:'Explore neighbourhoods in Sri Lanka',description:'Discover five Colombo-area neighbourhoods with practical property viewing checklists and rental links.',alternates:{canonical:'/explore'} };
-
-export default function ExplorePage() {
- return <div className="min-h-screen bg-[#f4f1ea] text-[#20372e]"><Header/><main className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
-  <p className="text-xs font-semibold uppercase tracking-[.2em]">The neighbourhood edit</p><h1 className="mt-4 max-w-3xl font-serif text-5xl sm:text-7xl">Find a place that fits your life.</h1><p className="mt-5 max-w-2xl text-lg text-slate-700">Start with five places in the Colombo region. Use practical viewing questions, browse properties and build your own budget. These are planning checklists, not market rankings or measured area profiles.</p>
-  <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{neighbourhoods.map((n,i)=><Link key={n.slug} href={'/explore/'+n.slug} className="overflow-hidden rounded-2xl border border-[#dedacf] bg-white hover:border-[#20372e]"><div className="flex min-h-[180px] flex-col justify-between p-6 text-white" style={{backgroundColor:n.accent}}><p className="text-xs">0{i+1} / Colombo region</p><div><p className="text-xs">{n.label}</p><h2 className="mt-2 font-serif text-4xl">{n.name}</h2></div></div><div className="p-6"><p className="text-sm leading-relaxed text-slate-600">{n.intro}</p><span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold">Explore {n.name} <ArrowUpRight size={16}/></span></div></Link>)}</div>
-  <section className="mt-10 rounded-2xl bg-[#20372e] p-8 text-white"><h2 className="font-serif text-3xl">Compare your total living budget.</h2><p className="mt-3 text-white/85">Use your own rent and expenses. No account required.</p><Link href="/tools/living-cost" className="mt-5 inline-block rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#20372e]">Estimate living costs</Link></section>
+import { AreaCards } from '@/components/discovery/EditorialCards';
+import ArchitectureArt from '@/components/discovery/ArchitectureArt';
+import { getPublicContent } from '@/lib/discovery/repository';
+export const metadata: Metadata={title:'Explore neighbourhoods in Sri Lanka',description:'Discover five Colombo-area neighbourhoods with practical property viewing checklists and rental links.',alternates:{canonical:'/explore'}};
+export const dynamic='force-dynamic';
+export default async function ExplorePage(){
+ const {neighbourhoods,directory}=await getPublicContent();
+ return <div className="avara-editorial min-h-screen"><Header/><main id="main-content" className="avara-shell">
+ <section className="avara-section"><div className="grid items-center gap-8 lg:grid-cols-[1.08fr_.92fr]"><div><p className="avara-kicker">The neighbourhood edit / Sri Lanka</p><h1 className="avara-display mt-5 text-[clamp(3rem,6vw,6rem)] leading-[1.02]">{directory.title}</h1><p className="mt-6 max-w-xl text-[15px] leading-[1.85] text-[#5f685e]">{directory.description}</p><Link href="/tools" className="avara-text-link mt-7">Plan your next move <ArrowUpRight size={17}/></Link></div><div className="avara-art-frame"><ArchitectureArt kind="city" className="avara-art"/><span className="avara-art-index">Editorial illustration</span></div></div></section>
+ <section className="avara-top-rule pb-16 pt-8"><p className="avara-kicker">Explore the Colombo region</p><h2 className="avara-display mt-3 text-4xl">The places collection.</h2><AreaCards items={neighbourhoods}/><p className="mt-6 text-xs text-[#5f685e]">Conceptual architecture illustrations; not photographs of specific neighbourhoods.</p></section>
+ <section className="mb-16 rounded-[1.25rem] bg-[#243b31] p-7 text-white sm:p-12"><p className="avara-kicker avara-kicker-light">Avara intelligence</p><h2 className="avara-display mt-4 text-4xl">A place that fits your budget, too.</h2><p className="mt-3 text-sm leading-relaxed text-white/85">Compare your own rent, transport and living expenses before deciding.</p><Link href="/tools/living-cost" className="avara-hero-link mt-6">Estimate living costs <ArrowUpRight size={17}/></Link></section>
  </main><DiscoveryFooter/></div>;
 }

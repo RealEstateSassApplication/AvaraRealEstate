@@ -68,3 +68,35 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  discovery-cms-sql:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test-only
+          POSTGRES_DB: avara_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: test-only
+      PGDATABASE: avara_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Set up Supabase-equivalent database roles
+        run: psql -v ON_ERROR_STOP=1 -c "create role anon nologin; create role authenticated nologin; create role service_role nologin bypassrls; grant usage on schema public to anon, authenticated, service_role;"
+      - name: Apply CMS migration
+        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261127180000_discovery_cms.sql
+      - name: Verify RLS, permissions, revisions and publication
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/discovery_cms.sql

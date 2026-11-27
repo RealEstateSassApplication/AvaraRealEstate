@@ -41,3 +41,6 @@ Server-render public content; route-specific canonical, metadata, sitemaps only 
 
 ## Release
 Vercel preview + isolated Supabase staging; local Supabase CLI when adopted. Keep current npm lock and existing CI; upgrade framework separately after dependency/security audit. Require lint, typecheck, build, browser smoke, anonymous access and RLS checks before launch. Do not deploy or migrate live data in the foundation PR.
+
+## Editorial CMS implementation
+See [CMS setup and trust boundaries](CMS.md). The additive Supabase editorial schema stores drafts, a separate public snapshot and immutable-through-app revision history. Existing MongoDB-backed admin sessions authorize server-only mutations; Supabase Auth and listing migration remain separate future work.

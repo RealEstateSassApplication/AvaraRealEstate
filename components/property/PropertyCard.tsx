@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useMemo } from 'react';
-import { Heart, MapPin, Bed, Bath, Square, Star, Calendar, ShieldCheck } from 'lucide-react';
+import { Heart, MapPin, Bed, Bath, Square, Star, Calendar, ShieldCheck, ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -84,12 +84,14 @@ export default function PropertyCard({
   const handleNextImage = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    setImageErrored(false); setImageLoading(true);
     setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
   };
 
   const handlePrevImage = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    setImageErrored(false); setImageLoading(true);
     setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
   };
 
@@ -100,14 +102,14 @@ export default function PropertyCard({
   };
 
   return (
-    <Link href={`/listings/${property._id}`}>
-      <Card className={`group hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden ${className}`}>
+    <Card className={`group relative overflow-hidden border-[#dedbd0] bg-white text-[#243b31] shadow-none transition hover:border-[#8a9685] hover:shadow-md ${className}`}>
         <div className="relative">
           <div className="relative aspect-[4/3] overflow-hidden">
+            <Link href={`/listings/${property._id}`} aria-label={`View ${property.title}`} className="block h-full w-full">
             <img
               src={imageErrored ? '/images/property-placeholder.jpg' : (images[currentImageIndex] || '/images/property-placeholder.jpg')}
               alt={property.title}
-              className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${imageLoading ? 'animate-pulse bg-gray-200' : ''}`}
+              className={`w-full h-full object-cover motion-safe:group-hover:scale-[1.035] transition-transform duration-500 ${imageLoading ? 'animate-pulse bg-gray-200' : ''}`}
               loading="lazy"
               decoding="async"
               onLoad={() => setImageLoading(false)}
@@ -118,24 +120,25 @@ export default function PropertyCard({
                 }
               }}
             />
+            </Link>
 
             {images.length > 1 && (
               <>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white/90 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={handlePrevImage}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white/90 rounded-full opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
+                  aria-label="Previous property photo" onClick={handlePrevImage}
                 >
-                  ←
+                  <ChevronLeft size={18}/>
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white/90 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={handleNextImage}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white/90 rounded-full opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
+                  aria-label="Next property photo" onClick={handleNextImage}
                 >
-                  →
+                  <ChevronRight size={18}/>
                 </Button>
                 <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex space-x-1">
                   {images.map((_, index) => (
@@ -148,7 +151,7 @@ export default function PropertyCard({
               </>
             )}
 
-            <div className="absolute top-2 left-2 flex flex-col gap-1">
+            <div className="absolute top-3 left-3 flex flex-col items-start gap-1">
               {property.featured && <Badge className="bg-slate-950 text-white">Featured</Badge>}
               {(property.trustScore || 0) > 0 && (
                 <Badge className="bg-white/95 text-slate-950 hover:bg-white border-0 shadow-sm">
@@ -170,22 +173,22 @@ export default function PropertyCard({
               aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
               variant="ghost"
               size="sm"
-              className="absolute top-2 right-2 bg-white/80 hover:bg-white/90 p-2"
+              className="absolute top-3 right-3 rounded-full bg-white/95 hover:bg-white p-2"
               onClick={handleToggleFavorite}
             >
               <Heart className={`w-4 h-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
             </Button>}
           </div>
 
-          <CardContent className="p-4">
+          <CardContent className="p-5">
             <div className="flex items-center text-sm text-gray-600 mb-2">
               <MapPin className="w-4 h-4 mr-1" />
               {property.address.city}, {property.address.district}
             </div>
 
-            <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2">{property.title}</h3>
+            <h3 className="avara-display mb-3 text-2xl leading-tight line-clamp-2"><Link href={`/listings/${property._id}`} className="hover:underline underline-offset-4">{property.title}</Link></h3>
 
-            <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600 mb-3">
               {property.bedrooms !== undefined && property.bedrooms > 0 && (
                 <div className="flex items-center"><Bed className="w-4 h-4 mr-1" />{property.bedrooms} bed{property.bedrooms !== 1 ? 's' : ''}</div>
               )}
@@ -217,13 +220,11 @@ export default function PropertyCard({
               </div>
             )}
 
-            <div className="flex items-center justify-between">
-              <div className="text-xl font-bold text-gray-900">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#e6e4db] pt-4">
+              <div className="text-lg font-semibold text-[#243b31]">
                 {formatPrice(property.price, property.currency, property.purpose, property.rentFrequency)}
               </div>
-              {property.purpose === 'booking' && (
-                <Button size="sm" variant="outline"><Calendar className="w-4 h-4 mr-2" />Check Dates</Button>
-              )}
+              <Link href={`/listings/${property._id}`} className="inline-flex items-center gap-1.5 text-xs font-semibold hover:underline">{property.purpose === 'booking' ? <><Calendar size={15}/> Check dates</> : <>View property <ArrowUpRight size={15}/></>}</Link>
             </div>
 
             {property.owner && (
@@ -246,6 +247,5 @@ export default function PropertyCard({
           </CardContent>
         </div>
       </Card>
-    </Link>
   );
 }
