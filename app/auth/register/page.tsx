@@ -239,7 +239,7 @@ export default function RegisterPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="user">Find a property</SelectItem>
-                  <SelectItem value="host">List my property</SelectItem>
+                  <SelectItem value="host">Request property manager access</SelectItem>
                 </SelectContent>
               </Select>
             </div>

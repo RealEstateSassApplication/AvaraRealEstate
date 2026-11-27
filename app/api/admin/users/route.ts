@@ -13,9 +13,9 @@ export async function GET(request: NextRequest) {
     const limit = parsePositiveInt(searchParams.get('limit'), 20, 100);
 
     const users = await User.find({})
-      .sort({ createdAt: -1 })
+      .sort({managerRequestedAt:-1,createdAt:-1})
       .limit(limit)
-      .select('name email phone role roles verified listings createdAt');
+      .select('name email phone role roles verified listings createdAt managerRequestedAt');
 
     return NextResponse.json({ users });
   } catch (error) {

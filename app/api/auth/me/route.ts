@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
       role,  // Include single role field
       roles, // Include roles array
       listingsCount,
+      managerRequestedAt:user.managerRequestedAt,
       profilePhoto: (user as any).profilePhoto
     };
 

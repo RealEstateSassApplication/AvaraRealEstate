@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     const { name, phone, password } = parsed.data;
     const email = parsed.data.email.toLowerCase();
     const requestedRole = parsed.data.role || 'user';
-    if(supabaseMode()){try{await provider('signup','POST',{email,password,data:{name,phone}});return NextResponse.json({verificationRequired:true,message:'Check your email to verify your account.'},{status:201,headers:privateHeaders});}catch(e){return providerFailure(e);}}
+    if(supabaseMode()){try{await provider('signup','POST',{email,password,data:{name,phone,managerRequested:requestedRole==='host'}});return NextResponse.json({verificationRequired:true,message:'Check your email to verify your account.'},{status:201,headers:privateHeaders});}catch(e){return providerFailure(e);}}
 
     const existing = await User.findOne({ $or: [{ email }, { phone }] }).select('_id');
     if (existing) {
@@ -35,13 +35,14 @@ export async function POST(request: NextRequest) {
     }
 
     const passwordHash = await hashPassword(password);
-    const roles = requestedRole === 'host' ? ['user', 'host'] : ['user'];
+    const roles = ['user'];
     const user = await User.create({
       name,
       email,
       phone,
       passwordHash,
-      role: requestedRole,
+      role: 'user',
+      ...(requestedRole==='host'?{managerRequestedAt:new Date()}:{}),
       roles,
       verified: false,
       emailVerified: false,
