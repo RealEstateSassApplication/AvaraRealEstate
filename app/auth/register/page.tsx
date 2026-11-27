@@ -110,7 +110,7 @@ export default function RegisterPage() {
         if(data.verificationRequired){setNeedsVerification(true);return;}
         // Redirect to home after successful registration
         setTimeout(() => {
-          window.location.href = '/';
+          window.location.href = '/workspace';
         }, 2000);
       } else {
         setError(data.error || 'Registration failed');
@@ -124,7 +124,7 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-[#f7f5ef] via-[#f7f5ef] to-[#eaece2] flex items-center justify-center p-4">
         <Card className="max-w-md w-full shadow-xl">
           <CardContent className="text-center p-8">
             <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">

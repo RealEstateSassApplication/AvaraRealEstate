@@ -72,7 +72,7 @@ export async function requireAuth(request: NextRequest): Promise<IUser> {
 export async function requireRole(request: NextRequest, roles: string[]): Promise<IUser> {
   const user = await requireAuth(request);
   const userRolesMap = rolesFor(user);
-  const allowed = roles.map(String).some((role) => userRoles.includes(role));
+  const allowed = roles.map(String).some((role) => userRolesMap.includes(role));
   if (!allowed) throw new Error('Insufficient permissions');
   return user;
 }

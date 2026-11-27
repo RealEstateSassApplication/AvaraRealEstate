@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { contentSchema, type DiscoveryContent, type SectionKey } from '@/lib/discovery/schema';
 import type { CMSState } from '@/lib/discovery/repository';
 
-type Tab = 'home'|'collections'|'neighbourhoods'|'history';
-const tabs: {id:Tab;label:string}[] = [{id:'home',label:'Homepage'},{id:'collections',label:'Collections'},{id:'neighbourhoods',label:'Neighbourhoods'},{id:'history',label:'Revision history'}];
-const sections: SectionKey[] = ['collections','listings','neighbourhoods','tools'];
+type Tab = 'home'|'website'|'collections'|'neighbourhoods'|'history';
+const tabs: {id:Tab;label:string}[] = [{id:'home',label:'Homepage'},{id:'website',label:'Website & SEO'},{id:'collections',label:'Collections'},{id:'neighbourhoods',label:'Neighbourhoods'},{id:'history',label:'Revision history'}];
+const sections: SectionKey[] = ['collections','listings','neighbourhoods'];
 function Field({label,value,onChange,multiline=false,maxLength=300}:{label:string;value:string;onChange:(value:string)=>void;multiline?:boolean;maxLength?:number}){
   const cls='mt-2 block w-full rounded-lg border border-[#d8d8cc] bg-white p-3 text-sm text-slate-900';
   return <label className="block text-sm font-medium">{label}{multiline?<textarea className={cls} rows={3} maxLength={maxLength} value={value} onChange={e=>onChange(e.target.value)}/>:<input className={cls} maxLength={maxLength} value={value} onChange={e=>onChange(e.target.value)}/>}</label>;
@@ -65,7 +65,8 @@ export default function DiscoveryCMS(){
       <nav className="mt-6 flex flex-wrap gap-2" aria-label="Editor sections">{tabs.map(t=><button key={t.id} type="button" aria-pressed={tab===t.id} onClick={()=>setTab(t.id)} className={'rounded-full px-4 py-2 text-sm '+(tab===t.id?'bg-[#20372e] text-white':'border bg-white')}>{t.label}</button>)}</nav>
       <div className="mt-5 grid gap-6 lg:grid-cols-[1.3fr_1fr]">
       <fieldset disabled={busy||conflict} className="min-w-0 space-y-5 rounded-xl border bg-white p-5 sm:p-7 disabled:opacity-70">
-        {tab==='home'&&<><h2 className="font-serif text-2xl">Homepage hero</h2>
+        {tab==='website'&&<section className="mt-6 space-y-5 rounded-xl border bg-white p-5"><h2 className="font-serif text-3xl">Website &amp; search appearance</h2><p className="text-sm text-[#5f685e]">Changes are applied only after publishing. Use an HTTPS image you own or have permission to use.</p>{(['seoTitle','seoDescription','heroImage','ownerTitle','ownerDescription'] as const).map(k=><Field key={k} label={{seoTitle:'Homepage search title',seoDescription:'Homepage meta description',heroImage:'Homepage hero image URL (optional)',ownerTitle:'Owner callout title',ownerDescription:'Owner callout description'}[k]} value={draft.website[k]} maxLength={k==='heroImage'?500:k==='seoDescription'||k==='ownerDescription'?300:100} onChange={v=>edit(old=>({...old,website:{...old.website,[k]:v}}))}/>)}<label className="flex items-center gap-3 text-sm"><input type="checkbox" checked={draft.website.showOwnerCallout} onChange={e=>edit(old=>({...old,website:{...old.website,showOwnerCallout:e.target.checked}}))}/> Show property owner callout</label></section>}
+      {tab==='home'&&<><h2 className="font-serif text-2xl">Homepage hero</h2>
           <Field label="Eyebrow" value={draft.hero.eyebrow} maxLength={100} onChange={v=>hero('eyebrow',v)}/>
           <Field label="Headline" value={draft.hero.title} maxLength={100} onChange={v=>hero('title',v)}/>
           <Field label="Description" value={draft.hero.description} multiline onChange={v=>hero('description',v)}/>

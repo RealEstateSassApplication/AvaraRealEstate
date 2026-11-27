@@ -8,7 +8,7 @@ import { hashPassword, generateToken } from '@/lib/auth';
 const registerSchema = z.object({
   name: z.string().trim().min(2).max(120),
   email: z.string().trim().email().max(254),
-  phone: z.string().trim().min(7).max(30),
+  phone: z.string().trim().regex(/^\+?[0-9 ()-]{7,30}$/),
   password: z.string().min(8).max(128),
   role: z.enum(['user', 'host']).optional(),
 }).strict();

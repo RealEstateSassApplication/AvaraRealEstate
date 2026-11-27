@@ -9,10 +9,10 @@ import ArchitectureArt from '@/components/discovery/ArchitectureArt';
 import { SectionHeading, CollectionCards, AreaCards } from '@/components/discovery/EditorialCards';
 import { propertyOSRepository } from '@/lib/discovery/content';
 import { getPublicContent } from '@/lib/discovery/repository';
-export const metadata: Metadata = { alternates: { canonical: '/' } };
+export async function generateMetadata():Promise<Metadata>{const {website}=await getPublicContent();return {title:{absolute:website.seoTitle},description:website.seoDescription,alternates:{canonical:'/'}};}
 export const dynamic = 'force-dynamic';
 export default async function HomePage(){
- const {hero,sections,collections,neighbourhoods}=await getPublicContent();
+ const {hero,sections,collections,neighbourhoods,website}=await getPublicContent();
  return <div className="avara-editorial min-h-screen"><Header/>
  <main id="main-content">
   <section className="avara-shell pt-7 sm:pt-10">
@@ -26,7 +26,7 @@ export default async function HomePage(){
     </div>
     <div className="avara-hero-image">
       <ArchitectureArt kind="house" className="absolute inset-0 h-full w-full"/>
-      <div className="absolute inset-0 bg-cover bg-center" style={{backgroundImage:"url('https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg')"}}/>
+      {website.heroImage&&<img className="absolute inset-0 h-full w-full object-cover" src={website.heroImage} alt="" fetchPriority="high"/>}
       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"/>
       <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between gap-4 text-white sm:bottom-8 sm:left-8 sm:right-8"><div><p className="text-[10px] uppercase tracking-[.23em]">The Avara edit</p><p className="avara-display mt-1 text-2xl sm:text-3xl">A sense of place.</p></div><span className="text-right text-[10px] text-white/90">Illustrative imagery</span></div>
     </div>
@@ -37,7 +37,7 @@ export default async function HomePage(){
   {sections.collections.enabled&&<section className="avara-shell avara-section"><SectionHeading eyebrow={sections.collections.eyebrow} title={sections.collections.title} href="/listings" linkLabel="All properties"/><CollectionCards items={collections}/></section>}
   {sections.listings.enabled&&<section className="avara-shell avara-section avara-top-rule"><SectionHeading eyebrow={sections.listings.eyebrow} title={sections.listings.title} href="/listings" linkLabel="Browse properties"/><div className="mt-9"><DiscoveryListings/></div></section>}
   {sections.neighbourhoods.enabled&&<section className="avara-area-band"><div className="avara-shell avara-section"><SectionHeading eyebrow={sections.neighbourhoods.eyebrow} title={sections.neighbourhoods.title} href="/explore" linkLabel="All neighbourhoods"/><p className="mt-4 max-w-xl text-sm leading-relaxed text-[#5f685e]">Get to know the questions worth asking, the routines worth considering and the places to explore before your next move.</p><AreaCards items={neighbourhoods} compact/><p className="mt-5 text-xs text-[#5f685e]">Architectural illustrations are conceptual, not photographs or maps of the neighbourhoods.</p></div></section>}
-  <section className="avara-shell pb-16"><div className="rounded-xl bg-[#243b31] p-6 text-white sm:p-10"><p className="avara-kicker avara-kicker-light">For property seekers and owners</p><h2 className="avara-display mt-3 text-4xl">Make your next move.</h2><p className="mt-3 max-w-xl text-sm text-white/90">Find a home, manage your saved properties or list a place of your own.</p><div className="mt-5 flex flex-wrap gap-4"><Link href="/listings" className="avara-hero-link">Browse properties <ArrowUpRight size={16}/></Link><Link href="/host/apply" className="avara-hero-link">List a property <ArrowUpRight size={16}/></Link></div></div></section>
+  {website.showOwnerCallout&&<section className="avara-shell pb-16"><div className="rounded-xl bg-[#243b31] p-6 text-white sm:p-10"><p className="avara-kicker avara-kicker-light">For property seekers and owners</p><h2 className="avara-display mt-3 text-4xl">{website.ownerTitle}</h2><p className="mt-3 max-w-xl text-sm text-white/90">{website.ownerDescription}</p><div className="mt-5 flex flex-wrap gap-4"><Link href="/listings" className="avara-hero-link">Browse properties <ArrowUpRight size={16}/></Link><Link href="/host/apply" className="avara-hero-link">List a property <ArrowUpRight size={16}/></Link></div></div></section>}
   <section className="avara-shell pb-16"><div className="avara-owner-note"><div><p className="avara-kicker">For property managers</p><p className="mt-2 text-sm text-[#5f685e]">Property Management OS, a separate software project.</p></div><a href={propertyOSRepository} className="avara-text-link">View on GitHub <ArrowUpRight size={16}/></a></div></section>
  </main><DiscoveryFooter/></div>;
 }
