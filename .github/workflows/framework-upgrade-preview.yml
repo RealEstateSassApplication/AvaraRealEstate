@@ -15,7 +15,7 @@ jobs:
       NEXTAUTH_SECRET: ci-only-nextauth-secret-with-at-least-32-characters
       NEXT_PUBLIC_BASE_URL: http://localhost:3000
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 22
