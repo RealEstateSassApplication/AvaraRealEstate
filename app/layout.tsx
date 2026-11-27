@@ -9,10 +9,10 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://avara.lk';
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: 'Avara Real Estate | Buy, Rent & Book Properties in Sri Lanka',
+    default: 'Avara | Discover Property & Places in Sri Lanka',
     template: '%s | Avara Real Estate Sri Lanka',
   },
-  description: 'Find your dream property in Sri Lanka. Browse houses, apartments, villas, and land for sale and rent in Colombo, Kandy, Galle, and across Sri Lanka. Trusted by 15,000+ customers.',
+  description: 'Find your dream property in Sri Lanka. Browse houses, apartments, villas, and land for sale and rent in Colombo, Kandy, Galle, and across Sri Lanka. Explore neighbourhoods and plan your living costs.',
   keywords: [
     'property Sri Lanka',
     'houses for sale Sri Lanka',
@@ -41,8 +41,8 @@ export const metadata: Metadata = {
     locale: 'en_LK',
     url: BASE_URL,
     siteName: 'Avara Real Estate',
-    title: 'Avara Real Estate | Buy, Rent & Book Properties in Sri Lanka',
-    description: 'Sri Lanka\'s premier property platform. Find houses, apartments, villas, and land for sale and rent across Colombo, Kandy, Galle, and more.',
+    title: 'Avara | Discover Property & Places in Sri Lanka',
+    description: 'Explore property in Sri Lanka. Find houses, apartments, villas, and land for sale and rent across Colombo, Kandy, Galle, and more.',
     images: [
       {
         url: `${BASE_URL}/og-image.jpg`,

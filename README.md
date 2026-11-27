@@ -1,4 +1,14 @@
-# Avara SL - Complete Property Platform
+# Avara — Property Discovery & Intelligence
+
+Avara is evolving into an account-optional public discovery platform for Sri Lanka. Explore neighbourhoods and listings, estimate living costs and discover the separate Property Management OS.
+
+- [Discovery product strategy](docs/discovery/PRODUCT.md)
+- [Target architecture and migration](docs/discovery/ARCHITECTURE.md)
+- [Delivery roadmap and acceptance criteria](docs/discovery/ROADMAP.md)
+
+The current runtime remains Next.js + MongoDB. Next.js + Supabase is the proposed discovery target, not an already-completed migration. Existing owner, tenant, booking and admin features remain available; the standalone Property Management OS retains its own stack and data.
+
+## Existing platform reference
 
 A comprehensive fullstack Next.js application for property rentals, sales, and short-term bookings in Sri Lanka. Built with MongoDB, featuring advanced search, booking management, payment integration, and WhatsApp communications.
 
