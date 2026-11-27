@@ -567,7 +567,7 @@ export default function UserDashboardPage() {
                     <CardDescription>Manage your active and past rentals</CardDescription>
                   </div>
                   <Button asChild>
-                    <Link href="/listings?type=rent">Find Rentals</Link>
+                    <Link href="/listings?purpose=rent">Find Rentals</Link>
                   </Button>
                 </div>
               </CardHeader>
@@ -577,7 +577,7 @@ export default function UserDashboardPage() {
                     <Home className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500 mb-4">No rental agreements yet</p>
                     <Button asChild>
-                      <Link href="/listings?type=rent">Browse Rentals</Link>
+                      <Link href="/listings?purpose=rent">Browse Rentals</Link>
                     </Button>
                   </div>
                 ) : (
@@ -727,7 +727,7 @@ export default function UserDashboardPage() {
                     <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500 mb-4">No applications submitted</p>
                     <Button asChild>
-                      <Link href="/listings?type=rent">Apply for Rentals</Link>
+                      <Link href="/listings?purpose=rent">Apply for Rentals</Link>
                     </Button>
                   </div>
                 ) : (

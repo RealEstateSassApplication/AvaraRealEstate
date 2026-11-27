@@ -14,7 +14,7 @@ async function noOverflow(page){await expect.poll(()=>page.evaluate(()=>document
 for(const width of [320,360,390,768,1440]){
  test('public routes have no horizontal overflow at '+width,async({page})=>{
   await page.setViewportSize({width,height:850});await mock(page);
-  for(const path of ['/','/explore','/explore/nugegoda','/listings?purpose=rent','/tools','/tools/mortgage','/tools/rent-vs-buy','/tools/land-converter','/tools/living-cost','/blog','/guides','/guides/buying-land-sri-lanka','/guides/perch-acre-square-feet','/about']){
+  for(const path of ['/','/explore','/explore/nugegoda','/listings?purpose=rent','/tools','/tools/mortgage','/tools/rent-vs-buy','/tools/land-converter','/tools/living-cost','/blog','/rentals','/request-property','/rentals/my-requests','/rentals/opportunities','/guides','/guides/buying-land-sri-lanka','/guides/perch-acre-square-feet','/about']){
    const response=await page.goto(path,{waitUntil:'domcontentloaded'});expect(response.status(),path).toBe(200);
    await expect(page.getByRole('heading',{level:1}).first()).toBeVisible();
    await noOverflow(page);
@@ -27,7 +27,7 @@ test('mobile menu and search filters retain editable values and URL state',async
  await page.getByRole('button',{name:'Toggle menu'}).click();
  await expect(page.getByRole('navigation',{name:'Mobile navigation'})).toBeVisible();
  await page.getByRole('navigation',{name:'Mobile navigation'}).getByRole('link',{name:'Rent',exact:true}).click();
- await expect(page).toHaveURL(/purpose=rent/);
+ await expect(page).toHaveURL(/\/rentals$/);await page.getByRole('link',{name:'Browse rentals',exact:true}).click();await expect(page).toHaveURL(/purpose=rent/);
  await page.getByRole('textbox',{name:'Location'}).fill('Nugegoda');
  await page.getByRole('button',{name:/^Filters/}).click();
  const dialog=page.getByRole('dialog');await expect(dialog).toBeVisible();

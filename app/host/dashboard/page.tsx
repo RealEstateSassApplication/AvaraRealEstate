@@ -1235,7 +1235,7 @@ export default function HostDashboard() {
                             <div>
                               <div className="flex items-center gap-2 mb-2">
                                 <h3 className="font-semibold text-lg">
-                                  {request.user.name}
+                                  Looking for a rental
                                 </h3>
                                 <Badge className="bg-teal-100 text-teal-800">
                                   {request.relevanceScore}% Match
@@ -1247,7 +1247,7 @@ export default function HostDashboard() {
                                 )}
                               </div>
                               <p className="text-sm text-gray-500">
-                                Contact: {request.user.email} {request.user.phone && `• ${request.user.phone}`}
+                                Opt-in matching request
                               </p>
                             </div>
                             <Badge variant={request.status === 'active' || request.status === 'matched' ? 'default' : 'outline'}>
@@ -1336,12 +1336,10 @@ export default function HostDashboard() {
 
                           <div className="mt-4 flex gap-2">
                             <Button size="sm" variant="default" asChild>
-                              <a href={`mailto:${request.user.email}?subject=Property Inquiry`}>
-                                Contact User
-                              </a>
+                              <Link href="/rentals/opportunities">Respond with property</Link>
                             </Button>
                             <Button size="sm" variant="outline" asChild>
-                              <Link href="/host/listings">
+                              <Link href="/host/dashboard">
                                 View Your Properties
                               </Link>
                             </Button>
