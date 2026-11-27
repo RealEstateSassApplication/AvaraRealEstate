@@ -100,3 +100,16 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261127180000_discovery_cms.sql
       - name: Verify RLS, permissions, revisions and publication
         run: psql -v ON_ERROR_STOP=1 -f supabase/tests/discovery_cms.sql
+      - name: Set up isolated Auth schema fixture
+        run: |
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          create schema auth;
+          create table auth.users(id uuid primary key);
+          create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+          grant usage on schema auth to anon, authenticated;
+          grant execute on function auth.uid() to authenticated;
+          SQL
+      - name: Apply PostgreSQL discovery candidate (test database only)
+        run: psql -v ON_ERROR_STOP=1 -f supabase/schema/discovery_core.sql
+      - name: Verify discovery schema isolation and permissions
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/discovery_core.sql
