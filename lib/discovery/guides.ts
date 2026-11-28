@@ -228,6 +228,149 @@ export const guides:Guide[]=[
       ]
     ],
     "note": "Educational interpretation, not a current market quotation, price forecast or valuation."
-  }
+  },
+{
+  "slug": "tropical-home-design",
+  "title": "Tropical home design in Sri Lanka",
+  "description": "A practical architecture guide to daylight, shade, cross-ventilation, rain protection and low-maintenance materials.",
+  "category": "Architecture & design",
+  "question": "How can I design a comfortable tropical home?",
+  "answer": "Start with the site, sun, wind and rain before choosing a floor plan. Use shade, protected openings and ventilation paths where site conditions permit; balance these with privacy, security and maintenance needs.",
+  "sections": [
+    [
+      "Design around the site",
+      "Observe the changing sunlight, prevailing winds, neighbouring buildings, road noise and water flow. Discuss orientation and room placement with an architect before finalising a plan."
+    ],
+    [
+      "Plan for shade and air movement",
+      "Consider roof overhangs, verandas and external shading. Arrange openings to allow airflow where practical, while addressing insects, rain and security. Keep bedrooms comfortable without assuming natural ventilation is sufficient in every season."
+    ],
+    [
+      "Choose materials for upkeep",
+      "Compare material samples for heat exposure, moisture, cleaning and replacement cost. Plan gutters, drainage and accessible maintenance points with your design team."
+    ],
+    [
+      "Make spaces work harder",
+      "Use furniture dimensions and actual daily routines to test layouts. A compact plan with useful storage and adaptable rooms may suit a family better than an oversized plan."
+    ]
+  ],
+  "checks": [
+    "Site and climate assessment",
+    "Daylight and shading plan",
+    "Ventilation and privacy",
+    "Rainwater and drainage design",
+    "Maintenance and materials review"
+  ],
+  "links": [
+    [
+      "Build planning checklist",
+      "/guides/home-building-checklist"
+    ],
+    [
+      "Land for sale",
+      "/properties/land-for-sale"
+    ]
+  ],
+  "sources": [],
+  "note": "Editorial planning guidance, not a building specification. Consult a qualified architect and engineer for your site."
+},
+{
+  "slug": "home-building-checklist",
+  "title": "Building a house in Sri Lanka: planning checklist",
+  "description": "Plan a home build from site feasibility and design to contractor scope, budget and handover.",
+  "category": "Build & renovate",
+  "question": "Where should I start when planning to build a house?",
+  "answer": "Confirm land suitability and access, establish a realistic project budget, and appoint qualified professionals to develop a scope and design. Obtain the applicable approvals before construction and compare written contractor quotations against the same scope.",
+  "sections": [
+    [
+      "Before designing",
+      "Gather the land documents, survey and site information. Ask your design team about ground conditions, drainage, services, access and applicable local approval requirements."
+    ],
+    [
+      "Set a complete budget",
+      "Separate design and approval costs, site work, structure, finishes, services, landscaping and contingencies. Ask for itemised estimates and clarify inclusions, taxes and exclusions."
+    ],
+    [
+      "Compare contractor proposals",
+      "Give bidders the same drawings and scope. Ask about experience, supervision, programme, payment milestones, changes, quality checks and warranties. Record agreed changes in writing."
+    ],
+    [
+      "Prepare for handover",
+      "Arrange inspections at appropriate stages. Record incomplete work and defects, and collect drawings, maintenance instructions and applicable completion documentation."
+    ]
+  ],
+  "checks": [
+    "Independent land and site review",
+    "Qualified design team",
+    "Written scope and itemised budget",
+    "Applicable approvals",
+    "Inspections and handover records"
+  ],
+  "links": [
+    [
+      "Buying land",
+      "/guides/buying-land-sri-lanka"
+    ],
+    [
+      "Land measurement converter",
+      "/tools/land-converter"
+    ],
+    [
+      "Tropical home design",
+      "/guides/tropical-home-design"
+    ]
+  ],
+  "sources": [],
+  "note": "General project planning, not engineering, regulatory or cost advice. Confirm current requirements with the relevant authority and qualified professionals."
+},
+{
+  "slug": "property-listing-checklist",
+  "title": "How to prepare a property listing in Sri Lanka",
+  "description": "A clear checklist for owners to prepare accurate property details, photographs, pricing and enquiries.",
+  "category": "Property owners",
+  "question": "What should I include in a good property listing?",
+  "answer": "Describe the property accurately, include current photographs and the asking price and currency, state the rental period if relevant, and provide the general location and important conditions. Keep private documents and sensitive addresses out of public images.",
+  "sections": [
+    [
+      "Prepare the facts",
+      "Confirm property type, intended use, floor or land area, room counts, amenities and availability. Distinguish included fixtures from optional items and describe any limitations honestly."
+    ],
+    [
+      "Photograph the actual property",
+      "Use daylight and clear, representative photos of rooms, outdoor spaces and access. Avoid misleading filters, stock images or photographs that reveal identity documents, personal belongings or security details."
+    ],
+    [
+      "Set a transparent asking price",
+      "Compare like-for-like advertised properties and distinguish asking prices from completed transaction prices. State the currency, period, deposit and any additional charges."
+    ],
+    [
+      "Handle enquiries safely",
+      "Keep a record of enquiries and arrange viewings safely. Confirm identities and agreement details independently before accepting payments. Remove or update listings when availability changes."
+    ]
+  ],
+  "checks": [
+    "Accurate property type and dimensions",
+    "Current photos",
+    "Transparent asking price and period",
+    "General location without private details",
+    "Current availability"
+  ],
+  "links": [
+    [
+      "List a property",
+      "/host/apply"
+    ],
+    [
+      "Compare properties",
+      "/compare"
+    ],
+    [
+      "Rental guide",
+      "/guides/renting-home-sri-lanka"
+    ]
+  ],
+  "sources": [],
+  "note": "Editorial guidance; publishing does not imply title verification or a guarantee of availability."
+}
 ];
 export const guideReviewed='2026-11-27';
